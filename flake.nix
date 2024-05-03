@@ -20,6 +20,13 @@
                 gdb
                 valgrind
                 premake5
+                fmt
+                glfw
+                vulkan-headers
+                vulkan-tools
+                vulkan-validation-layers
+                vulkan-extension-layer
+                vulkan-loader
             ];
 
             shellHook = ''
