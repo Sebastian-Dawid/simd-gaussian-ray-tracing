@@ -1,5 +1,6 @@
 workspace "ba-thesis"
     toolset "clang"
+    cppdialect "c++20"
     configurations { "debug", "release" }
     location "build"
 
@@ -24,8 +25,12 @@ workspace "ba-thesis"
         language "C++"
         targetdir "build/lib/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-Werror" }
+        defines { "VULKAN_HPP_NO_EXCEPTIONS" }
 
-        includedirs { "./src/external/imgui" }
+        filter "files:src/vk-renderer/vk-mem-alloc/vk_mem_alloc.cpp"
+            buildoptions { "-w" }
+        filter {}
+        includedirs { "./src" }
         files { "./src/vk-renderer/**.cpp" }
 
     project "volumetric-ray-tracer"
