@@ -8,6 +8,13 @@
 
 constexpr u32 FRAME_OVERLAP = 2;
 
+struct deletion_queue_t
+{
+    std::vector<std::function<void()>> deletors;
+    void push_function(std::function<void()> &&function);
+    void flush();
+};
+
 struct renderer_t
 {
         vk::Instance instance;
@@ -78,6 +85,8 @@ struct renderer_t
             vk::Extent3D extent;
             allocated_buffer_t buffer;
         } staging_buffer;
+
+        deletion_queue_t deletion_queue;
 
         bool immediate_submit(std::function<void(vk::CommandBuffer cmd)> &&function);
 

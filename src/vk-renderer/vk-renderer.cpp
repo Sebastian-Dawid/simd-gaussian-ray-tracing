@@ -4,6 +4,20 @@
 #include <vk-renderer/VkBootstrap/VkBootstrap.h>
 #include <include/error_fmt.h>
 
+void deletion_queue_t::push_function(std::function<void()> &&function)
+{
+    this->deletors.push_back(function);
+}
+
+void deletion_queue_t::flush()
+{
+    for (auto it = deletors.rbegin(); it != deletors.rend(); ++it)
+    {
+        (*it)();
+    }
+    this->deletors.clear();
+}
+
 void transition_image(vk::CommandBuffer cmd, vk::Image image, vk::ImageLayout layout, vk::ImageLayout target)
 {
     vk::ImageMemoryBarrier2 image_barrier(vk::PipelineStageFlagBits2::eAllCommands,
@@ -281,6 +295,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         return false;
     }
     const vkb::Instance vkb_instance = instance_or_err.value();
+    this->deletion_queue.push_function([vkb_instance](){ vkb::destroy_instance(vkb_instance); });
     this->instance = vkb_instance.instance;
     this->messenger = vkb_instance.debug_messenger;
 
@@ -292,6 +307,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         return false;
     }
     this->window.surface = vk::SurfaceKHR(surface);
+    this->deletion_queue.push_function([this](){ this->instance.destroySurfaceKHR(this->window.surface); });
 
     vkb::PhysicalDeviceSelector selector{ vkb_instance };
     const vkb::Result<vkb::PhysicalDevice> physical_device_or_error = selector.set_surface(surface)
@@ -320,6 +336,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
     }
 
     vkb::Device vkb_device = device_or_error.value();
+    this->deletion_queue.push_function([vkb_device](){ vkb::destroy_device(vkb_device); });
     this->device.device = vk::Device(vkb_device.device);
 
     const vkb::Result<VkQueue> present_queue_or_error = vkb_device.get_queue(vkb::QueueType::present);
@@ -359,6 +376,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         .instance = this->instance
     };
     vmaCreateAllocator(&allocator_info, &this->allocator);
+    this->deletion_queue.push_function([this](){ vmaDestroyAllocator(this->allocator); });
 
     vkb::SwapchainBuilder swapchain_builder{ this->physical_device, this->device.device, this->window.surface };
     this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
@@ -374,6 +392,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         return false;
     }
     vkb::Swapchain vkb_swapchain = swapchain_or_error.value();
+    this->deletion_queue.push_function([vkb_swapchain](){ vkb::destroy_swapchain(vkb_swapchain); });
 
     this->swapchain.swapchain = vkb_swapchain.swapchain;
     this->swapchain.extent = vkb_swapchain.extent;
@@ -383,6 +402,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
     {
         this->swapchain.images.push_back(images[i]);
         this->swapchain.views.push_back(views[i]);
+        this->deletion_queue.push_function([this, views, i](){ this->device.device.destroyImageView(views[i]); });
     }
 
     const vk::CommandPoolCreateInfo pool_info(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, this->device.graphics.family_index);
@@ -400,6 +420,8 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
             fmt::print(stderr, "[ {} ]\tFailed to create command pool with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(result));
             return false;
         }
+        this->deletion_queue.push_function([this, i](){ this->device.device.destroyCommandPool(this->frames[i].pool); });
+
         vk::CommandBufferAllocateInfo allocate_info(this->frames[i].pool, vk::CommandBufferLevel::ePrimary, 1);
         std::tie(result, command_buffer) = this->device.device.allocateCommandBuffers(allocate_info);
         if (result != vk::Result::eSuccess)
@@ -415,6 +437,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
             fmt::print(stderr, "[ {} ]\tFailed to create render fence with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(result));
             return false;
         }
+        this->deletion_queue.push_function([this, i](){ this->device.device.destroyFence(this->frames[i].render_fence); });
 
         std::tie(result, this->frames[i].render_semaphore) = this->device.device.createSemaphore(semaphore_info);
         if (result != vk::Result::eSuccess)
@@ -422,6 +445,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
             fmt::print(stderr, "[ {} ]\tFailed to create render semaphore with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(result));
             return false;
         }
+        this->deletion_queue.push_function([this, i](){ this->device.device.destroySemaphore(this->frames[i].render_semaphore); });
 
         std::tie(result, this->frames[i].swapchain_semaphore) = this->device.device.createSemaphore(semaphore_info);
         if (result != vk::Result::eSuccess)
@@ -429,6 +453,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
             fmt::print(stderr, "[ {} ]\tFailed to create swapchain semaphore with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(result));
             return false;
         }
+        this->deletion_queue.push_function([this, i](){ this->device.device.destroySemaphore(this->frames[i].swapchain_semaphore); });
     }
 
     std::tie(result, this->immediate_sync.fence) = this->device.device.createFence(fence_info);
@@ -437,10 +462,12 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         fmt::print(stderr, "[ {} ]\tFailed to create fence with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(result));
         return false;
     }
+    this->deletion_queue.push_function([this](){ this->device.device.destroyFence(this->immediate_sync.fence); });
 
     auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
     if (staging_buffer.has_value())
     {
+        this->deletion_queue.push_function([this, staging_buffer](){ this->destroy_buffer(staging_buffer.value()); });
         this->staging_buffer.buffer = staging_buffer.value();
         this->staging_buffer.extent = vk::Extent3D(width, height, 1);
         u32 pixels[width * height];
@@ -462,6 +489,10 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
 
 renderer_t::~renderer_t()
 {
-    // TODO: CLEANUP
-    //       Maybe use a deletion queue to defer deconstruction immediately upon construction
+    vk::Result err;
+    if ((err = this->device.device.waitIdle()) != vk::Result::eSuccess) // wait for current command to finish
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to wait idle with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(err));
+    }
+    this->deletion_queue.flush();
 }
