@@ -100,7 +100,10 @@ struct renderer_t
         /// * `!= 0` Staging failed
         /// TODO: Add more meaningful error codes when implementing this function
         i32 stage_img(void *data, u32 width, u32 height);
+        bool init_imgui();
+        void draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_view);
         bool update();
+
 
         /// Initializes window and vulkan.
         /// # Parameters:

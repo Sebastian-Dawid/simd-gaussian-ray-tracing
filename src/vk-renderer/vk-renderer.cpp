@@ -4,6 +4,13 @@
 #include <vk-renderer/VkBootstrap/VkBootstrap.h>
 #include <include/error_fmt.h>
 
+#include <imgui.h>
+#include <backend/imgui_impl_glfw.h>
+#include <backend/imgui_impl_vulkan.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 void deletion_queue_t::push_function(std::function<void()> &&function)
 {
     this->deletors.push_back(function);
@@ -145,6 +152,69 @@ bool renderer_t::immediate_submit(std::function<void(vk::CommandBuffer cmd)> &&f
     return true;
 }
 
+bool renderer_t::init_imgui()
+{
+    vk::DescriptorPoolSize pool_sizes[] = {
+        { vk::DescriptorType::eSampler, 1000 },
+        { vk::DescriptorType::eCombinedImageSampler, 1000 },
+        { vk::DescriptorType::eSampledImage, 1000 },
+        { vk::DescriptorType::eStorageImage, 1000 },
+        { vk::DescriptorType::eUniformTexelBuffer, 1000 },
+        { vk::DescriptorType::eStorageTexelBuffer, 1000 },
+        { vk::DescriptorType::eUniformBuffer, 1000 },
+        { vk::DescriptorType::eStorageBuffer, 1000 },
+        { vk::DescriptorType::eUniformBufferDynamic, 1000 },
+        { vk::DescriptorType::eStorageBufferDynamic, 1000 },
+        { vk::DescriptorType::eInputAttachment, 1000 },
+    };
+
+    vk::DescriptorPoolCreateInfo pool_info(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1000, pool_sizes);
+    auto [result, imgui_pool] = this->device.device.createDescriptorPool(pool_info);
+    if (result != vk::Result::eSuccess)
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to create imgui descriptor pool!\n", ERROR_FMT("ERROR"));
+        return false;
+    }
+
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForVulkan(this->window.ptr, true);
+    ImGui_ImplVulkan_InitInfo init_info = {0};
+    init_info.Instance = this->instance;
+    init_info.PhysicalDevice = this->physical_device;
+    init_info.Device = this->device.device;
+    init_info.Queue = this->device.graphics.queue;
+    init_info.DescriptorPool = imgui_pool;
+    init_info.MinImageCount = 3;
+    init_info.ImageCount = 3;
+    init_info.UseDynamicRendering = true;
+    init_info.ColorAttachmentFormat = (VkFormat)this->swapchain.format;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+    ImGui_ImplVulkan_Init(&init_info, VK_NULL_HANDLE);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+    if (!this->immediate_submit([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(); })) return false;
+#pragma GCC diagnostic pop
+
+    ImGui_ImplVulkan_DestroyFontsTexture();
+
+    this->deletion_queue.push_function([=, this]() {
+            ImGui_ImplVulkan_Shutdown();
+            this->device.device.destroyDescriptorPool(imgui_pool);
+            });
+
+    return true;
+}
+
+void renderer_t::draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_view)
+{
+    vk::RenderingAttachmentInfo color_attachment(target_image_view, vk::ImageLayout::eGeneral);
+    vk::RenderingInfo render_info({}, { vk::Offset2D(0, 0), this->swapchain.extent }, 1, {}, color_attachment);
+    cmd.beginRendering(render_info);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+    cmd.endRendering();
+}
+
 bool renderer_t::update()
 {
     size_t current_frame = this->frame_count % FRAME_OVERLAP;
@@ -193,7 +263,19 @@ bool renderer_t::update()
     vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffer.extent);
     cmd.copyBufferToImage(this->staging_buffer.buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
 
-    transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
+    //transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
+
+    // TODO: add parameter for this
+    if (true)
+    {
+        transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+        this->draw_imgui(cmd, this->swapchain.views[swapchain_image_index]);
+        transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+    }
+    else
+    {
+        transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
+    }
 
     if ((result = cmd.end()) != vk::Result::eSuccess)
     {
@@ -464,6 +546,23 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
     }
     this->deletion_queue.push_function([this](){ this->device.device.destroyFence(this->immediate_sync.fence); });
 
+    std::tie(result, this->immediate_sync.pool) = this->device.device.createCommandPool(pool_info);
+    if (result != vk::Result::eSuccess)
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to create command pool!\n", ERROR_FMT("ERROR"));
+        return false;
+    }
+    vk::CommandBufferAllocateInfo cmd_alloc_info(this->immediate_sync.pool, vk::CommandBufferLevel::ePrimary, 1);
+    std::tie(result, command_buffer) = this->device.device.allocateCommandBuffers(cmd_alloc_info);
+    if (result != vk::Result::eSuccess)
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to create command buffer!\n", ERROR_FMT("ERROR"));
+        return false;
+    }
+    this->immediate_sync.cmd = command_buffer[0];
+
+    if (!this->init_imgui()) return false;
+
     auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
     if (staging_buffer.has_value())
     {
@@ -496,3 +595,5 @@ renderer_t::~renderer_t()
     }
     this->deletion_queue.flush();
 }
+
+#pragma GCC diagnostic pop

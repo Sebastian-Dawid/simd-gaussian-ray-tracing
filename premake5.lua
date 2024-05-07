@@ -30,7 +30,7 @@ workspace "ba-thesis"
         filter "files:src/vk-renderer/vk-mem-alloc/vk_mem_alloc.cpp"
             buildoptions { "-w" }
         filter {}
-        includedirs { "./src" }
+        includedirs { "./src", "./src/external/imgui/" }
         files { "./src/vk-renderer/**.cpp" }
 
     project "volumetric-ray-tracer"
@@ -39,6 +39,6 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-Werror" }
 
-        includedirs { "./src" }
+        includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/**.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui" }

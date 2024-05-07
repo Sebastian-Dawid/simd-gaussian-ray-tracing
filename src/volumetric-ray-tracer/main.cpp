@@ -1,3 +1,5 @@
+#include "external/imgui/backend/imgui_impl_glfw.h"
+#include "external/imgui/backend/imgui_impl_vulkan.h"
 #include <cmath>
 #include <cstdlib>
 #include <fmt/core.h>
@@ -27,9 +29,17 @@ struct vec4f_t
     {
         return vec4f_t{ .x = this->x * lambda, .y = this->y * lambda, .z = this->z * lambda, .w = this->w * lambda };
     }
+    vec4f_t operator/(const vec4f_t &other) const
+    {
+        return vec4f_t{ .x = this->x / other.x, .y = this->y / other.y, .z = this->z / other.z, .w = this->w / other.w };
+    }
     float dot(const vec4f_t &other) const
     {
         return this->x * other.x + this->y * other.y + this->z * other.z + this->w * other.w;
+    }
+    vec4f_t max(const vec4f_t &other) const
+    {
+        return vec4f_t{ .x = std::max(this->x, other.x), .y = std::max(this->y, other.y), .z = std::max(this->z, other.z), .w = std::max(this->w, other.w) };
     }
     void normalize()
     {
@@ -86,6 +96,8 @@ int main(i32 argc, char **argv)
         width = strtoul(argv[1], NULL, 10);
         height = strtoul(argv[2], NULL, 10);
     }
+    
+    const std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.5f, -.5f, 1.f }, .sigma = 0.24f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = 1.f, .magnitude = 1.f } };
 
     renderer_t renderer;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
@@ -94,6 +106,17 @@ int main(i32 argc, char **argv)
             {
                 glfwPollEvents();
                 if (glfwGetKey(renderer.window.ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(renderer.window.ptr, GLFW_TRUE);
+                
+                {
+                    ImGui_ImplVulkan_NewFrame();
+                    ImGui_ImplGlfw_NewFrame();
+                    ImGui::NewFrame();
+
+                    ImGui::ShowDemoWindow();
+
+                    ImGui::Render();
+                }
+                
                 if (!renderer.update())
                 {
                     return;
@@ -101,37 +124,45 @@ int main(i32 argc, char **argv)
             }
         });
 
+    vec4f_t *fimage = (vec4f_t*)std::malloc(sizeof(*fimage) * width * height);
     u32 image[width * height];
-    u32 write_image[width * height];
-    std::memcpy(image, renderer.staging_buffer.buffer.info.pMappedData, width * height * 4);
-    std::memcpy(write_image, renderer.staging_buffer.buffer.info.pMappedData, width * height * 4);
-    const std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.5f, -.5f, 1.f }, .sigma = 0.24f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .5f, .magnitude = 1.f } };
 
     const vec4f_t origin = { 0.f, 0.f, -5.f };
-    vec4f_t pt = { -1.f, -1.f, 0.f };
-    for (u64 y = 0; y < height; ++y)
+    while (1)
     {
-        for (u64 x = 0; x < width; ++x)
+        vec4f_t pt = { -1.f, -1.f, 0.f }, max = { .0f, 0.f, .0f };
+        for (u64 y = 0; y < height; ++y)
         {
-            vec4f_t dir = pt - origin;
-            dir.normalize();
-            vec4f_t color = l_hat(origin, dir, gaussians);
-            // BUG: This method of color conversion does not account for values outside of [0, 1]
-            u32 A = 0xFF000000; // final alpha channel is always 1
-            u32 R = (u32)(color.x * 255);
-            u32 G = (u32)(color.y * 255);
-            u32 B = (u32)(color.z * 255);
-            image[y * width + x] = A | R << 16 | G << 8 | B;
-            write_image[y * width + x] = A | B << 16 | G << 8 | R;
-            pt.x += 1/(width/2.f);
+            for (u64 x = 0; x < width; ++x)
+            {
+                vec4f_t dir = pt - origin;
+                dir.normalize();
+                vec4f_t color = l_hat(origin, dir, gaussians);
+                max = max.max(color);
+                fimage[y * width + x] = color;
+                pt.x += 1/(width/2.f);
+            }
+            pt.x = -1.f;
+            pt.y += 1/(height/2.f);
         }
-        pt.x = -1.f;
-        pt.y += 1/(height/2.f);
-    }
 
-    if (argc >= 4)
-        stbi_write_png(argv[3], width, height, 4, write_image, width * 4);
-    std::memcpy(renderer.staging_buffer.buffer.info.pMappedData, image, width * height * 4);
+        for (u64 y = 0; y < height; ++y)
+        {
+            for (u64 x = 0; x < width; ++x)
+            {
+                vec4f_t color = fimage[y * width + x] / max;
+                u32 A = 0xFF000000; // final alpha channel is always 1
+                u32 R = (u32)(color.x * 255);
+                u32 G = (u32)(color.y * 255);
+                u32 B = (u32)(color.z * 255);
+                image[y * width + x] = A | R << 16 | G << 8 | B;
+            }
+        }
+
+        if (argc >= 4)
+            stbi_write_png(argv[3], width, height, 4, image, width * 4);
+        std::memcpy(renderer.staging_buffer.buffer.info.pMappedData, image, width * height * 4);
+    }
 
     render_thread.join();
 
