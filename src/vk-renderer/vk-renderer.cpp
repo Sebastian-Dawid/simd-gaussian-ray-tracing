@@ -262,7 +262,6 @@ bool renderer_t::update()
 
     vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffer.extent);
     cmd.copyBufferToImage(this->staging_buffer.buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
-
     //transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     // TODO: add parameter for this

@@ -63,7 +63,30 @@ struct gaussian_t
     }
 };
 
-vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> gaussians)
+static float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
+{
+    float T = 0.f;
+    for (const gaussian_t &g_q : gaussians)
+    {
+        const float mu_bar = (g_q.mu - o).dot(n);
+        const float c_bar = g_q.magnitude * std::exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
+        T += ((g_q.sigma * c_bar)/(std::sqrt(2/M_PIf))) * (std::erf(-mu_bar/(std::sqrt(2) * g_q.sigma)) - std::erf((s - mu_bar)/(std::sqrt(2) * g_q.sigma)));
+    }
+    return std::exp(T);
+}
+
+static float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians)
+{
+    float T = 0.f;
+    for (float t = 0; t <= s; t += delta)
+    {
+        for (const gaussian_t &g : gaussians)
+            T += delta * g.pdf(o + n * t);
+    }
+    return std::exp(-T);
+}
+
+static vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> gaussians)
 {
     vec4f_t L_hat{ .x = 0.f, .y = 0.f, .z = 0.f };
     for (const gaussian_t &G_q : gaussians)
@@ -73,14 +96,7 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> ga
         for (i8 k = -4; k <= 0; ++k)
         {
             const float s = (G_q.mu - o).dot(n) + k * lambda_q;
-            float T = 0.f;
-            for (const gaussian_t &g_q : gaussians)
-            {
-                const float mu_bar = (g_q.mu - o).dot(n);
-                const float c_bar = g_q.magnitude * std::exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(g_q.sigma, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
-                T += ((g_q.sigma * c_bar)/(std::sqrt(2/M_PIf))) * (std::erf(-mu_bar/(std::sqrt(2) * g_q.sigma)) - std::erf((s - mu_bar)/(std::sqrt(2) * g_q.sigma)));
-            }
-            T = std::exp(T);
+            float T = transmittance(o, n, s, gaussians);
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);
@@ -97,10 +113,11 @@ int main(i32 argc, char **argv)
         height = strtoul(argv[2], NULL, 10);
     }
     
-    const std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.5f, -.5f, 1.f }, .sigma = 0.24f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = 1.f, .magnitude = 1.f } };
+    std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
 
     renderer_t renderer;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
+    bool running = true;
     std::thread render_thread([&](){
             while (!glfwWindowShouldClose(renderer.window.ptr))
             {
@@ -112,7 +129,9 @@ int main(i32 argc, char **argv)
                     ImGui_ImplGlfw_NewFrame();
                     ImGui::NewFrame();
 
-                    ImGui::ShowDemoWindow();
+                    ImGui::Begin("Gaussians");
+                    ImGui::InputFloat3("mu", &gaussians[2].mu.x);
+                    ImGui::End();
 
                     ImGui::Render();
                 }
@@ -122,45 +141,48 @@ int main(i32 argc, char **argv)
                     return;
                 }
             }
+            running = false;
         });
 
-    vec4f_t *fimage = (vec4f_t*)std::malloc(sizeof(*fimage) * width * height);
     u32 image[width * height];
 
     const vec4f_t origin = { 0.f, 0.f, -5.f };
-    while (1)
+    while (running)
     {
-        vec4f_t pt = { -1.f, -1.f, 0.f }, max = { .0f, 0.f, .0f };
+        vec4f_t pt = { -1.f, -1.f, 0.f };
         for (u64 y = 0; y < height; ++y)
         {
             for (u64 x = 0; x < width; ++x)
             {
                 vec4f_t dir = pt - origin;
                 dir.normalize();
+                if (x == width/2 && y == height/2)
+                {
+                    FILE *CSV = std::fopen("data.csv", "wd");
+                    fmt::println(CSV, "s1, T1, s2, T2");
+                    for (float k = -4.f; k <= 0; k += .5f)
+                    {
+                        float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
+                        fmt::print(CSV, "{}, {}, ", s, transmittance(origin, dir, s, gaussians));
+                        fmt::println(CSV, "{}, {}", s, transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians));
+                    }
+                    std::fclose(CSV);
+                }
                 vec4f_t color = l_hat(origin, dir, gaussians);
-                max = max.max(color);
-                fimage[y * width + x] = color;
+                u32 A = 0xFF000000; // final alpha channel is always 1
+                u32 R = (u32)(color.x * 255);
+                u32 G = (u32)(color.y * 255);
+                u32 B = (u32)(color.z * 255);
+                image[y * width + x] = A | R << 16 | G << 8 | B;
                 pt.x += 1/(width/2.f);
             }
             pt.x = -1.f;
             pt.y += 1/(height/2.f);
         }
 
-        for (u64 y = 0; y < height; ++y)
-        {
-            for (u64 x = 0; x < width; ++x)
-            {
-                vec4f_t color = fimage[y * width + x] / max;
-                u32 A = 0xFF000000; // final alpha channel is always 1
-                u32 R = (u32)(color.x * 255);
-                u32 G = (u32)(color.y * 255);
-                u32 B = (u32)(color.z * 255);
-                image[y * width + x] = A | R << 16 | G << 8 | B;
-            }
-        }
-
         if (argc >= 4)
             stbi_write_png(argv[3], width, height, 4, image, width * 4);
+        // TODO: sync with gpu copy
         std::memcpy(renderer.staging_buffer.buffer.info.pMappedData, image, width * height * 4);
     }
 
