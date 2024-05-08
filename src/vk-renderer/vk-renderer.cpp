@@ -152,6 +152,29 @@ bool renderer_t::immediate_submit(std::function<void(vk::CommandBuffer cmd)> &&f
     return true;
 }
 
+// BUG: Can cause the buffer to be "destroyed" while in use this could be mitigated using a fence but this function is not called from the render thread
+bool renderer_t::stage_image(const void *data, const u32 width, const u32 height, const u32 elem_size)
+{
+    this->buffer_count++;
+    u64 bidx = this->buffer_count % FRAME_OVERLAP;
+    std::lock_guard<std::mutex> guard(this->staging_buffers[bidx].mutex);
+    if (this->staging_buffers[bidx].extent.width != width || this->staging_buffers[bidx].extent.height != height)
+    {
+        auto staging_buffer = this->create_buffer(width * height * elem_size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        if (!staging_buffer.has_value())
+        {
+            fmt::print(stderr, "[ {} ]\tFailed to recreate staging buffer!\n", ERROR_FMT("ERROR"));
+            return false;
+        }
+        this->destroy_buffer(this->staging_buffers[bidx].buffer);
+        this->staging_buffers[bidx].buffer = staging_buffer.value();
+        this->staging_buffers[bidx].extent = vk::Extent3D(width, height, 1);
+
+    }
+    std::memcpy(this->staging_buffers[bidx].buffer.info.pMappedData, data, width * height * elem_size);
+    return true;
+}
+
 bool renderer_t::init_imgui()
 {
     vk::DescriptorPoolSize pool_sizes[] = {
@@ -218,6 +241,7 @@ void renderer_t::draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_vi
 bool renderer_t::update()
 {
     size_t current_frame = this->frame_count % FRAME_OVERLAP;
+    size_t current_buffer = this->buffer_count % FRAME_OVERLAP;
     vk::Result result = this->device.device.waitForFences(this->frames[current_frame].render_fence, true, 1000000000);
     if (result != vk::Result::eSuccess)
     {
@@ -260,8 +284,9 @@ bool renderer_t::update()
 
     transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
-    vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffer.extent);
-    cmd.copyBufferToImage(this->staging_buffer.buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
+    std::lock_guard<std::mutex> guard(this->staging_buffers[current_buffer].mutex);
+    vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffers[current_buffer].extent);
+    cmd.copyBufferToImage(this->staging_buffers[current_buffer].buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
     //transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     // TODO: add parameter for this
@@ -309,6 +334,73 @@ bool renderer_t::update()
     return true;
 }
 
+bool renderer_t::create_swapchain(u32 width, u32 height)
+{
+    vkb::SwapchainBuilder swapchain_builder{ this->physical_device, this->device.device, this->window.surface };
+    this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
+
+    const vkb::Result<vkb::Swapchain> swapchain_or_error = swapchain_builder.set_desired_format((VkSurfaceFormatKHR)vk::SurfaceFormatKHR(this->swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
+        .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+        .set_desired_extent(width, height)
+        .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+        .build();
+    if (!swapchain_or_error)
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to create swapchain with error: {}\n", ERROR_FMT("ERROR"), swapchain_or_error.error().message());
+        return false;
+    }
+    vkb::Swapchain vkb_swapchain = swapchain_or_error.value();
+
+    this->swapchain.swapchain = vkb_swapchain.swapchain;
+    this->swapchain.extent = vkb_swapchain.extent;
+    auto images = vkb_swapchain.get_images().value();
+    auto views = vkb_swapchain.get_image_views().value();
+    for (u32 i = 0; i < images.size(); ++i)
+    {
+        this->swapchain.images.push_back(images[i]);
+        this->swapchain.views.push_back(views[i]);
+    }
+    return true;
+}
+
+void renderer_t::destroy_swapchain()
+{
+    for (vk::ImageView view : this->swapchain.views)
+        this->device.device.destroyImageView(view);
+    this->device.device.destroySwapchainKHR(this->swapchain.swapchain);
+    this->swapchain.images.clear();
+    this->swapchain.views.clear();
+}
+
+bool renderer_t::resize_swapchain()
+{
+    vk::Result err;
+    if ((err = this->device.device.waitIdle()) != vk::Result::eSuccess)
+    {
+        fmt::print(stderr, "[ {} ]\tFailed to wait idle with error: {}\n", ERROR_FMT("ERROR"), vk::to_string(err));
+        return false;
+    }
+    this->destroy_swapchain();
+    i32 w, h;
+    glfwGetWindowSize(this->window.ptr, &w, &h);
+    this->window.width = w;
+    this->window.height = h;
+    if (!this->create_swapchain(w, h)) return false;
+    this->window.resize_requested = false;
+    return true;
+}
+
+static renderer_t *active_renderer = nullptr;
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void renderer_t::framebuffer_size_callback(GLFWwindow *window, i32 width, i32 height)
+{
+    active_renderer->resize_swapchain();
+}
+#pragma GCC diagnostic pop
+
 bool renderer_t::init(u32 width, u32 height, std::string name)
 {
     glfwInit();
@@ -320,7 +412,8 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
     }
     this->window.width = width;
     this->window.height = height;
-    glfwSetFramebufferSizeCallback(this->window.ptr, NULL);
+    active_renderer = this;
+    glfwSetFramebufferSizeCallback(this->window.ptr, renderer_t::framebuffer_size_callback);
 
 #ifdef DEBUG
     const auto debug_callback = [](VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -459,32 +552,8 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
     vmaCreateAllocator(&allocator_info, &this->allocator);
     this->deletion_queue.push_function([this](){ vmaDestroyAllocator(this->allocator); });
 
-    vkb::SwapchainBuilder swapchain_builder{ this->physical_device, this->device.device, this->window.surface };
-    this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
-
-    const vkb::Result<vkb::Swapchain> swapchain_or_error = swapchain_builder.set_desired_format((VkSurfaceFormatKHR)vk::SurfaceFormatKHR(this->swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
-        .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-        .set_desired_extent(width, height)
-        .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
-        .build();
-    if (!swapchain_or_error)
-    {
-        fmt::print(stderr, "[ {} ]\tFailed to create swapchain with error: {}\n", ERROR_FMT("ERROR"), swapchain_or_error.error().message());
-        return false;
-    }
-    vkb::Swapchain vkb_swapchain = swapchain_or_error.value();
-    this->deletion_queue.push_function([vkb_swapchain](){ vkb::destroy_swapchain(vkb_swapchain); });
-
-    this->swapchain.swapchain = vkb_swapchain.swapchain;
-    this->swapchain.extent = vkb_swapchain.extent;
-    auto images = vkb_swapchain.get_images().value();
-    auto views = vkb_swapchain.get_image_views().value();
-    for (u32 i = 0; i < images.size(); ++i)
-    {
-        this->swapchain.images.push_back(images[i]);
-        this->swapchain.views.push_back(views[i]);
-        this->deletion_queue.push_function([this, views, i](){ this->device.device.destroyImageView(views[i]); });
-    }
+    if (!this->create_swapchain(width, height)) return false;
+    this->deletion_queue.push_function([this](){ this->destroy_swapchain(); });
 
     const vk::CommandPoolCreateInfo pool_info(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, this->device.graphics.family_index);
     vk::Result result;
@@ -559,27 +628,33 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         return false;
     }
     this->immediate_sync.cmd = command_buffer[0];
+    this->deletion_queue.push_function([this](){
+                this->device.device.destroyCommandPool(this->immediate_sync.pool);
+            });
 
     if (!this->init_imgui()) return false;
 
-    auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
-    if (staging_buffer.has_value())
+    for (u64 i = 0; i < FRAME_OVERLAP; ++i)
     {
-        this->deletion_queue.push_function([this, staging_buffer](){ this->destroy_buffer(staging_buffer.value()); });
-        this->staging_buffer.buffer = staging_buffer.value();
-        this->staging_buffer.extent = vk::Extent3D(width, height, 1);
-        u32 pixels[width * height];
-        bool w = false, h = false;
-        for (size_t x = 0; x < width; ++x)
+        auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        if (staging_buffer.has_value())
         {
-            if (!(x % 16)) w = !w;
-            for (size_t y = 0; y < height; ++y)
+            this->staging_buffers[i].buffer = staging_buffer.value();
+            this->deletion_queue.push_function([this, i](){ this->destroy_buffer(this->staging_buffers[i].buffer); });
+            this->staging_buffers[i].extent = vk::Extent3D(width, height, 1);
+            u32 pixels[width * height];
+            bool w = false, h = false;
+            for (size_t x = 0; x < width; ++x)
             {
-                if (!(y % 16)) h = !h;
-                pixels[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
+                if (!(x % 16)) w = !w;
+                for (size_t y = 0; y < height; ++y)
+                {
+                    if (!(y % 16)) h = !h;
+                    pixels[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
+                }
             }
-        }
-        std::memcpy(this->staging_buffer.buffer.info.pMappedData, pixels, width * height * 4);
+            std::memcpy(this->staging_buffers[i].buffer.info.pMappedData, pixels, width * height * 4);
+    }
     }
 
     return true;

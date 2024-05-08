@@ -86,6 +86,9 @@ static float transmittance_step(const vec4f_t o, const vec4f_t n, const float s,
     return std::exp(-T);
 }
 
+static bool approx_transmittance = false;
+static bool new_approx_transmittance = approx_transmittance;
+
 static vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> gaussians)
 {
     vec4f_t L_hat{ .x = 0.f, .y = 0.f, .z = 0.f };
@@ -96,7 +99,11 @@ static vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussia
         for (i8 k = -4; k <= 0; ++k)
         {
             const float s = (G_q.mu - o).dot(n) + k * lambda_q;
-            float T = transmittance(o, n, s, gaussians);
+            float T;
+            if (approx_transmittance)
+                T = transmittance_step(o, n, s, lambda_q, gaussians);
+            else
+                T = transmittance(o, n, s, gaussians);
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);
@@ -112,6 +119,7 @@ int main(i32 argc, char **argv)
         width = strtoul(argv[1], NULL, 10);
         height = strtoul(argv[2], NULL, 10);
     }
+    u64 new_width = width, new_height = height;
     
     std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
 
@@ -131,6 +139,9 @@ int main(i32 argc, char **argv)
 
                     ImGui::Begin("Gaussians");
                     ImGui::InputFloat3("mu", &gaussians[2].mu.x);
+                    ImGui::InputInt("width", (int*)&new_width);
+                    ImGui::InputInt("height", (int*)&new_height);
+                    ImGui::Checkbox("approx", &new_approx_transmittance);
                     ImGui::End();
 
                     ImGui::Render();
@@ -144,11 +155,18 @@ int main(i32 argc, char **argv)
             running = false;
         });
 
-    u32 image[width * height];
+    u32 *image = (u32*)std::calloc(width * height, sizeof(u32));
 
     const vec4f_t origin = { 0.f, 0.f, -5.f };
     while (running)
     {
+        if (new_width != width || new_height != height)
+        {
+            width = new_width;
+            height = new_height;
+            image = (u32*)std::realloc(image, width * height * sizeof(u32));
+        }
+        approx_transmittance = new_approx_transmittance;
         vec4f_t pt = { -1.f, -1.f, 0.f };
         for (u64 y = 0; y < height; ++y)
         {
@@ -159,12 +177,11 @@ int main(i32 argc, char **argv)
                 if (x == width/2 && y == height/2)
                 {
                     FILE *CSV = std::fopen("data.csv", "wd");
-                    fmt::println(CSV, "s1, T1, s2, T2");
+                    fmt::println(CSV, "s, T1, T2");
                     for (float k = -4.f; k <= 0; k += .5f)
                     {
                         float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
-                        fmt::print(CSV, "{}, {}, ", s, transmittance(origin, dir, s, gaussians));
-                        fmt::println(CSV, "{}, {}", s, transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians));
+                        fmt::println(CSV, "{}, {}, {}", s, transmittance(origin, dir, s, gaussians), transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians));
                     }
                     std::fclose(CSV);
                 }
@@ -175,6 +192,7 @@ int main(i32 argc, char **argv)
                 u32 B = (u32)(color.z * 255);
                 image[y * width + x] = A | R << 16 | G << 8 | B;
                 pt.x += 1/(width/2.f);
+                if (!running) goto cleanup;
             }
             pt.x = -1.f;
             pt.y += 1/(height/2.f);
@@ -182,11 +200,12 @@ int main(i32 argc, char **argv)
 
         if (argc >= 4)
             stbi_write_png(argv[3], width, height, 4, image, width * 4);
-        // TODO: sync with gpu copy
-        std::memcpy(renderer.staging_buffer.buffer.info.pMappedData, image, width * height * 4);
+        renderer.stage_image(image, width, height);
     }
 
+cleanup:
     render_thread.join();
+    free(image);
 
     return EXIT_SUCCESS;
 }

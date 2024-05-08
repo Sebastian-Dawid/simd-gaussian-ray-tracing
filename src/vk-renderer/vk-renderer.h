@@ -3,6 +3,7 @@
 #include <functional>
 #include "vk-mem-alloc/vk_mem_alloc.h"
 #include <include/definitions.h>
+#include <mutex>
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 
@@ -59,6 +60,7 @@ struct renderer_t
             vk::CommandPool pool;
         } immediate_sync;
         u64 frame_count = 0;
+        u64 buffer_count = 0;
 
         struct allocated_buffer_t
         {
@@ -80,11 +82,13 @@ struct renderer_t
         std::optional<allocated_image_t> upload_image(const void *data, const vk::Extent3D extent, const vk::Format format, const vk::ImageUsageFlags usage);
         void destroy_image(const allocated_image_t &image);
         
+        // TODO:: Perhaps I need a staging buffer per frame in flight...
         struct
         {
             vk::Extent3D extent;
             allocated_buffer_t buffer;
-        } staging_buffer;
+            std::mutex mutex;
+        } staging_buffers[FRAME_OVERLAP];
 
         deletion_queue_t deletion_queue;
 
@@ -95,15 +99,20 @@ struct renderer_t
         /// * `void *data` image data to upload
         /// * `u32 height` height of the image
         /// * `u32 width` width of the image
+        /// * `u32 elem_size` size of a single pixel in bytes
         /// # Returns
-        /// * `0` Staging successful
-        /// * `!= 0` Staging failed
-        /// TODO: Add more meaningful error codes when implementing this function
-        i32 stage_img(void *data, u32 width, u32 height);
+        /// * `true` Staging successful
+        /// * `false` failed to recreate buffer
+        bool stage_image(const void *data, const u32 width, const u32 height, const u32 elem_size = 4);
         bool init_imgui();
         void draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_view);
         bool update();
 
+        bool create_swapchain(u32 width, u32 height);
+        void destroy_swapchain();
+        bool resize_swapchain();
+
+        static void framebuffer_size_callback(GLFWwindow *window, i32 width, i32 height);
 
         /// Initializes window and vulkan.
         /// # Parameters:
