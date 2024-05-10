@@ -27,6 +27,7 @@
                 vulkan-validation-layers
                 vulkan-extension-layer
                 vulkan-loader
+                julia
             ];
 
             shellHook = ''

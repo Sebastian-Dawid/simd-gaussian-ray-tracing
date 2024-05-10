@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 #include <thread>
 #include <vk-renderer/vk-renderer.h>
+#include <include/error_fmt.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -86,6 +87,16 @@ static float transmittance_step(const vec4f_t o, const vec4f_t n, const float s,
     return std::exp(-T);
 }
 
+static float density(const vec4f_t pt, const std::vector<gaussian_t> gaussians)
+{
+    float D = 0.f;
+    for (const gaussian_t &g : gaussians)
+    {
+        D += g.pdf(pt);
+    }
+    return D;
+}
+
 static bool approx_transmittance = false;
 static bool new_approx_transmittance = approx_transmittance;
 
@@ -121,12 +132,13 @@ int main(i32 argc, char **argv)
     }
     u64 new_width = width, new_height = height;
     
-    std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 5.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = 2.f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+    std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
 
     renderer_t renderer;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     bool running = true;
     std::thread render_thread([&](){
+            // TODO: Refactor into run function of renderer + some system to add ImGui attributes
             while (!glfwWindowShouldClose(renderer.window.ptr))
             {
                 glfwPollEvents();
@@ -158,6 +170,31 @@ int main(i32 argc, char **argv)
     u32 *image = (u32*)std::calloc(width * height, sizeof(u32));
 
     const vec4f_t origin = { 0.f, 0.f, -5.f };
+    
+    if (fork() == 0)
+    {
+        vec4f_t dir = {0.f, 0.f, 1.f};        
+        FILE *CSV = std::fopen("data.csv", "wd");
+        fmt::println(CSV, "s, T, T_s, err, D");
+        for (float k = -6.f; k <= 6; k += .1f)
+        {
+            float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
+            float T = transmittance(origin, dir, s, gaussians);
+            float T_s = transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians);
+            float err = std::abs(T - T_s);
+            float D = density(origin + dir * s, gaussians);
+            fmt::println(CSV, "{}, {}, {}, {}, {}", s, T, T_s, err, D);
+        }
+        std::fclose(CSV);
+        char *args[] = { (char*)"julia", (char*)"--project=./julia", (char*)"./julia/transmittance.jl", NULL };
+        int err;
+        if ((err = execvp("julia", args)) == -1)
+        {
+            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+            exit(-1);
+        }
+    }
+
     while (running)
     {
         if (new_width != width || new_height != height)
@@ -174,17 +211,6 @@ int main(i32 argc, char **argv)
             {
                 vec4f_t dir = pt - origin;
                 dir.normalize();
-                if (x == width/2 && y == height/2)
-                {
-                    FILE *CSV = std::fopen("data.csv", "wd");
-                    fmt::println(CSV, "s, T1, T2");
-                    for (float k = -4.f; k <= 0; k += .5f)
-                    {
-                        float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
-                        fmt::println(CSV, "{}, {}, {}", s, transmittance(origin, dir, s, gaussians), transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians));
-                    }
-                    std::fclose(CSV);
-                }
                 vec4f_t color = l_hat(origin, dir, gaussians);
                 u32 A = 0xFF000000; // final alpha channel is always 1
                 u32 R = (u32)(color.x * 255);
