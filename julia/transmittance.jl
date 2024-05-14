@@ -2,7 +2,7 @@ using Plots, CSV, DataFrames, LaTeXStrings
 
 function load_data()
     data_path = "./"*dirname(relpath(@__FILE__))*"/"
-    data = CSV.File(data_path*"../data.csv") |> DataFrame
+    data = CSV.File(data_path*"../csv/data.csv") |> DataFrame
     s = Vector(data[:, 1])
     T = Vector(data[:, 2])
     T_s = Vector(data[:, 3])

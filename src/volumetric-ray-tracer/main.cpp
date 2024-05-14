@@ -4,6 +4,7 @@
 #include <thread>
 #include <vk-renderer/vk-renderer.h>
 #include <include/error_fmt.h>
+#include <sys/wait.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -93,14 +94,37 @@ int main(i32 argc, char **argv)
     }
     u64 new_width = width, new_height = height;
     
-    std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+    std::vector<char*> args(argc);
+    std::memcpy(args.data(), argv, sizeof(*argv) * argc);
+    bool grid = false;
+    for (char *s : args)
+        if (std::strncmp(s, "--grid", 7) == 0) grid = true;
+
+    std::vector<gaussian_t> gaussians;
+    if (grid)
+    {
+        for (u8 i = 0; i < 4; ++i)
+            for (u8 j = 0; j < 4; ++j)
+                gaussians.push_back(gaussian_t{
+                        .albedo{ 1.f, 0.f, 0.f, 1.f },
+                        .mu{ -1.f + i * 1.f/2.f, -1.f + j * 1.f/2.f, 0.f },
+                        .sigma = 1.f/8.f,
+                        .magnitude = 1.f
+                        });
+    }
+    else
+    {
+        gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+    }
     std::vector<gaussian_t> staging_gaussians = gaussians;
     const vec4f_t origin = { 0.f, 0.f, -5.f };
     
-    if (fork() == 0)
+    pid_t cpid[2];
+    if ((cpid[0] = fork()) == 0)
     {
         vec4f_t dir = {0.f, 0.f, 1.f};        
-        FILE *CSV = std::fopen("data.csv", "wd");
+        FILE *CSV = std::fopen("csv/data.csv", "wd");
+        if (!CSV) exit(EXIT_FAILURE);
         fmt::println(CSV, "s, T, T_s, err, D");
         for (float k = -6.f; k <= 6; k += .1f)
         {
@@ -113,12 +137,39 @@ int main(i32 argc, char **argv)
         }
         std::fclose(CSV);
         char *args[] = { (char*)"julia", (char*)"--project=./julia", (char*)"./julia/transmittance.jl", NULL };
-        int err;
-        if ((err = execvp("julia", args)) == -1)
+        execvp("julia", args);
+        fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if ((cpid[1] = fork()) == 0)
+    {
+        FILE *CSV = std::fopen("csv/timing.csv", "wd");
+        if (!CSV) exit(EXIT_FAILURE);
+        fmt::println(CSV, "count, time");
+        std::vector<gaussian_t> growing;
+        for (u8 i = 0; i < 32; ++i)
         {
-            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
-            exit(-1);
+            for (u8 j = 0; j < 32; ++j)
+            {
+                growing.push_back(gaussian_t{
+                        .albedo{ 1.f, 0.f, 0.f, 1.f },
+                        .mu{ -1.f + i * 1.f/16.f, -1.f + j * 1.f/16.f, 0.f },
+                        .sigma = 1.f/16.f,
+                        .magnitude = 1.f
+                        });
+                auto start_time = std::chrono::high_resolution_clock::now();
+                l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                auto end_time = std::chrono::high_resolution_clock::now();
+                float t = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+                fmt::println(CSV, "{}, {}", i * 32 + j + 1, t);
+            }
         }
+        std::fclose(CSV);
+        char *args[] = { (char*)"julia", (char*)"--project=./julia", (char*)"./julia/timing.jl", NULL };
+        execvp("julia", args);
+        fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
     renderer_t renderer;
