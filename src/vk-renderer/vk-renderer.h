@@ -70,6 +70,7 @@ struct renderer_t
         };
         std::optional<allocated_buffer_t> create_buffer(const size_t allocation_size, const vk::BufferUsageFlags usage, const VmaMemoryUsage memory_usage);
         void destroy_buffer(const allocated_buffer_t &buffer);
+
         struct allocated_image_t
         {
             vk::Image image;
@@ -82,16 +83,17 @@ struct renderer_t
         std::optional<allocated_image_t> upload_image(const void *data, const vk::Extent3D extent, const vk::Format format, const vk::ImageUsageFlags usage);
         void destroy_image(const allocated_image_t &image);
         
-        // TODO:: Perhaps I need a staging buffer per frame in flight...
         struct
         {
             vk::Extent3D extent;
             allocated_buffer_t buffer;
             std::mutex mutex;
-        } staging_buffers[FRAME_OVERLAP];
+        } staging_buffers;
 
         deletion_queue_t deletion_queue;
 
+        /// Performs an immediate submit of the commands recorded in the given function.
+        /// Uses the immediate sync command buffer
         bool immediate_submit(std::function<void(vk::CommandBuffer cmd)> &&function);
 
         /// Stages image to be uploaded to the instances present buffer.
@@ -104,14 +106,25 @@ struct renderer_t
         /// * `true` Staging successful
         /// * `false` failed to recreate buffer
         bool stage_image(const void *data, const u32 width, const u32 height, const u32 elem_size = 4);
+        /// Initialize structures necessary for ImGui (descriptors, command pool, etc.)
         bool init_imgui();
+        /// Draws ImGui Windows to the given image view
         void draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_view);
+        /// User defined Windows to draw
+        std::function<void()> custom_imgui = [](){};
+        /// Renders and presents a new frame. Deals with associated sync structures.
         bool update();
+        /// Main loop (IO, etc)
+        void run(bool &running);
 
+        /// Creates new swapchain (init and resize)
         bool create_swapchain(u32 width, u32 height);
+        /// Destroys the current swapchain
         void destroy_swapchain();
+        /// Destroys then creates new swapchain with updated size
         bool resize_swapchain();
 
+        /// Callback to deal with resizing the window at runtime
         static void framebuffer_size_callback(GLFWwindow *window, i32 width, i32 height);
 
         /// Initializes window and vulkan.

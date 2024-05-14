@@ -8,7 +8,6 @@
 #include <backend/imgui_impl_glfw.h>
 #include <backend/imgui_impl_vulkan.h>
 
-#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 void deletion_queue_t::push_function(std::function<void()> &&function)
@@ -155,10 +154,8 @@ bool renderer_t::immediate_submit(std::function<void(vk::CommandBuffer cmd)> &&f
 // BUG: Can cause the buffer to be "destroyed" while in use this could be mitigated using a fence but this function is not called from the render thread
 bool renderer_t::stage_image(const void *data, const u32 width, const u32 height, const u32 elem_size)
 {
-    this->buffer_count++;
-    u64 bidx = this->buffer_count % FRAME_OVERLAP;
-    std::lock_guard<std::mutex> guard(this->staging_buffers[bidx].mutex);
-    if (this->staging_buffers[bidx].extent.width != width || this->staging_buffers[bidx].extent.height != height)
+    std::lock_guard<std::mutex> guard(this->staging_buffers.mutex);
+    if (this->staging_buffers.extent.width != width || this->staging_buffers.extent.height != height)
     {
         auto staging_buffer = this->create_buffer(width * height * elem_size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         if (!staging_buffer.has_value())
@@ -166,12 +163,12 @@ bool renderer_t::stage_image(const void *data, const u32 width, const u32 height
             fmt::print(stderr, "[ {} ]\tFailed to recreate staging buffer!\n", ERROR_FMT("ERROR"));
             return false;
         }
-        this->destroy_buffer(this->staging_buffers[bidx].buffer);
-        this->staging_buffers[bidx].buffer = staging_buffer.value();
-        this->staging_buffers[bidx].extent = vk::Extent3D(width, height, 1);
+        this->destroy_buffer(this->staging_buffers.buffer);
+        this->staging_buffers.buffer = staging_buffer.value();
+        this->staging_buffers.extent = vk::Extent3D(width, height, 1);
 
     }
-    std::memcpy(this->staging_buffers[bidx].buffer.info.pMappedData, data, width * height * elem_size);
+    std::memcpy(this->staging_buffers.buffer.info.pMappedData, data, width * height * elem_size);
     return true;
 }
 
@@ -241,7 +238,6 @@ void renderer_t::draw_imgui(vk::CommandBuffer cmd, vk::ImageView target_image_vi
 bool renderer_t::update()
 {
     size_t current_frame = this->frame_count % FRAME_OVERLAP;
-    size_t current_buffer = this->buffer_count % FRAME_OVERLAP;
     vk::Result result = this->device.device.waitForFences(this->frames[current_frame].render_fence, true, 1000000000);
     if (result != vk::Result::eSuccess)
     {
@@ -284,9 +280,12 @@ bool renderer_t::update()
 
     transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
-    std::lock_guard<std::mutex> guard(this->staging_buffers[current_buffer].mutex);
-    vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffers[current_buffer].extent);
-    cmd.copyBufferToImage(this->staging_buffers[current_buffer].buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
+    const vk::ClearColorValue color(std::array<float, 4>{0.f, 0.f, 0.f, 1.f});
+    cmd.clearColorImage(this->swapchain.images[swapchain_image_index], vk::ImageLayout::eGeneral, color, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+
+    std::lock_guard<std::mutex> guard(this->staging_buffers.mutex);
+    vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffers.extent);
+    cmd.copyBufferToImage(this->staging_buffers.buffer.buffer, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, copy_region);
     //transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR);
 
     // TODO: add parameter for this
@@ -332,6 +331,32 @@ bool renderer_t::update()
 
     this->frame_count++;
     return true;
+}
+
+void renderer_t::run(bool &running)
+{
+    while (!glfwWindowShouldClose(this->window.ptr))
+    {
+        glfwPollEvents();
+        if (glfwGetKey(this->window.ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(this->window.ptr, GLFW_TRUE);
+
+        {
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            /// TODO: Record and display Rendering Stats when enabled
+            this->custom_imgui();
+
+            ImGui::Render();
+        }
+
+        if (!this->update())
+        {
+            return;
+        }
+    }
+    running = false;
 }
 
 bool renderer_t::create_swapchain(u32 width, u32 height)
@@ -634,27 +659,24 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
 
     if (!this->init_imgui()) return false;
 
-    for (u64 i = 0; i < FRAME_OVERLAP; ++i)
+    auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+    if (staging_buffer.has_value())
     {
-        auto staging_buffer = this->create_buffer(width * height * 4, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
-        if (staging_buffer.has_value())
+        this->staging_buffers.buffer = staging_buffer.value();
+        this->deletion_queue.push_function([this](){ this->destroy_buffer(this->staging_buffers.buffer); });
+        this->staging_buffers.extent = vk::Extent3D(width, height, 1);
+        u32 pixels[width * height];
+        bool w = false, h = false;
+        for (size_t x = 0; x < width; ++x)
         {
-            this->staging_buffers[i].buffer = staging_buffer.value();
-            this->deletion_queue.push_function([this, i](){ this->destroy_buffer(this->staging_buffers[i].buffer); });
-            this->staging_buffers[i].extent = vk::Extent3D(width, height, 1);
-            u32 pixels[width * height];
-            bool w = false, h = false;
-            for (size_t x = 0; x < width; ++x)
+            if (!(x % 16)) w = !w;
+            for (size_t y = 0; y < height; ++y)
             {
-                if (!(x % 16)) w = !w;
-                for (size_t y = 0; y < height; ++y)
-                {
-                    if (!(y % 16)) h = !h;
-                    pixels[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
-                }
+                if (!(y % 16)) h = !h;
+                pixels[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
             }
-            std::memcpy(this->staging_buffers[i].buffer.info.pMappedData, pixels, width * height * 4);
-    }
+        }
+        std::memcpy(this->staging_buffers.buffer.info.pMappedData, pixels, width * height * 4);
     }
 
     return true;
@@ -669,5 +691,3 @@ renderer_t::~renderer_t()
     }
     this->deletion_queue.flush();
 }
-
-#pragma GCC diagnostic pop

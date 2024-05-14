@@ -1,5 +1,3 @@
-#include "external/imgui/backend/imgui_impl_glfw.h"
-#include "external/imgui/backend/imgui_impl_vulkan.h"
 #include <cmath>
 #include <cstdlib>
 #include <fmt/core.h>
@@ -15,54 +13,7 @@
 
 #pragma GCC diagnostic pop
 
-struct vec4f_t
-{
-    float x, y, z, w = 0.f;
-    vec4f_t operator+(const vec4f_t &other) const
-    {
-        return vec4f_t{ .x = this->x + other.x, .y = this->y + other.y, .z = this->z + other.z, .w = this->w + other.w };
-    }
-    vec4f_t operator-(const vec4f_t &other) const
-    {
-        return vec4f_t{ .x = this->x - other.x, .y = this->y - other.y, .z = this->z - other.z, .w = this->w - other.w };
-    }
-    vec4f_t operator*(const float &lambda) const
-    {
-        return vec4f_t{ .x = this->x * lambda, .y = this->y * lambda, .z = this->z * lambda, .w = this->w * lambda };
-    }
-    vec4f_t operator/(const vec4f_t &other) const
-    {
-        return vec4f_t{ .x = this->x / other.x, .y = this->y / other.y, .z = this->z / other.z, .w = this->w / other.w };
-    }
-    float dot(const vec4f_t &other) const
-    {
-        return this->x * other.x + this->y * other.y + this->z * other.z + this->w * other.w;
-    }
-    vec4f_t max(const vec4f_t &other) const
-    {
-        return vec4f_t{ .x = std::max(this->x, other.x), .y = std::max(this->y, other.y), .z = std::max(this->z, other.z), .w = std::max(this->w, other.w) };
-    }
-    void normalize()
-    {
-        float norm = std::sqrt(this->dot(*this));
-        this->x /= norm;
-        this->y /= norm;
-        this->z /= norm;
-        this->w /= norm;
-    }
-};
-
-struct gaussian_t
-{
-    vec4f_t albedo;
-    vec4f_t mu;
-    float sigma;
-    float magnitude;
-    float pdf(vec4f_t x) const
-    {
-        return this->magnitude * std::exp(-((x - this->mu).dot(x - this->mu))/(2 * std::pow(this->sigma, 2.f)));
-    }
-};
+#include "types.h"
 
 static float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
 {
@@ -128,47 +79,22 @@ int main(i32 argc, char **argv)
     if (argc >= 3)
     {
         width = strtoul(argv[1], NULL, 10);
+        if (width == 0)
+        {
+            fmt::println(stderr, "[ {} ]\tInvaid width set! Setting widht to 256.", ERROR_FMT("ERROR"));
+            width = 256;
+        }
         height = strtoul(argv[2], NULL, 10);
+        if (height == 0)
+        {
+            fmt::println(stderr, "[ {} ]\tInvaid height set! Setting height to 256.", ERROR_FMT("ERROR"), strerror(errno));
+            height = 256;
+        }
     }
     u64 new_width = width, new_height = height;
     
     std::vector<gaussian_t> gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
-
-    renderer_t renderer;
-    if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
-    bool running = true;
-    std::thread render_thread([&](){
-            // TODO: Refactor into run function of renderer + some system to add ImGui attributes
-            while (!glfwWindowShouldClose(renderer.window.ptr))
-            {
-                glfwPollEvents();
-                if (glfwGetKey(renderer.window.ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(renderer.window.ptr, GLFW_TRUE);
-                
-                {
-                    ImGui_ImplVulkan_NewFrame();
-                    ImGui_ImplGlfw_NewFrame();
-                    ImGui::NewFrame();
-
-                    ImGui::Begin("Gaussians");
-                    ImGui::InputFloat3("mu", &gaussians[2].mu.x);
-                    ImGui::InputInt("width", (int*)&new_width);
-                    ImGui::InputInt("height", (int*)&new_height);
-                    ImGui::Checkbox("approx", &new_approx_transmittance);
-                    ImGui::End();
-
-                    ImGui::Render();
-                }
-                
-                if (!renderer.update())
-                {
-                    return;
-                }
-            }
-            running = false;
-        });
-
-    u32 *image = (u32*)std::calloc(width * height, sizeof(u32));
-
+    std::vector<gaussian_t> staging_gaussians = gaussians;
     const vec4f_t origin = { 0.f, 0.f, -5.f };
     
     if (fork() == 0)
@@ -195,6 +121,23 @@ int main(i32 argc, char **argv)
         }
     }
 
+    renderer_t renderer;
+    float draw_time = 0.f;
+    if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
+    renderer.custom_imgui = [&](){
+        ImGui::Begin("Gaussians");
+        for (gaussian_t &g : staging_gaussians) g.imgui_controls();
+        ImGui::End();
+        ImGui::Begin("Debug");
+        ImGui::Text("Draw Time: %f ms", draw_time);
+        ImGui::Checkbox("approx", &new_approx_transmittance);
+        ImGui::End();
+    };
+    bool running = true;
+    std::thread render_thread([&](){ renderer.run(running); });
+
+    u32 *image = (u32*)std::calloc(width * height, sizeof(u32));
+
     while (running)
     {
         if (new_width != width || new_height != height)
@@ -203,7 +146,10 @@ int main(i32 argc, char **argv)
             height = new_height;
             image = (u32*)std::realloc(image, width * height * sizeof(u32));
         }
+        gaussians = staging_gaussians;
         approx_transmittance = new_approx_transmittance;
+        
+        auto start_time = std::chrono::system_clock::now();
         vec4f_t pt = { -1.f, -1.f, 0.f };
         for (u64 y = 0; y < height; ++y)
         {
@@ -223,6 +169,9 @@ int main(i32 argc, char **argv)
             pt.x = -1.f;
             pt.y += 1/(height/2.f);
         }
+
+        auto end_time = std::chrono::system_clock::now();
+        draw_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
         if (argc >= 4)
             stbi_write_png(argv[3], width, height, 4, image, width * 4);
