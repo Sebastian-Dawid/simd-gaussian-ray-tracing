@@ -16,6 +16,30 @@
 
 #include "types.h"
 
+/// generated using spline interpolation from -4 to 4 in steps of .7
+static float spline_erf(float x)
+{
+    if (x <= -3.3f) return -1.f;
+    else if (-3.3f <= x && x <= -2.6f) { return -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
+    else if (-2.6f <= x && x <= -1.9f) { return 0.0012324096f * (x - -2.6f) * (x - -2.6f) * (x - -2.6f) + 0.0023520004f * (x - -2.6f) * (x - -2.6f) + 0.0013753435f * (x - -2.6f) + -0.99976397f; }
+    else if (-1.9f <= x && x <= -1.2f) { return 0.014164185f * (x - -1.9f) * (x - -1.9f) * (x - -1.9f) + 0.032096792f * (x - -1.9f) * (x - -1.9f) + 0.025489498f * (x - -1.9f) + -0.9927904f; }
+    else if (-1.2f <= x && x <= -0.5f) { return 0.14258419f * (x - -1.2f) * (x - -1.2f) * (x - -1.2f) + 0.33152357f * (x - -1.2f) * (x - -1.2f) + 0.28002375f * (x - -1.2f) + -0.91031396f; }
+    else if (-0.5f <= x && x <= 0.2f) { return 0.09140208f * (x - -0.5f) * (x - -0.5f) * (x - -0.5f) + 0.52346796f * (x - -0.5f) * (x - -0.5f) + 0.87851787f * (x - -0.5f) + -0.5204999f; }
+    else if (0.2f <= x && x <= 0.9f) { return -0.37393388f * (x - 0.2f) * (x - 0.2f) * (x - 0.2f) + -0.2617932f * (x - 0.2f) * (x - 0.2f) + 1.0616902f * (x - 0.2f) + 0.2227026f; }
+    else if (0.9f <= x && x <= 1.6f) { return -0.11865551f * (x - 0.9f) * (x - 0.9f) * (x - 0.9f) + -0.51096976f * (x - 0.9f) * (x - 0.9f) + 0.5207561f * (x - 0.9f) + 0.7969082f; }
+    else if (1.6f <= x && x <= 2.3f) { return 0.19033842f * (x - 1.6f) * (x - 1.6f) * (x - 1.6f) + -0.11125909f * (x - 1.6f) * (x - 1.6f) + 0.085195914f * (x - 1.6f) + 0.9763484f; }
+    else if (2.3f <= x && x <= 3.0f) { return 0.05069461f * (x - 2.3f) * (x - 2.3f) * (x - 2.3f) + -0.004800401f * (x - 2.3f) * (x - 2.3f) + 0.0039542736f * (x - 2.3f) + 0.99885684f; }
+    else if (3.0f <= x && x <= 3.7f) { return 0.0020562427f * (x - 3.0f) * (x - 3.0f) * (x - 3.0f) + -0.00048229168f * (x - 3.0f) * (x - 3.0f) + 0.0002563885f * (x - 3.0f) + 0.9999779f; }
+    return 1.f;
+}
+
+float taylor_erf(float x)
+{
+    return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
+}
+
+static float (*_erf)(float) = std::erf;
+
 static float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
 {
     float T = 0.f;
@@ -23,7 +47,7 @@ static float transmittance(const vec4f_t o, const vec4f_t n, const float s, cons
     {
         const float mu_bar = (g_q.mu - o).dot(n);
         const float c_bar = g_q.magnitude * std::exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
-        T += ((g_q.sigma * c_bar)/(std::sqrt(2/M_PIf))) * (std::erf(-mu_bar/(std::sqrt(2) * g_q.sigma)) - std::erf((s - mu_bar)/(std::sqrt(2) * g_q.sigma)));
+        T += ((g_q.sigma * c_bar)/(std::sqrt(2/M_PIf))) * (_erf(-mu_bar/(std::sqrt(2) * g_q.sigma)) - _erf((s - mu_bar)/(std::sqrt(2) * g_q.sigma)));
     }
     return std::exp(T);
 }
@@ -172,8 +196,22 @@ int main(i32 argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    if (fork() == 0)
+    {
+        FILE *CSV = std::fopen("csv/erf.csv", "wd");
+        if (!CSV) exit(EXIT_FAILURE);
+        fmt::println(CSV, "x, spline, taylor, erf");
+        for (float x = -6.f; x <= 6.f; x+=0.5f)
+        {
+            fmt::println(CSV, "{}, {}, {}, {}", x, spline_erf(x), taylor_erf(x), std::erf(x));
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     renderer_t renderer;
     float draw_time = 0.f;
+    bool use_spline_approx = false;
+    bool use_taylor_approx = false;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Gaussians");
@@ -181,6 +219,8 @@ int main(i32 argc, char **argv)
         ImGui::End();
         ImGui::Begin("Debug");
         ImGui::Text("Draw Time: %f ms", draw_time);
+        ImGui::Checkbox("spline", &use_spline_approx);
+        ImGui::Checkbox("taylor", &use_taylor_approx);
         ImGui::Checkbox("approx", &new_approx_transmittance);
         ImGui::End();
     };
@@ -199,7 +239,10 @@ int main(i32 argc, char **argv)
         }
         gaussians = staging_gaussians;
         approx_transmittance = new_approx_transmittance;
-        
+        if (use_spline_approx) _erf = spline_erf;
+        else if (use_taylor_approx) _erf = taylor_erf;
+        else _erf = std::erf;
+
         auto start_time = std::chrono::system_clock::now();
         vec4f_t pt = { -1.f, -1.f, 0.f };
         for (u64 y = 0; y < height; ++y)
