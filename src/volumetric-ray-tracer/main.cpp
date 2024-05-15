@@ -33,8 +33,24 @@ static float spline_erf(float x)
     return 1.f;
 }
 
-float taylor_erf(float x)
+/// use half of the spline approximation and mirror it w.r.t. the origin
+static float spline_erf_mirror(float x)
 {
+    float sign = x < 0 ? 1.f : -1.f;
+    float value = -1.f;
+    x = x > 0 ? -x : x; // take the negative absolute value
+    if (-3.3f <= x && x <= -2.6f) { value = -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
+    else if (-2.6f <= x && x <= -1.9f) { value = 0.0012324096f * (x - -2.6f) * (x - -2.6f) * (x - -2.6f) + 0.0023520004f * (x - -2.6f) * (x - -2.6f) + 0.0013753435f * (x - -2.6f) + -0.99976397f; }
+    else if (-1.9f <= x && x <= -1.2f) { value = 0.014164185f * (x - -1.9f) * (x - -1.9f) * (x - -1.9f) + 0.032096792f * (x - -1.9f) * (x - -1.9f) + 0.025489498f * (x - -1.9f) + -0.9927904f; }
+    else if (-1.2f <= x && x <= -0.5f) { value = 0.14258419f * (x - -1.2f) * (x - -1.2f) * (x - -1.2f) + 0.33152357f * (x - -1.2f) * (x - -1.2f) + 0.28002375f * (x - -1.2f) + -0.91031396f; }
+    else if (-0.5f <= x && x <= 0.f) { value = 0.09140208f * (x - -0.5f) * (x - -0.5f) * (x - -0.5f) + 0.52346796f * (x - -0.5f) * (x - -0.5f) + 0.87851787f * (x - -0.5f) + -0.5204999f; }
+    return value * sign;
+}
+
+static float taylor_erf(float x)
+{
+    if (x <= -2.f) return -1.f;
+    if (x >= 2.f) return 1.f;
     return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
 }
 
@@ -200,10 +216,10 @@ int main(i32 argc, char **argv)
     {
         FILE *CSV = std::fopen("csv/erf.csv", "wd");
         if (!CSV) exit(EXIT_FAILURE);
-        fmt::println(CSV, "x, spline, taylor, erf");
+        fmt::println(CSV, "x, spline, spline_mirror, taylor, erf");
         for (float x = -6.f; x <= 6.f; x+=0.5f)
         {
-            fmt::println(CSV, "{}, {}, {}, {}", x, spline_erf(x), taylor_erf(x), std::erf(x));
+            fmt::println(CSV, "{}, {}, {}, {}, {}", x, spline_erf(x), spline_erf_mirror(x), taylor_erf(x), std::erf(x));
         }
         exit(EXIT_SUCCESS);
     }
@@ -211,6 +227,7 @@ int main(i32 argc, char **argv)
     renderer_t renderer;
     float draw_time = 0.f;
     bool use_spline_approx = false;
+    bool use_mirror_approx = false;
     bool use_taylor_approx = false;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
@@ -220,6 +237,7 @@ int main(i32 argc, char **argv)
         ImGui::Begin("Debug");
         ImGui::Text("Draw Time: %f ms", draw_time);
         ImGui::Checkbox("spline", &use_spline_approx);
+        ImGui::Checkbox("mirror", &use_mirror_approx);
         ImGui::Checkbox("taylor", &use_taylor_approx);
         ImGui::Checkbox("approx", &new_approx_transmittance);
         ImGui::End();
@@ -240,6 +258,7 @@ int main(i32 argc, char **argv)
         gaussians = staging_gaussians;
         approx_transmittance = new_approx_transmittance;
         if (use_spline_approx) _erf = spline_erf;
+        else if (use_mirror_approx) _erf = spline_erf_mirror;
         else if (use_taylor_approx) _erf = taylor_erf;
         else _erf = std::erf;
 
