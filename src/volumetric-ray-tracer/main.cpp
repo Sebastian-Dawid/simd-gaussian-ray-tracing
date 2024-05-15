@@ -16,20 +16,20 @@
 
 #include "types.h"
 
-/// generated using spline interpolation from -4 to 4 in steps of .7
+/// generated using spline interpolation from -4 to 4 in steps of .5
 static float spline_erf(float x)
 {
-    if (x <= -3.3f) return -1.f;
-    else if (-3.3f <= x && x <= -2.6f) { return -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
-    else if (-2.6f <= x && x <= -1.9f) { return 0.0012324096f * (x - -2.6f) * (x - -2.6f) * (x - -2.6f) + 0.0023520004f * (x - -2.6f) * (x - -2.6f) + 0.0013753435f * (x - -2.6f) + -0.99976397f; }
-    else if (-1.9f <= x && x <= -1.2f) { return 0.014164185f * (x - -1.9f) * (x - -1.9f) * (x - -1.9f) + 0.032096792f * (x - -1.9f) * (x - -1.9f) + 0.025489498f * (x - -1.9f) + -0.9927904f; }
-    else if (-1.2f <= x && x <= -0.5f) { return 0.14258419f * (x - -1.2f) * (x - -1.2f) * (x - -1.2f) + 0.33152357f * (x - -1.2f) * (x - -1.2f) + 0.28002375f * (x - -1.2f) + -0.91031396f; }
-    else if (-0.5f <= x && x <= 0.2f) { return 0.09140208f * (x - -0.5f) * (x - -0.5f) * (x - -0.5f) + 0.52346796f * (x - -0.5f) * (x - -0.5f) + 0.87851787f * (x - -0.5f) + -0.5204999f; }
-    else if (0.2f <= x && x <= 0.9f) { return -0.37393388f * (x - 0.2f) * (x - 0.2f) * (x - 0.2f) + -0.2617932f * (x - 0.2f) * (x - 0.2f) + 1.0616902f * (x - 0.2f) + 0.2227026f; }
-    else if (0.9f <= x && x <= 1.6f) { return -0.11865551f * (x - 0.9f) * (x - 0.9f) * (x - 0.9f) + -0.51096976f * (x - 0.9f) * (x - 0.9f) + 0.5207561f * (x - 0.9f) + 0.7969082f; }
-    else if (1.6f <= x && x <= 2.3f) { return 0.19033842f * (x - 1.6f) * (x - 1.6f) * (x - 1.6f) + -0.11125909f * (x - 1.6f) * (x - 1.6f) + 0.085195914f * (x - 1.6f) + 0.9763484f; }
-    else if (2.3f <= x && x <= 3.0f) { return 0.05069461f * (x - 2.3f) * (x - 2.3f) * (x - 2.3f) + -0.004800401f * (x - 2.3f) * (x - 2.3f) + 0.0039542736f * (x - 2.3f) + 0.99885684f; }
-    else if (3.0f <= x && x <= 3.7f) { return 0.0020562427f * (x - 3.0f) * (x - 3.0f) * (x - 3.0f) + -0.00048229168f * (x - 3.0f) * (x - 3.0f) + 0.0002563885f * (x - 3.0f) + 0.9999779f; }
+    if (x < -2.9f) return -1.f;
+    else if (-2.9f <= x && x < -2.3f) { return 0.00019103826f * (x - -2.9f) * (x - -2.9f) * (x - -2.9f) + 0.00034386886f * (x - -2.9f) * (x - -2.9f) + 0.0002048055f * (x - -2.9f) + -0.9999589f; }
+    else if (-2.3f <= x && x < -1.7f) { return 0.0039601973f * (x - -2.3f) * (x - -2.3f) * (x - -2.3f) + 0.007472224f * (x - -2.3f) * (x - -2.3f) + 0.0048944615f * (x - -2.3f) + -0.99885684f; }
+    else if (-1.7f <= x && x < -1.1f) { return 0.043702256f * (x - -1.7f) * (x - -1.7f) * (x - -1.7f) + 0.08613629f * (x - -1.7f) * (x - -1.7f) + 0.061059568f * (x - -1.7f) + -0.98379046f; }
+    else if (-1.1f <= x && x < -0.5f) { return 0.1663916f * (x - -1.1f) * (x - -1.1f) * (x - -1.1f) + 0.38564116f * (x - -1.1f) * (x - -1.1f) + 0.34412605f * (x - -1.1f) + -0.8802051f; }
+    else if (-0.5f <= x && x < 0.1f) { return 0.066660866f * (x - -0.5f) * (x - -0.5f) * (x - -0.5f) + 0.50563073f * (x - -0.5f) * (x - -0.5f) + 0.8788892f * (x - -0.5f) + -0.5204999f; }
+    else if (0.1f <= x && x < 0.7f) { return -0.3536934f * (x - 0.1f) * (x - 0.1f) * (x - 0.1f) + -0.1310174f * (x - 0.1f) * (x - 0.1f) + 1.1036571f * (x - 0.1f) + 0.112462915f; }
+    else if (0.7f <= x && x < 1.3f) { return -0.2300452f * (x - 0.7f) * (x - 0.7f) * (x - 0.7f) + -0.5450987f * (x - 0.7f) * (x - 0.7f) + 0.6979875f * (x - 0.7f) + 0.6778012f; }
+    else if (1.3f <= x && x < 1.9f) { return 0.15578617f * (x - 1.3f) * (x - 1.3f) * (x - 1.3f) + -0.26468363f * (x - 1.3f) * (x - 1.3f) + 0.21211804f * (x - 1.3f) + 0.93400794f; }
+    else if (1.9f <= x && x < 2.5f) { return 0.12406375f * (x - 1.9f) * (x - 1.9f) * (x - 1.9f) + -0.041368887f * (x - 1.9f) * (x - 1.9f) + 0.028486524f * (x - 1.9f) + 0.9927904f; }
+    else if (2.5f <= x && x < 3.1f) { return 0.02131252f * (x - 2.5f) * (x - 2.5f) * (x - 2.5f) + -0.0030063519f * (x - 2.5f) * (x - 2.5f) + 0.0018613797f * (x - 2.5f) + 0.999593f; }
     return 1.f;
 }
 
@@ -137,8 +137,12 @@ int main(i32 argc, char **argv)
     std::vector<char*> args(argc);
     std::memcpy(args.data(), argv, sizeof(*argv) * argc);
     bool grid = false;
+    bool with_tests = true;
     for (char *s : args)
+    {
         if (std::strncmp(s, "--grid", 7) == 0) grid = true;
+        else if (std::strncmp(s, "--no-tests", 11) == 0) with_tests = false;
+    }
 
     std::vector<gaussian_t> gaussians;
     if (grid)
@@ -159,73 +163,91 @@ int main(i32 argc, char **argv)
     std::vector<gaussian_t> staging_gaussians = gaussians;
     const vec4f_t origin = { 0.f, 0.f, -5.f };
     
-    pid_t cpid[2];
-    if ((cpid[0] = fork()) == 0)
+    if (with_tests)
     {
-        vec4f_t dir = {0.f, 0.f, 1.f};        
-        FILE *CSV = std::fopen("csv/data.csv", "wd");
-        if (!CSV) exit(EXIT_FAILURE);
-        fmt::println(CSV, "s, T, T_s, err, D");
-        for (float k = -6.f; k <= 6; k += .1f)
+        if (fork() == 0)
         {
-            float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
-            float T = transmittance(origin, dir, s, gaussians);
-            float T_s = transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians);
-            float err = std::abs(T - T_s);
-            float D = density(origin + dir * s, gaussians);
-            fmt::println(CSV, "{}, {}, {}, {}, {}", s, T, T_s, err, D);
-        }
-        std::fclose(CSV);
-        char *args[] = { (char*)"julia", (char*)"--project=./julia", (char*)"./julia/transmittance.jl", NULL };
-        execvp("julia", args);
-        fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    if ((cpid[1] = fork()) == 0)
-    {
-        FILE *CSV = std::fopen("csv/timing.csv", "wd");
-        if (!CSV) exit(EXIT_FAILURE);
-        fmt::println(CSV, "count, time");
-        std::vector<gaussian_t> growing;
-        for (u8 i = 0; i < 32; ++i)
-        {
-            for (u8 j = 0; j < 32; ++j)
+            vec4f_t dir = {0.f, 0.f, 1.f};        
+            FILE *CSV = std::fopen("csv/data.csv", "wd");
+            if (!CSV) exit(EXIT_FAILURE);
+            fmt::println(CSV, "s, T, T_s, err, D");
+            for (float k = -6.f; k <= 6; k += .1f)
             {
-                growing.push_back(gaussian_t{
-                        .albedo{ 1.f, 0.f, 0.f, 1.f },
-                        .mu{ -1.f + i * 1.f/16.f, -1.f + j * 1.f/16.f, 0.f },
-                        .sigma = 1.f/16.f,
-                        .magnitude = 1.f
-                        });
-                auto start_time = std::chrono::high_resolution_clock::now();
-                l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
-                auto end_time = std::chrono::high_resolution_clock::now();
-                float t = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-                fmt::println(CSV, "{}, {}", i * 32 + j + 1, t);
+                float s = (gaussians[2].mu - origin).dot(dir) + k * gaussians[2].sigma;
+                float T = transmittance(origin, dir, s, gaussians);
+                float T_s = transmittance_step(origin, dir, s, gaussians[2].sigma, gaussians);
+                float err = std::abs(T - T_s);
+                float D = density(origin + dir * s, gaussians);
+                fmt::println(CSV, "{}, {}, {}, {}, {}", s, T, T_s, err, D);
             }
+            std::fclose(CSV);
+            char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/transmittance.jl", NULL };
+            execvp("./julia/wrapper.sh", args);
+            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+            exit(EXIT_FAILURE);
         }
-        std::fclose(CSV);
-        char *args[] = { (char*)"julia", (char*)"--project=./julia", (char*)"./julia/timing.jl", NULL };
-        execvp("julia", args);
-        fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
-        exit(EXIT_FAILURE);
-    }
 
-    // TODO: Add timing measurement for different erf implementation (spline vs. taylor vs. std::erf)
-    if (fork() == 0)
-    {
-        FILE *CSV = std::fopen("csv/erf.csv", "wd");
-        if (!CSV) exit(EXIT_FAILURE);
-        fmt::println(CSV, "x, spline, spline_mirror, taylor, erf");
-        for (float x = -6.f; x <= 6.f; x+=0.5f)
+        if (fork() == 0)
         {
-            fmt::println(CSV, "{}, {}, {}, {}, {}", x, spline_erf(x), spline_erf_mirror(x), taylor_erf(x), std::erf(x));
-        }
-        // TODO: Add script to plot curves and err w.r.t. std::err
-        exit(EXIT_SUCCESS);
-    }
+            FILE *CSV = std::fopen("csv/timing.csv", "wd");
+            if (!CSV) exit(EXIT_FAILURE);
+            fmt::println(CSV, "count, t_spline, t_taylor, t_std");
+            std::vector<gaussian_t> growing;
+            for (u8 i = 0; i < 16; ++i)
+            {
+                for (u8 j = 0; j < 16; ++j)
+                {
+                    growing.push_back(gaussian_t{
+                            .albedo{ 1.f, 0.f, 0.f, 1.f },
+                            .mu{ -1.f + i * 1.f/8.f, -1.f + j * 1.f/8.f, 0.f },
+                            .sigma = 1.f/8.f,
+                            .magnitude = 1.f
+                            });
+                    _erf = spline_erf;
+                    auto start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    auto end_time = std::chrono::high_resolution_clock::now();
+                    float t_spline = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
+                    _erf = taylor_erf;
+                    start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    end_time = std::chrono::high_resolution_clock::now();
+                    float t_taylor = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+                    _erf = std::erf;
+                    start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    end_time = std::chrono::high_resolution_clock::now();
+                    float t_std = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+                    fmt::println(CSV, "{}, {}, {}, {}", i * 16 + j + 1, t_spline, t_taylor, t_std);
+                }
+            }
+            std::fclose(CSV);
+            char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/timing.jl", NULL };
+            execvp("./julia/wrapper.sh", args);
+            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        if (fork() == 0)
+        {
+            FILE *CSV = std::fopen("csv/erf.csv", "wd");
+            if (!CSV) exit(EXIT_FAILURE);
+            fmt::println(CSV, "x, spline, spline_mirror, taylor, erf");
+            for (float x = -6.f; x <= 6.f; x+=0.1f)
+            {
+                fmt::println(CSV, "{}, {}, {}, {}, {}", x, spline_erf(x), spline_erf_mirror(x), taylor_erf(x), std::erf(x));
+            }
+            fclose(CSV);
+            char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/cmp_erf.jl", NULL };
+            execvp("./julia/wrapper.sh", args);
+            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+            exit(EXIT_SUCCESS);
+        }
+    }
+    
     renderer_t renderer;
     float draw_time = 0.f;
     bool use_spline_approx = false;

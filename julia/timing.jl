@@ -5,7 +5,11 @@ function load_data()
     data = CSV.File(data_path*"../csv/timing.csv") |> DataFrame
     count = Vector(data[:, 1])
     t = Vector(data[:, 2])
-    plot(count, t, dpi=300, xlabel="count", ylabel=L"$\mu s$", title="Time per pixel w.r.t. the number of gaussians\nin the scene")
+    plot(count, t, dpi=300, label="spline", xlabel="count", ylabel=L"$\mu s$", title="Time per pixel w.r.t. the number of gaussians\nin the scene")
+    t = Vector(data[:, 3])
+    plot!(count, t, label="taylor")
+    t = Vector(data[:, 4])
+    plot!(count, t, label="std::erf")
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
