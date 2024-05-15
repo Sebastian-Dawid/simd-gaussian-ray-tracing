@@ -28,6 +28,7 @@
                 vulkan-extension-layer
                 vulkan-loader
                 julia
+                openspecfun
             ];
 
             shellHook = ''

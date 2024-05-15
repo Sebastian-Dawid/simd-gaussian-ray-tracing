@@ -212,6 +212,7 @@ int main(i32 argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    // TODO: Add timing measurement for different erf implementation (spline vs. taylor vs. std::erf)
     if (fork() == 0)
     {
         FILE *CSV = std::fopen("csv/erf.csv", "wd");
@@ -221,6 +222,7 @@ int main(i32 argc, char **argv)
         {
             fmt::println(CSV, "{}, {}, {}, {}, {}", x, spline_erf(x), spline_erf_mirror(x), taylor_erf(x), std::erf(x));
         }
+        // TODO: Add script to plot curves and err w.r.t. std::err
         exit(EXIT_SUCCESS);
     }
 
