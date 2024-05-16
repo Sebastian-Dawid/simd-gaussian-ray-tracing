@@ -5,9 +5,11 @@
 #include <vk-renderer/vk-renderer.h>
 #include <include/error_fmt.h>
 #include <sys/wait.h>
+#include <sched.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <include/stb_image_write.h>
@@ -15,6 +17,8 @@
 #pragma GCC diagnostic pop
 
 #include "types.h"
+
+// TODO: Transfer erf approximations to simd and add timing analysis
 
 /// generated using spline interpolation from -4 to 4 in steps of .5
 static float spline_erf(float x)
@@ -34,6 +38,7 @@ static float spline_erf(float x)
 }
 
 /// use half of the spline approximation and mirror it w.r.t. the origin
+/// might be valid to use in case of simd since all if cases have to be considered regardless
 static float spline_erf_mirror(float x)
 {
     float sign = x < 0 ? 1.f : -1.f;
@@ -165,8 +170,15 @@ int main(i32 argc, char **argv)
     
     if (with_tests)
     {
+        cpu_set_t mask;
+        CPU_ZERO(&mask);
+
         if (fork() == 0)
         {
+            // bind process to CPU2
+            CPU_SET(2, &mask);
+            sched_setaffinity(0, sizeof(mask), &mask);
+
             vec4f_t dir = {0.f, 0.f, 1.f};        
             FILE *CSV = std::fopen("csv/data.csv", "wd");
             if (!CSV) exit(EXIT_FAILURE);
@@ -189,9 +201,13 @@ int main(i32 argc, char **argv)
 
         if (fork() == 0)
         {
+            // bind process to CPU4
+            CPU_SET(4, &mask);
+            sched_setaffinity(0, sizeof(mask), &mask);
+
             FILE *CSV = std::fopen("csv/timing.csv", "wd");
             if (!CSV) exit(EXIT_FAILURE);
-            fmt::println(CSV, "count, t_spline, t_taylor, t_std");
+            fmt::println(CSV, "count, t_spline, t_mirror, t_taylor, t_std");
             std::vector<gaussian_t> growing;
             for (u8 i = 0; i < 16; ++i)
             {
@@ -208,6 +224,12 @@ int main(i32 argc, char **argv)
                     l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
                     auto end_time = std::chrono::high_resolution_clock::now();
                     float t_spline = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+                    
+                    _erf = spline_erf_mirror;
+                    start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    end_time = std::chrono::high_resolution_clock::now();
+                    float t_mirror = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
                     _erf = taylor_erf;
                     start_time = std::chrono::high_resolution_clock::now();
@@ -221,7 +243,7 @@ int main(i32 argc, char **argv)
                     end_time = std::chrono::high_resolution_clock::now();
                     float t_std = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
-                    fmt::println(CSV, "{}, {}, {}, {}", i * 16 + j + 1, t_spline, t_taylor, t_std);
+                    fmt::println(CSV, "{}, {}, {}, {}, {}", i * 16 + j + 1, t_spline, t_mirror, t_taylor, t_std);
                 }
             }
             std::fclose(CSV);
@@ -233,6 +255,9 @@ int main(i32 argc, char **argv)
 
         if (fork() == 0)
         {
+            // bind process to CPU6
+            CPU_SET(6, &mask);
+            sched_setaffinity(0, sizeof(mask), &mask);
             FILE *CSV = std::fopen("csv/erf.csv", "wd");
             if (!CSV) exit(EXIT_FAILURE);
             fmt::println(CSV, "x, spline, spline_mirror, taylor, erf");
