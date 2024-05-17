@@ -1,3 +1,8 @@
+ARCH = os.getenv("ARCH")
+if ARCH == nil then
+    ARCH = "native"
+end
+
 workspace "ba-thesis"
     toolset "clang"
     cppdialect "c++20"
@@ -37,7 +42,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-Werror", "-march=native" }
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH }
 
         includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/**.cpp" }

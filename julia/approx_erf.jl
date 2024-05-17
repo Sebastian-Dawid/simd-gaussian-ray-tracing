@@ -28,8 +28,8 @@ function cubic_spline_interpolation(x, y)
     return (t -> p(t)[get_index(t)]), [a_0, a_1, a_2, a_3]
 end
 
-function generate_c(x=-6:.5:6)
-    _, a = cubic_spline_interpolation(x, erf.(x))
+function generate_c(f=erf, name="erf", x=-6:.5:6)
+    _, a = cubic_spline_interpolation(x, f.(x))
     factors = map(x -> string.(x) .* "f", Vector{Float32}.(a))
     xs = "(x - " .* string.(x[2:end]) .* "f)"
     xs2 = xs .* " * " .* xs
@@ -39,7 +39,8 @@ function generate_c(x=-6:.5:6)
     p1 = factors[2] .* " * " .* xs
     polynomials = p3 .* " + " .* p2 .* " + " .* p1 .* " + " .* factors[1]
     returns = "return " .* polynomials .* ";"
-    fun = "float spline_erf(float x)
+    fun = "// generated using spline interpolation with supports $(x)
+static float spline_"*name*"(float x)
 {
     if (x <= $(x[2])f) return -1.f;\n"
     for i in eachindex(returns)[1:end-1]
@@ -50,7 +51,7 @@ fun = fun .* "    else if ($(x[i+1])f <= x && x <= $(x[i+2])f) { " .* returns[i]
     println(fun)
 end
 
-function main(;start=-6, step=.1, finish=6, spline_step=.5, taylor_degree=25)
+function cmp_erf(;start=-6, step=.1, finish=6, spline_step=.5, taylor_degree=25)
     default(titlefont=(10), legendfontsize=8)
     spline_erf, _ = cubic_spline_interpolation(start:spline_step:finish, erf.(start:spline_step:finish))
     taylor_erf = z -> 2/sqrt(π) * sum([ z/(2*n + 1) * prod([ (-z^2)/k for k in 1:n]) for n in 0:taylor_degree ])
@@ -64,7 +65,7 @@ function main(;start=-6, step=.1, finish=6, spline_step=.5, taylor_degree=25)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    spline_plt, taylor_plt = main()
+    spline_plt, taylor_plt = cmp_erf()
     savefig(spline_plt, "../images/spline_erf.png")
     savefig(taylor_plt, "../images/taylor_erf.png")
 end

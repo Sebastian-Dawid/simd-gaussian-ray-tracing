@@ -9,6 +9,13 @@
 
 #include <include/tsimd_sh.H>
 
+#ifdef __AVX512F__
+#define SIMD_BYTES 64
+#else
+#define SIMD_BYTES 32
+#endif
+#define SIMD_FLOATS (SIMD_BYTES/sizeof(float))
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
@@ -22,8 +29,8 @@
 
 // TODO: Transfer erf approximations to simd and add timing analysis
 
-/// generated using spline interpolation from -4 to 4 in steps of .5
-static float spline_erf(float x)
+/// generated using spline interpolation from -3.1 to 3.1 in steps of .6
+static float spline_erf(const float x)
 {
     if (x < -2.9f) return -1.f;
     else if (-2.9f <= x && x < -2.3f) { return 0.00019103826f * (x - -2.9f) * (x - -2.9f) * (x - -2.9f) + 0.00034386886f * (x - -2.9f) * (x - -2.9f) + 0.0002048055f * (x - -2.9f) + -0.9999589f; }
@@ -39,7 +46,7 @@ static float spline_erf(float x)
     return 1.f;
 }
 
-static simd::Vec<simd::Float> simd_spline_erf(simd::Vec<simd::Float> x)
+static simd::Vec<simd::Float> simd_spline_erf(const simd::Vec<simd::Float> x)
 {
     simd::Vec<simd::Float> value = simd::set1(1.f);
     value = simd::ifelse(x < simd::set1(-2.9f), simd::set1(-1.f), value);
@@ -60,7 +67,7 @@ static simd::Vec<simd::Float> simd_spline_erf(simd::Vec<simd::Float> x)
 /// might be valid to use in case of simd since all if cases have to be considered regardless
 static float spline_erf_mirror(float x)
 {
-    float sign = x < 0 ? 1.f : -1.f;
+    const float sign = x < 0 ? 1.f : -1.f;
     float value = -1.f;
     x = x > 0 ? -x : x; // take the negative absolute value
     if (-3.3f <= x && x <= -2.6f) { value = -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
@@ -71,14 +78,55 @@ static float spline_erf_mirror(float x)
     return value * sign;
 }
 
-static float taylor_erf(float x)
+static simd::Vec<simd::Float> simd_spline_erf_mirror(simd::Vec<simd::Float> x)
+{
+    const simd::Vec<simd::Float> sign = simd::ifelse(x < simd::set1(0.f), simd::set1(1.f), simd::set1(-1.f));
+    simd::Vec<simd::Float> value = simd::set1(-1.f);
+    x = simd::ifelse(x > simd::set1(0.f), -x, x);
+    value = simd::ifelse(simd::bit_and(simd::set1(-2.9f) <= x, x < simd::set1(-2.3f)), simd::set1(0.00019103826f) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) + simd::set1(0.00034386886f) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) + simd::set1(0.0002048055f) * (x - simd::set1(-2.9f)) + simd::set1(-0.9999589f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-2.3f) <= x, x < simd::set1(-1.7f)), simd::set1(0.0039601973f) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) + simd::set1(0.007472224f) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) + simd::set1(0.0048944615f) * (x - simd::set1(-2.3f)) + simd::set1(-0.99885684f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-1.7f) <= x, x < simd::set1(-1.1f)), simd::set1(0.043702256f) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) + simd::set1(0.08613629f) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) + simd::set1(0.061059568f) * (x - simd::set1(-1.7f)) + simd::set1(-0.98379046f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-1.1f) <= x, x < simd::set1(-0.5f)), simd::set1(0.1663916f) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) + simd::set1(0.38564116f) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) + simd::set1(0.34412605f) * (x - simd::set1(-1.1f)) + simd::set1(-0.8802051f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-0.5f) <= x, x <= simd::set1(0.0f)),  simd::set1(0.066660866f) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) + simd::set1(0.50563073f) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) + simd::set1(0.8788892f) * (x - simd::set1(-0.5f)) + simd::set1(-0.5204999f), value);
+    return value * sign;
+}
+
+static float taylor_erf(const float x)
 {
     if (x <= -2.f) return -1.f;
     if (x >= 2.f) return 1.f;
     return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
 }
 
+/// generated using spline interpolation with supports [-10.0 -9.0 -8.0 -7.0 -6.0 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.75 -1.5 -1.25 -1.0 -0.75 -0.5 -0.25 0.0]
+static float spline_exp(float x)
+{
+    if (x <= -9.0f) return -1.f;
+    else if (-9.0f <= x && x <= -8.0f) { return 2.0944866e-5f * (x - -9.0f) * (x - -9.0f) * (x - -9.0f) + 6.2834595e-5f * (x - -9.0f) * (x - -9.0f) + 0.0001198996f * (x - -9.0f) + 0.0001234098f; }
+    else if (-8.0f <= x && x <= -7.0f) { return 2.9318619e-5f * (x - -8.0f) * (x - -8.0f) * (x - -8.0f) + 0.00015079045f * (x - -8.0f) * (x - -8.0f) + 0.00033352466f * (x - -8.0f) + 0.00033546262f; }
+    else if (-7.0f <= x && x <= -6.0f) { return 9.210422e-5f * (x - -7.0f) * (x - -7.0f) * (x - -7.0f) + 0.0004271031f * (x - -7.0f) * (x - -7.0f) + 0.00091141823f * (x - -7.0f) + 0.000911882f; }
+    else if (-6.0f <= x && x <= -5.0f) { return 0.00022834886f * (x - -6.0f) * (x - -6.0f) * (x - -6.0f) + 0.0011121497f * (x - -6.0f) * (x - -6.0f) + 0.002450671f * (x - -6.0f) + 0.0024787523f; }
+    else if (-5.0f <= x && x <= -4.5f) { return 0.0006963741f * (x - -5.0f) * (x - -5.0f) * (x - -5.0f) + 0.0032012719f * (x - -5.0f) * (x - -5.0f) + 0.0067640925f * (x - -5.0f) + 0.006737947f; }
+    else if (-4.5f <= x && x <= -4.0f) { return 0.0015094817f * (x - -4.5f) * (x - -4.5f) * (x - -4.5f) + 0.0054654945f * (x - -4.5f) * (x - -4.5f) + 0.011097476f * (x - -4.5f) + 0.011108996f; }
+    else if (-4.0f <= x && x <= -3.5f) { return 0.0023322464f * (x - -4.0f) * (x - -4.0f) * (x - -4.0f) + 0.008963864f * (x - -4.0f) * (x - -4.0f) + 0.018312154f * (x - -4.0f) + 0.01831564f; }
+    else if (-3.5f <= x && x <= -3.0f) { return 0.0038776079f * (x - -3.5f) * (x - -3.5f) * (x - -3.5f) + 0.0147802755f * (x - -3.5f) * (x - -3.5f) + 0.030184224f * (x - -3.5f) + 0.030197384f; }
+    else if (-3.0f <= x && x <= -2.5f) { return 0.006420028f * (x - -3.0f) * (x - -3.0f) * (x - -3.0f) + 0.024410319f * (x - -3.0f) * (x - -3.0f) + 0.049779523f * (x - -3.0f) + 0.049787067f; }
+    else if (-2.5f <= x && x <= -2.0f) { return 0.010444719f * (x - -2.5f) * (x - -2.5f) * (x - -2.5f) + 0.040077396f * (x - -2.5f) * (x - -2.5f) + 0.08202338f * (x - -2.5f) + 0.082085f; }
+    else if (-2.0f <= x && x <= -1.75f) { return 0.017753968f * (x - -2.0f) * (x - -2.0f) * (x - -2.0f) + 0.06670835f * (x - -2.0f) * (x - -2.0f) + 0.13541625f * (x - -2.0f) + 0.13533528f; }
+    else if (-1.75f <= x && x <= -1.5f) { return 0.026580833f * (x - -1.75f) * (x - -1.75f) * (x - -1.75f) + 0.08664397f * (x - -1.75f) * (x - -1.75f) + 0.17375433f * (x - -1.75f) + 0.17377394f; }
+    else if (-1.5f <= x && x <= -1.25f) { return 0.03215266f * (x - -1.5f) * (x - -1.5f) * (x - -1.5f) + 0.11075847f * (x - -1.5f) * (x - -1.5f) + 0.22310494f * (x - -1.5f) + 0.22313017f; }
+    else if (-1.25f <= x && x <= -1.0f) { return 0.04326379f * (x - -1.25f) * (x - -1.25f) * (x - -1.25f) + 0.14320631f * (x - -1.25f) * (x - -1.25f) + 0.28659615f * (x - -1.25f) + 0.2865048f; }
+    else if (-1.0f <= x && x <= -0.75f) { return 0.04961379f * (x - -1.0f) * (x - -1.0f) * (x - -1.0f) + 0.18041666f * (x - -1.0f) * (x - -1.0f) + 0.36750188f * (x - -1.0f) + 0.36787945f; }
+    else if (-0.75f <= x && x <= -0.5f) { return 0.08547847f * (x - -0.75f) * (x - -0.75f) * (x - -0.75f) + 0.2445255f * (x - -0.75f) * (x - -0.75f) + 0.47373742f * (x - -0.75f) + 0.47236654f; }
+    else if (-0.5f <= x && x <= -0.25f) { return 0.02860214f * (x - -0.5f) * (x - -0.5f) * (x - -0.5f) + 0.2659771f * (x - -0.5f) * (x - -0.5f) + 0.60136306f * (x - -0.5f) + 0.60653067f; }
+    else if (-0.25f <= x && x <= 0.0f) { return 0.3395703f * (x - -0.25f) * (x - -0.25f) * (x - -0.25f) + 0.52065486f * (x - -0.25f) * (x - -0.25f) + 0.7980211f * (x - -0.25f) + 0.7788008f; }
+    return 1.f;
+}
+
 static float (*_erf)(float) = std::erf;
+static float (*_exp)(float) = std::exp;
+
+static FILE *LOG = NULL;
 
 static float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
 {
@@ -86,10 +134,12 @@ static float transmittance(const vec4f_t o, const vec4f_t n, const float s, cons
     for (const gaussian_t &g_q : gaussians)
     {
         const float mu_bar = (g_q.mu - o).dot(n);
-        const float c_bar = g_q.magnitude * std::exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
+        const float c_bar = g_q.magnitude * _exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
+        if (LOG) fmt::print(LOG, "{}, ", -((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
         T += ((g_q.sigma * c_bar)/(std::sqrt(2/M_PIf))) * (_erf(-mu_bar/(std::sqrt(2) * g_q.sigma)) - _erf((s - mu_bar)/(std::sqrt(2) * g_q.sigma)));
     }
-    return std::exp(T);
+    if (LOG) fmt::println(LOG, "{}", T);
+    return _exp(T);
 }
 
 static float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians)
@@ -100,7 +150,7 @@ static float transmittance_step(const vec4f_t o, const vec4f_t n, const float s,
         for (const gaussian_t &g : gaussians)
             T += delta * g.pdf(o + n * t);
     }
-    return std::exp(-T);
+    return _exp(-T);
 }
 
 static float density(const vec4f_t pt, const std::vector<gaussian_t> gaussians)
@@ -224,7 +274,7 @@ int main(i32 argc, char **argv)
             CPU_SET(4, &mask);
             sched_setaffinity(0, sizeof(mask), &mask);
 
-            FILE *CSV = std::fopen("csv/timing.csv", "wd");
+            FILE *CSV = std::fopen("csv/timing_erf.csv", "wd");
             if (!CSV) exit(EXIT_FAILURE);
             fmt::println(CSV, "count, t_spline, t_mirror, t_taylor, t_std");
             std::vector<gaussian_t> growing;
@@ -266,6 +316,38 @@ int main(i32 argc, char **argv)
                 }
             }
             std::fclose(CSV);
+            
+            CSV = std::fopen("csv/timing_exp.csv", "wd");
+            if (!CSV) exit(EXIT_FAILURE);
+            fmt::println(CSV, "count, t_spline, t_std");
+            growing.clear();
+            _erf = std::erf;
+            for (u8 i = 0; i < 16; ++i)
+            {
+                for (u8 j = 0; j < 16; ++j)
+                {
+                    growing.push_back(gaussian_t{
+                            .albedo{ 1.f, 0.f, 0.f, 1.f },
+                            .mu{ -1.f + i * 1.f/8.f, -1.f + j * 1.f/8.f, 0.f },
+                            .sigma = 1.f/8.f,
+                            .magnitude = 1.f
+                            });
+                    _exp = spline_exp;
+                    auto start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    auto end_time = std::chrono::high_resolution_clock::now();
+                    float t_spline = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+                    _exp = std::exp;
+                    start_time = std::chrono::high_resolution_clock::now();
+                    l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+                    end_time = std::chrono::high_resolution_clock::now();
+                    float t_std = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+                    fmt::println(CSV, "{}, {}, {}", i * 16 + j + 1, t_spline, t_std);
+                }
+            }
+            std::fclose(CSV);
             char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/timing.jl", NULL };
             execvp("./julia/wrapper.sh", args);
             fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
@@ -288,7 +370,54 @@ int main(i32 argc, char **argv)
             char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/cmp_erf.jl", NULL };
             execvp("./julia/wrapper.sh", args);
             fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
-            exit(EXIT_SUCCESS);
+            exit(EXIT_FAILURE);
+        }
+
+        if (fork() == 0)
+        {
+            // bind process to CPU8
+            CPU_SET(8, &mask);
+            sched_setaffinity(0, sizeof(mask), &mask);
+            FILE *CSV = std::fopen("csv/simd_erf.csv", "wd");
+            fmt::println(CSV, "count, t_simd, t_simd_mirror, t_spline, t_std");
+            for (u64 i = 1; i < 100; ++i)
+            {
+                float t[SIMD_FLOATS * i];
+                float s[SIMD_FLOATS * i];
+                for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
+                    t[j] = -4.f + j * 8.f/(SIMD_FLOATS * i);
+
+                auto start_time = std::chrono::high_resolution_clock::now();
+                for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
+                    simd::storeu(s + j, simd_spline_erf(simd::loadu(t + j)));
+                auto end_time = std::chrono::high_resolution_clock::now();
+                float t_simd = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
+                
+                start_time = std::chrono::high_resolution_clock::now();
+                for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
+                    simd::storeu(s + j, simd_spline_erf_mirror(simd::loadu(t + j)));
+                end_time = std::chrono::high_resolution_clock::now();
+                float t_simd_mirror = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
+                
+                start_time = std::chrono::high_resolution_clock::now();
+                for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
+                    s[j] = spline_erf(t[j]);
+                end_time = std::chrono::high_resolution_clock::now();
+                float t_spline = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
+                
+                start_time = std::chrono::high_resolution_clock::now();
+                for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
+                    s[j] = std::erf(t[j]);
+                end_time = std::chrono::high_resolution_clock::now();
+                float t_std = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
+
+                fmt::println(CSV, "{}, {}, {}, {}, {}", SIMD_FLOATS * i, t_simd, t_simd_mirror, t_spline, t_std);
+            }
+            std::fclose(CSV);
+            char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/simd_erf_timing.jl", NULL };
+            execvp("./julia/wrapper.sh", args);
+            fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+            exit(EXIT_FAILURE);
         }
     }
     
@@ -315,6 +444,8 @@ int main(i32 argc, char **argv)
 
     u32 *image = (u32*)std::calloc(width * height, sizeof(u32));
 
+    bool first_frame = true;
+
     while (running)
     {
         if (new_width != width || new_height != height)
@@ -329,6 +460,11 @@ int main(i32 argc, char **argv)
         else if (use_mirror_approx) _erf = spline_erf_mirror;
         else if (use_taylor_approx) _erf = taylor_erf;
         else _erf = std::erf;
+
+        if (first_frame)
+        {
+            LOG = std::fopen("csv/expvals.csv", "wd");
+        }
 
         auto start_time = std::chrono::system_clock::now();
         vec4f_t pt = { -1.f, -1.f, 0.f };
@@ -353,6 +489,13 @@ int main(i32 argc, char **argv)
 
         auto end_time = std::chrono::system_clock::now();
         draw_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        
+        if (first_frame)
+        {
+            std::fclose(LOG);
+            LOG = NULL;
+            first_frame = false;
+        }
 
         if (argc >= 4)
             stbi_write_png(argv[3], width, height, 4, image, width * 4);
