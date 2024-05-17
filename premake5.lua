@@ -42,8 +42,8 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH }
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps", "-masm=intel", "-fverbose-asm" }
 
         includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/**.cpp" }
-        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui" }
+        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
