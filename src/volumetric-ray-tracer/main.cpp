@@ -7,6 +7,8 @@
 #include <sys/wait.h>
 #include <sched.h>
 
+#include <include/tsimd_sh.H>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
@@ -35,6 +37,23 @@ static float spline_erf(float x)
     else if (1.9f <= x && x < 2.5f) { return 0.12406375f * (x - 1.9f) * (x - 1.9f) * (x - 1.9f) + -0.041368887f * (x - 1.9f) * (x - 1.9f) + 0.028486524f * (x - 1.9f) + 0.9927904f; }
     else if (2.5f <= x && x < 3.1f) { return 0.02131252f * (x - 2.5f) * (x - 2.5f) * (x - 2.5f) + -0.0030063519f * (x - 2.5f) * (x - 2.5f) + 0.0018613797f * (x - 2.5f) + 0.999593f; }
     return 1.f;
+}
+
+static simd::Vec<simd::Float> simd_spline_erf(simd::Vec<simd::Float> x)
+{
+    simd::Vec<simd::Float> value = simd::set1(1.f);
+    value = simd::ifelse(x < simd::set1(-2.9f), simd::set1(-1.f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-2.9f) <= x, x < simd::set1(-2.3f)), simd::set1(0.00019103826f) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) + simd::set1(0.00034386886f) * (x - simd::set1(-2.9f)) * (x - simd::set1(-2.9f)) + simd::set1(0.0002048055f) * (x - simd::set1(-2.9f)) + simd::set1(-0.9999589f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-2.3f) <= x, x < simd::set1(-1.7f)), simd::set1(0.0039601973f) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) + simd::set1(0.007472224f) * (x - simd::set1(-2.3f)) * (x - simd::set1(-2.3f)) + simd::set1(0.0048944615f) * (x - simd::set1(-2.3f)) + simd::set1(-0.99885684f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-1.7f) <= x, x < simd::set1(-1.1f)), simd::set1(0.043702256f) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) + simd::set1(0.08613629f) * (x - simd::set1(-1.7f)) * (x - simd::set1(-1.7f)) + simd::set1(0.061059568f) * (x - simd::set1(-1.7f)) + simd::set1(-0.98379046f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-1.1f) <= x, x < simd::set1(-0.5f)), simd::set1(0.1663916f) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) + simd::set1(0.38564116f) * (x - simd::set1(-1.1f)) * (x - simd::set1(-1.1f)) + simd::set1(0.34412605f) * (x - simd::set1(-1.1f)) + simd::set1(-0.8802051f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(-0.5f) <= x, x < simd::set1(0.1f)),  simd::set1(0.066660866f) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) + simd::set1(0.50563073f) * (x - simd::set1(-0.5f)) * (x - simd::set1(-0.5f)) + simd::set1(0.8788892f) * (x - simd::set1(-0.5f)) + simd::set1(-0.5204999f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(0.1f) <= x, x < simd::set1(0.7f)),   simd::set1(-0.3536934f) * (x - simd::set1(0.1f)) * (x - simd::set1(0.1f)) * (x - simd::set1(0.1f)) + simd::set1(-0.1310174f) * (x - simd::set1(0.1f)) * (x - simd::set1(0.1f)) + simd::set1(1.1036571f) * (x - simd::set1(0.1f)) + simd::set1(0.112462915f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(0.7f) <= x, x < simd::set1(1.3f)),   simd::set1(-0.2300452f) * (x - simd::set1(0.7f)) * (x - simd::set1(0.7f)) * (x - simd::set1(0.7f)) + simd::set1(-0.5450987f) * (x - simd::set1(0.7f)) * (x - simd::set1(0.7f)) + simd::set1(0.6979875f) * (x - simd::set1(0.7f)) + simd::set1(0.6778012f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(1.3f) <= x, x < simd::set1(1.9f)),   simd::set1(0.15578617f) * (x - simd::set1(1.3f)) * (x - simd::set1(1.3f)) * (x - simd::set1(1.3f)) + simd::set1(-0.26468363f) * (x - simd::set1(1.3f)) * (x - simd::set1(1.3f)) + simd::set1(0.21211804f) * (x - simd::set1(1.3f)) + simd::set1(0.93400794f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(1.9f) <= x, x < simd::set1(2.5f)),   simd::set1(0.12406375f) * (x - simd::set1(1.9f)) * (x - simd::set1(1.9f)) * (x - simd::set1(1.9f)) + simd::set1(-0.041368887f) * (x - simd::set1(1.9f)) * (x - simd::set1(1.9f)) + simd::set1(0.028486524f) * (x - simd::set1(1.9f)) + simd::set1(0.9927904f), value);
+    value = simd::ifelse(simd::bit_and(simd::set1(2.5f) <= x, x < simd::set1(3.1f)),   simd::set1(0.02131252f) * (x - simd::set1(2.5f)) * (x - simd::set1(2.5f)) * (x - simd::set1(2.5f)) + simd::set1(-0.0030063519f) * (x - simd::set1(2.5f)) * (x - simd::set1(2.5f)) + simd::set1(0.0018613797f) * (x - simd::set1(2.5f)) + simd::set1(0.999593f), value);
+    return value;
 }
 
 /// use half of the spline approximation and mirror it w.r.t. the origin

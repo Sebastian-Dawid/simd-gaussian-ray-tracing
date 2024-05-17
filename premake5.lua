@@ -37,7 +37,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-Werror" }
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march=native" }
 
         includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/**.cpp" }
