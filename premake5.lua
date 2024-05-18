@@ -42,8 +42,18 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps", "-masm=intel", "-fverbose-asm" }
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm" }
 
         includedirs { "./src", "./src/external/imgui/" }
-        files { "./src/volumetric-ray-tracer/**.cpp" }
+        files { "./src/volumetric-ray-tracer/*.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
+
+    project "timing-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm" }
+
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt", "rt" }

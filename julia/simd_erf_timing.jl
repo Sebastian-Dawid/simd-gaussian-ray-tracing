@@ -11,7 +11,9 @@ function load_data()
     t = Vector(data[:, 4])
     plot!(count, t, label="spline")
     t = Vector(data[:, 5])
-    plot!(count, t, label="std::erf")
+    plot!(count, t, label="spline mirror")
+    t = Vector(data[:, 6])
+    #plot!(count, t, label="std::erf")
     
     data = CSV.File(data_path*"../csv/simd_exp.csv") |> DataFrame
     count = Vector(data[:, 1])
@@ -20,7 +22,7 @@ function load_data()
     t = Vector(data[:, 3])
     plot!(count, t, label="spline")
     t = Vector(data[:, 4])
-    plot!(count, t, label="std::exp")
+    # plot!(count, t, label="std::exp")
     return plt_erf, plt_exp
 end
 
