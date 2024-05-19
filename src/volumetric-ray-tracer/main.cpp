@@ -272,6 +272,7 @@ int main(i32 argc, char **argv)
     bool use_spline_approx = false;
     bool use_mirror_approx = false;
     bool use_taylor_approx = false;
+    bool use_fast_exp = false;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Gaussians");
@@ -282,6 +283,7 @@ int main(i32 argc, char **argv)
         ImGui::Checkbox("erf spline", &use_spline_approx);
         ImGui::Checkbox("erf mirror", &use_mirror_approx);
         ImGui::Checkbox("erf taylor", &use_taylor_approx);
+        ImGui::Checkbox("exp fast", &use_fast_exp);
         ImGui::End();
     };
     bool running = true;
@@ -302,6 +304,8 @@ int main(i32 argc, char **argv)
         else if (use_mirror_approx) _erf = spline_erf_mirror;
         else if (use_taylor_approx) _erf = taylor_erf;
         else _erf = std::erf;
+        if (use_fast_exp) _exp = fast_exp;
+        else _exp = std::exp;
 
         auto start_time = std::chrono::system_clock::now();
         vec4f_t pt = { -1.f, -1.f, 0.f };

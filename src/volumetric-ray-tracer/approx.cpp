@@ -1,4 +1,5 @@
 #include "approx.h"
+#include "include/definitions.h"
 
 /// generated using spline interpolation from -3.1 to 3.1 in steps of .6
 float spline_erf(const float x)
@@ -67,6 +68,29 @@ float taylor_erf(const float x)
     if (x <= -2.f) return -1.f;
     if (x >= 2.f) return 1.f;
     return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
+}
+
+static constexpr float a = (1 << 23)/std::numbers::ln2_v<float>;
+static constexpr float b = (1 << 23) * (127 - 0.043677448f);
+static constexpr float c = (1 << 23);
+static constexpr float d = (1 << 23) * 255;
+float fast_exp(float x)
+{
+    x = a *x + b;
+    if (x < c || x > d)
+        x = (x < c) ? 0.f : d;
+
+    u32 n = static_cast<u32>(x);
+    std::memcpy(&x, &n, 4);
+    return x;
+}
+
+simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x)
+{
+    x = simd::set1(a) *x + simd::set1(b);
+    x = simd::ifelse(simd::bit_or(x < simd::set1(c), x > simd::set1(d)), simd::setzero<simd::Float>(), simd::set1(d));
+
+    return simd::reinterpret<simd::Float>(simd::cvts<simd::Int>(x));
 }
 
 /// generated using spline interpolation with supports [-10.0 -9.0 -8.0 -7.0 -6.0 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.75 -1.5 -1.25 -1.0 -0.75 -0.5 -0.25 0.0]
