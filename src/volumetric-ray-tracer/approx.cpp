@@ -1,6 +1,8 @@
 #include "approx.h"
 #include "include/definitions.h"
 
+#define SIGN(x) ((x > 0) - (x < 0))
+
 /// generated using spline interpolation from -3.1 to 3.1 in steps of .6
 float spline_erf(const float x)
 {
@@ -39,7 +41,7 @@ simd::Vec<simd::Float> simd_spline_erf(const simd::Vec<simd::Float> x)
 /// might be valid to use in case of simd since all if cases have to be considered regardless
 float spline_erf_mirror(float x)
 {
-    const float sign = x < 0 ? 1.f : -1.f;
+    const float sign = -SIGN(x);
     float value = -1.f;
     x = x > 0 ? -x : x; // take the negative absolute value
     if (-3.3f < x && x < -2.6f) { value = -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
@@ -68,6 +70,27 @@ float taylor_erf(const float x)
     if (x <= -2.f) return -1.f;
     if (x >= 2.f) return 1.f;
     return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
+}
+
+float abramowitz_stegun_erf(float x)
+{
+    float sign = SIGN(x);
+    x *= sign;
+    constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
+    float denom = 1 + a[0]*x + a[1]*x*x + a[2]*x*x*x + a[3]*x*x*x*x;
+    float val = 1 - 1/(denom*denom*denom*denom);
+    return val * sign;
+}
+
+simd::Vec<simd::Float> simd_abramowitz_stegun_erf(simd::Vec<simd::Float> x)
+{
+    const simd::Vec<simd::Float> sign = simd::ifelse(x < simd::set1(0.f), simd::set1(-1.f), simd::set1(1.f));
+    x *= sign;
+    constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
+    // TODO: examine if x^4 is needed for accuracy (visibile in final image?)
+    simd::Vec<simd::Float> denom = simd::set1(1.f) + simd::set1(a[0])*x + simd::set1(a[1])*x*x + simd::set1(a[2])*x*x*x + simd::set1(a[3])*x*x*x*x;
+    simd::Vec<simd::Float> val = simd::set1(1.f) - simd::set1(1.f)/(denom*denom*denom*denom);
+    return val * sign;
 }
 
 static constexpr float a = (1 << 23)/std::numbers::ln2_v<float>;

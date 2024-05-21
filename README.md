@@ -7,3 +7,4 @@
 * [Vk-Bootsrap](https://github.com/charles-lunarg/vk-bootstrap)
 * [VMA](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
 * [stb](https://github.com/nothings/stb)
+* [jevents (pmu-tools)](https://github.com/andikleen/pmu-tools/tree/master/jevents)

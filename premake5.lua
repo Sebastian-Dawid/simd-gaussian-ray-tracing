@@ -25,6 +25,13 @@ workspace "ba-thesis"
         includedirs { "./src/external/imgui", "./src/external/imgui/backend" }
         files { "./src/external/imgui/**.cpp" }
 
+    project "jevents"
+        kind "StaticLib"
+        language "C"
+        targetdir "build/lib/%{cfg.buildcfg}"
+
+        files { "./src/jevents/*.c" }
+
     project "vk-renderer"
         kind "StaticLib"
         language "C++"
@@ -52,9 +59,8 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm" }
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
 
-        includedirs { "./src" }
-        libdirs { "/usr/local/lib64" }
+        includedirs { "./src", "./src/jevents" }
         files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt", "jevents" }
