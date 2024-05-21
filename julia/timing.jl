@@ -11,6 +11,8 @@ function load_data()
     t = Vector(data[:, 4])
     plot!(count, t, label="taylor")
     t = Vector(data[:, 5])
+    plot!(count, t, label="abramowitz")
+    t = Vector(data[:, 6])
     plot!(count, t, label="std::erf")
     
     data = CSV.File(data_path*"../csv/timing_exp.csv") |> DataFrame
@@ -18,6 +20,8 @@ function load_data()
     t = Vector(data[:, 2])
     plt_exp = plot(count, t, dpi=300, label="spline", xlabel="count", ylabel=L"$\mu s$", title="Time per pixel w.r.t. the number of gaussians\nin the scene (exp)")
     t = Vector(data[:, 3])
+    plot!(count, t, label="fast exp")
+    t = Vector(data[:, 4])
     plot!(count, t, label="std::exp")
     return plt_erf, plt_exp
 end

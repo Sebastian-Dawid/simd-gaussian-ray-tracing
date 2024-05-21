@@ -10,11 +10,14 @@ function load_data()
     plot!(x, y_mirror, label="spline mirror")
     y_taylor = Vector(data[:, 4])
     plot!(x, y_taylor, label="taylor")
-    y = Vector(data[:, 5])
+    y_abramowitz = Vector(data[:, 5])
+    plot!(x, y_abramowitz, label="abramowitz stegun")
+    y = Vector(data[:, 6])
     plot!(x, y, label="std::erf")
     err = plot(x, abs.(y - y_spline), dpi=300, label="spline", xlabel=L"x", ylabel="err", title="Error")
     plot!(x, abs.(y - y_mirror), label="mirror")
     plot!(x, abs.(y - y_taylor), label="taylor")
+    plot!(x, abs.(y - y_abramowitz), label="abramowitz stegun")
     return approx, err
 end
 

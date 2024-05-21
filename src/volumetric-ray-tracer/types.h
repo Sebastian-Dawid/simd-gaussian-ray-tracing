@@ -4,7 +4,9 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#ifdef INCLUDE_IMGUI
 #include <imgui.h>
+#endif
 #include <string>
 
 struct vec4f_t
@@ -42,6 +44,7 @@ struct vec4f_t
         this->z /= norm;
         this->w /= norm;
     }
+#ifdef INCLUDE_IMGUI
     void imgui_controls(std::string label = "x, y, z, w", float min = -10.f, float max = 10.f, bool color = false)
     {
         ImGui::PushID(this);
@@ -57,6 +60,7 @@ struct vec4f_t
         this->imgui_controls();
         ImGui::End();
     }
+#endif
 };
 
 struct gaussian_t
@@ -69,6 +73,7 @@ struct gaussian_t
     {
         return this->magnitude * std::exp(-((x - this->mu).dot(x - this->mu))/(2 * std::pow(this->sigma, 2.f)));
     }
+#ifdef INCLUDE_IMGUI
     void imgui_controls()
     {
         ImGui::PushID(this);
@@ -84,4 +89,5 @@ struct gaussian_t
         this->imgui_controls();
         ImGui::End();
     }
+#endif
 };

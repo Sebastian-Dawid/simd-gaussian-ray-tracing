@@ -50,10 +50,41 @@ workspace "ba-thesis"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+        defines { "INCLUDE_IMGUI" }
 
         includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
+
+    project "cycles-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+
+        includedirs { "./src", "./src/jevents" }
+        files { "./src/volumetric-ray-tracer/tests/approx_cycles.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt", "jevents" }
+
+    project "accuracy-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/accuracy.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt" }
+
+    project "transmittance-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/transmittance.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
+        links { "fmt" }
 
     project "timing-test"
         kind "ConsoleApp"
@@ -61,6 +92,6 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
 
-        includedirs { "./src", "./src/jevents" }
-        files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt", "jevents" }
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt" }
