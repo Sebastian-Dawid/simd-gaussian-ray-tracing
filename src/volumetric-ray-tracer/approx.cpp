@@ -1,7 +1,8 @@
 #include "approx.h"
 #include "include/definitions.h"
+#include <fmt/core.h>
 
-#define SIGN(x) ((x > 0) - (x < 0))
+#define SIGN(x) ((x >= 0) - (x < 0))
 
 /// generated using spline interpolation from -3.1 to 3.1 in steps of .6
 float spline_erf(const float x)
@@ -111,8 +112,7 @@ float fast_exp(float x)
 simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x)
 {
     x = simd::set1(a) *x + simd::set1(b);
-    x = simd::ifelse(simd::bit_or(x < simd::set1(c), x > simd::set1(d)), simd::setzero<simd::Float>(), simd::set1(d));
-
+    x = simd::ifelse(simd::bit_or(x < simd::set1(c), x > simd::set1(d)), simd::ifelse(x < simd::set1(c), simd::set1(0.f), simd::set1(d)), x);
     return simd::reinterpret<simd::Float>(simd::cvts<simd::Int>(x));
 }
 

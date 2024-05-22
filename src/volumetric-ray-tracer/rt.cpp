@@ -13,9 +13,45 @@ float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::
     return _exp(T);
 }
 
-float simd_transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
+float simd_transmittance(const vec4f_t _o, const vec4f_t _n, const float s, const std::vector<gaussian_t> gaussians)
 {
-    simd::Vec<simd::Float> T = simd::set1(1.f);
+    simd::Vec<simd::Float> T = simd::set1(0.f);
+    for (u64 i = 0; i < gaussians.size(); i += SIMD_FLOATS)
+    {
+        // NOTE: this seems non-optimal, maybe use struct of arrays for gaussians and vec4s instead?
+        float _mu_x[SIMD_FLOATS], _mu_y[SIMD_FLOATS], _mu_z[SIMD_FLOATS], _magnitude[SIMD_FLOATS], _sigma[SIMD_FLOATS];
+        for (u64 j = 0; j < SIMD_FLOATS; ++j)
+        {
+            if (j >= gaussians.size())
+            {
+                _mu_x[j]      = 0.f;
+                _mu_y[j]      = 0.f;
+                _mu_z[j]      = 0.f;
+                _magnitude[j] = 0.f;
+                _sigma[j]     = 1.f;
+                continue;
+            }
+            _mu_x[j]      = gaussians[i + j].mu.x;
+            _mu_y[j]      = gaussians[i + j].mu.y;
+            _mu_z[j]      = gaussians[i + j].mu.z;
+            _magnitude[j] = gaussians[i + j].magnitude;
+            _sigma[j]     = gaussians[i + j].sigma;
+        }
+        simd_gaussian_t g_q{
+            .mu{ .x = simd::loadu(_mu_x), .y = simd::loadu(_mu_y), .z = simd::loadu(_mu_z) },
+            .sigma = simd::loadu(_sigma),
+            .magnitude = simd::loadu(_magnitude)
+        };
+        simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
+        simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
+        const simd::Vec<simd::Float> mu_bar = (g_q.mu - o).dot(n);
+        const simd::Vec<simd::Float> c_bar = g_q.magnitude * _simd_exp(-((g_q.mu - o).dot(g_q.mu - o) - (mu_bar * mu_bar))/(simd::set1(2.f) * g_q.sigma * g_q.sigma));
+
+        constexpr float SQRT_2_PI = 0.7978845608028654f;
+        constexpr float SQRT_2 = 1.4142135623730951f;
+
+        T += ((g_q.sigma * c_bar)/simd::set1(SQRT_2_PI)) * (_simd_erf(-mu_bar/(simd::set1(SQRT_2) * g_q.sigma)) - _simd_erf((simd::set1(s) - mu_bar)/(simd::set1(SQRT_2) * g_q.sigma)));
+    }
     return _exp(simd::hadds(T));
 }
 
@@ -51,7 +87,7 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> ga
         {
             const float s = (G_q.mu - o).dot(n) + k * lambda_q;
             float T;
-            T = transmittance(o, n, s, gaussians);
+            T = _transmittance(o, n, s, gaussians);
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);

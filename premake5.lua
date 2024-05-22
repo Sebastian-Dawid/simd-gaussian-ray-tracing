@@ -83,7 +83,7 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/transmittance.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
+        files { "./src/volumetric-ray-tracer/tests/transmittance.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt" }
 
     project "timing-test"

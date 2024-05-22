@@ -71,19 +71,19 @@ struct simd_vec4f_t
     simd::Vec<simd::Float> x, y, z, w = simd::set1(0.f);
     simd_vec4f_t operator+(const simd_vec4f_t &other) const
     {
-        return simd_vec4f_t{ .x = this->x + other.x, .y = this->y + other.y, .z = this->z + other.z, .w = this->w + other.w };
+        return simd_vec4f_t{ this->x + other.x, this->y + other.y, this->z + other.z, this->w + other.w };
     }
     simd_vec4f_t operator-(const simd_vec4f_t &other) const
     {
-        return simd_vec4f_t{ .x = this->x - other.x, .y = this->y - other.y, .z = this->z - other.z, .w = this->w - other.w };
+        return simd_vec4f_t{ this->x - other.x, this->y - other.y, this->z - other.z, this->w - other.w };
     }
     simd_vec4f_t operator*(const simd::Vec<simd::Float> &lambda) const
     {
-        return simd_vec4f_t{ .x = this->x * lambda, .y = this->y * lambda, .z = this->z * lambda, .w = this->w * lambda };
+        return simd_vec4f_t{ this->x * lambda, this->y * lambda, this->z * lambda, this->w * lambda };
     }
     simd_vec4f_t operator/(const simd_vec4f_t &other) const
     {
-        return simd_vec4f_t{ .x = this->x / other.x, .y = this->y / other.y, .z = this->z / other.z, .w = this->w / other.w };
+        return simd_vec4f_t{ this->x / other.x, this->y / other.y, this->z / other.z, this->w / other.w };
     }
     simd::Vec<simd::Float> dot(const simd_vec4f_t &other) const
     {
@@ -91,7 +91,7 @@ struct simd_vec4f_t
     }
     simd_vec4f_t max(const simd_vec4f_t &other) const
     {
-        return simd_vec4f_t{ .x = simd::max(this->x, other.x), .y = simd::max(this->y, other.y), .z = simd::max(this->z, other.z), .w = simd::max(this->w, other.w) };
+        return simd_vec4f_t{ simd::max(this->x, other.x), simd::max(this->y, other.y), simd::max(this->z, other.z), simd::max(this->w, other.w) };
     }
     void normalize()
     {
@@ -100,6 +100,16 @@ struct simd_vec4f_t
         this->y /= norm;
         this->z /= norm;
         this->w /= norm;
+    }
+
+    static simd_vec4f_t from_vec4f_t(const vec4f_t &other)
+    {
+        return simd_vec4f_t{
+            .x = simd::set1(other.x),
+            .y = simd::set1(other.y),
+            .z = simd::set1(other.z),
+            .w = simd::set1(other.w)
+        };
     }
 };
 

@@ -79,6 +79,7 @@ int main(i32 argc, char **argv)
     bool use_taylor_approx = false;
     bool use_abramowitz_approx = false;
     bool use_fast_exp = false;
+    bool use_simd_transmittance = false;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Gaussians");
@@ -91,6 +92,7 @@ int main(i32 argc, char **argv)
         ImGui::Checkbox("erf taylor", &use_taylor_approx);
         ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
         ImGui::Checkbox("exp fast", &use_fast_exp);
+        ImGui::Checkbox("use simd", &use_simd_transmittance);
         ImGui::End();
     };
     bool running = true;
@@ -114,6 +116,8 @@ int main(i32 argc, char **argv)
         else _erf = std::erf;
         if (use_fast_exp) _exp = fast_exp;
         else _exp = std::exp;
+        if (use_simd_transmittance) _transmittance = simd_transmittance;
+        else _transmittance = transmittance;
 
         auto start_time = std::chrono::system_clock::now();
         vec4f_t pt = { -1.f, -1.f, 0.f };

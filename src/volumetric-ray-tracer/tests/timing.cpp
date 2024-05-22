@@ -36,31 +36,31 @@ int main()
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            u64 t_spline = simd::timeSpecDiffNsec(end, start);
+            u64 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             _erf = spline_erf_mirror;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            u64 t_mirror = simd::timeSpecDiffNsec(end, start);
+            u64 t_mirror = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             _erf = taylor_erf;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            u64 t_taylor = simd::timeSpecDiffNsec(end, start);
+            u64 t_taylor = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             _erf = abramowitz_stegun_erf;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            u64 t_abramowitz = simd::timeSpecDiffNsec(end, start);
+            u64 t_abramowitz = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             _erf = std::erf;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            u64 t_std = simd::timeSpecDiffNsec(end, start);
+            u64 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             fmt::println(CSV, "{}, {}, {}, {}, {}, {}", i * 16 + j + 1, t_spline, t_mirror, t_taylor, t_abramowitz, t_std);
         }
@@ -104,6 +104,43 @@ int main()
         }
     }
     std::fclose(CSV);
+
+    CSV = std::fopen("csv/timing_transmittance.csv", "wd");
+    if (!CSV) exit(EXIT_FAILURE);
+    fmt::println(CSV, "count, t_std, t_simd");
+    growing.clear();
+    _erf = std::erf;
+    for (u8 i = 0; i < 16; ++i)
+    {
+        for (u8 j = 0; j < 16; ++j)
+        {
+            growing.push_back(gaussian_t{
+                    .albedo{ 1.f, 0.f, 0.f, 1.f },
+                    .mu{ -1.f + i * 1.f/8.f, -1.f + j * 1.f/8.f, 0.f },
+                    .sigma = 1.f/8.f,
+                    .magnitude = 1.f
+                    });
+            _simd_erf = simd_abramowitz_stegun_erf;
+            _simd_exp = simd_fast_exp;
+            _transmittance = simd_transmittance;
+            GETTIME(start);
+            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            GETTIME(end);
+            float t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
+            
+            _erf = abramowitz_stegun_erf;
+            _exp = fast_exp;
+            _transmittance = transmittance;
+            GETTIME(start);
+            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            GETTIME(end);
+            float t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
+
+            fmt::println(CSV, "{}, {}, {}", i * 16 + j + 1, t_spline, t_fast);
+        }
+    }
+    std::fclose(CSV);
+
     char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/timing.jl", NULL };
     execvp("./julia/wrapper.sh", args);
     fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
