@@ -17,3 +17,8 @@ float fast_exp(float x);
 simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x);
 float spline_exp(float x);
 simd::Vec<simd::Float> simd_spline_exp(simd::Vec<simd::Float> x);
+
+inline float (*_erf)(float) = std::erf;
+inline float (*_exp)(float) = std::exp;
+inline simd::Vec<simd::Float> (*_simd_erf)(simd::Vec<simd::Float>) = simd_abramowitz_stegun_erf;
+inline simd::Vec<simd::Float> (*_simd_exp)(simd::Vec<simd::Float>) = simd_fast_exp;

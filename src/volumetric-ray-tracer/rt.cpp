@@ -13,6 +13,12 @@ float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::
     return _exp(T);
 }
 
+float simd_transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
+{
+    simd::Vec<simd::Float> T = simd::set1(1.f);
+    return _exp(simd::hadds(T));
+}
+
 float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians)
 {
     float T = 0.f;

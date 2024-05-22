@@ -3,9 +3,7 @@
 #include <vector>
 #include <cmath>
 #include "types.h"
-
-inline float (*_erf)(float) = std::erf;
-inline float (*_exp)(float) = std::exp;
+#include <include/tsimd_sh.H>
 
 float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians);
 float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians);

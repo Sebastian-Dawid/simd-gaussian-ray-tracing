@@ -21,8 +21,6 @@
 
 #pragma GCC diagnostic pop
 
-#define barrier() __asm__ __volatile__("" : : : "memory")
-
 #include "types.h"
 #include "approx.h"
 #include "rt.h"
