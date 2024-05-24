@@ -16,28 +16,30 @@ float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::
 float simd_transmittance(const vec4f_t _o, const vec4f_t _n, const float s, const std::vector<gaussian_t> gaussians)
 {
     simd::Vec<simd::Float> T = simd::set1(0.f);
+    // NOTE: this seems non-optimal, maybe use struct of arrays for gaussians and vec4s instead?
+    u64 size = ((gaussians.size()/SIMD_FLOATS) + 1) * SIMD_FLOATS;
+    float _mu_x[size], _mu_y[size], _mu_z[size], _magnitude[size], _sigma[size];
+    for (u64 j = 0; j < size; ++j)
+    {
+        if (j >= gaussians.size())
+        {
+            _mu_x[j]      = 0.f;
+            _mu_y[j]      = 0.f;
+            _mu_z[j]      = 0.f;
+            _magnitude[j] = 0.f;
+            _sigma[j]     = 1.f;
+            continue;
+        }
+        _mu_x[j]      = gaussians[j].mu.x;
+        _mu_y[j]      = gaussians[j].mu.y;
+        _mu_z[j]      = gaussians[j].mu.z;
+        _magnitude[j] = gaussians[j].magnitude;
+        _sigma[j]     = gaussians[j].sigma;
+    }
     for (u64 i = 0; i < gaussians.size(); i += SIMD_FLOATS)
     {
-        // NOTE: this seems non-optimal, maybe use struct of arrays for gaussians and vec4s instead?
-        float _mu_x[SIMD_FLOATS], _mu_y[SIMD_FLOATS], _mu_z[SIMD_FLOATS], _magnitude[SIMD_FLOATS], _sigma[SIMD_FLOATS];
-        for (u64 j = 0; j < SIMD_FLOATS; ++j)
-        {
-            if (j >= gaussians.size())
-            {
-                _mu_x[j]      = 0.f;
-                _mu_y[j]      = 0.f;
-                _mu_z[j]      = 0.f;
-                _magnitude[j] = 0.f;
-                _sigma[j]     = 1.f;
-                continue;
-            }
-            _mu_x[j]      = gaussians[i + j].mu.x;
-            _mu_y[j]      = gaussians[i + j].mu.y;
-            _mu_z[j]      = gaussians[i + j].mu.z;
-            _magnitude[j] = gaussians[i + j].magnitude;
-            _sigma[j]     = gaussians[i + j].sigma;
-        }
         simd_gaussian_t g_q{
+            .albedo{},
             .mu{ .x = simd::loadu(_mu_x), .y = simd::loadu(_mu_y), .z = simd::loadu(_mu_z) },
             .sigma = simd::loadu(_sigma),
             .magnitude = simd::loadu(_magnitude)

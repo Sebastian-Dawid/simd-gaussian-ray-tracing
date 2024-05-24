@@ -1,10 +1,12 @@
 #pragma once
 
 #include <include/tsimd_sh.H>
+#include <include/definitions.h>
 #include <cmath>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <vector>
 #ifdef INCLUDE_IMGUI
 #include <imgui.h>
 #endif
@@ -140,6 +142,77 @@ struct gaussian_t
         ImGui::End();
     }
 #endif
+};
+
+// for easier loading into simd gaussians
+struct gaussian_vec_t
+{
+    struct
+    {
+        float *r;
+        float *g;
+        float *b;
+    } albedo;
+    struct
+    {
+        float *x;
+        float *y;
+        float *z;
+    } mu;
+    float *sigma;
+    float *magnitude;
+
+    static gaussian_vec_t from_gaussians(const std::vector<gaussian_t> &gaussians)
+    {
+        gaussian_vec_t vec;
+        u64 size = ((gaussians.size() / SIMD_FLOATS) + 1) * SIMD_FLOATS;
+
+        vec.mu.x = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.y = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.z = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.r = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.g = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.b = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.sigma = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.magnitude = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+
+        for (u64 i = 0; i < size; ++i)
+        {
+            if (i >= gaussians.size())
+            {
+                vec.mu.x[i]      = 0.f;
+                vec.mu.y[i]      = 0.f;
+                vec.mu.z[i]      = 0.f;
+                vec.albedo.r[i]  = 0.f;
+                vec.albedo.g[i]  = 0.f;
+                vec.albedo.b[i]  = 0.f;
+                vec.sigma[i]     = 0.f;
+                vec.magnitude[i] = 0.f;
+                continue;
+            }
+            vec.mu.x[i]      = gaussians[i].mu.x;
+            vec.mu.y[i]      = gaussians[i].mu.y;
+            vec.mu.z[i]      = gaussians[i].mu.z;
+            vec.albedo.r[i]  = gaussians[i].albedo.x;
+            vec.albedo.g[i]  = gaussians[i].albedo.y;
+            vec.albedo.b[i]  = gaussians[i].albedo.z;
+            vec.sigma[i]     = gaussians[i].sigma;
+            vec.magnitude[i] = gaussians[i].magnitude;
+        }
+        return vec;
+    }
+
+    ~gaussian_vec_t()
+    {
+        free(this->mu.x);
+        free(this->mu.y);
+        free(this->mu.z);
+        free(this->albedo.r);
+        free(this->albedo.g);
+        free(this->albedo.b);
+        free(this->sigma);
+        free(this->magnitude);
+    }
 };
 
 struct simd_gaussian_t

@@ -77,9 +77,10 @@ float abramowitz_stegun_erf(float x)
 {
     float sign = SIGN(x);
     x *= sign;
+    const float square = x*x;
     constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
-    float denom = 1 + a[0]*x + a[1]*x*x + a[2]*x*x*x + a[3]*x*x*x*x;
-    float val = 1 - 1/(denom*denom*denom*denom);
+    const float denom = 1 + a[0]*x + a[1]*square + a[2]*square*x + a[3]*square*square;
+    const float val = 1 - 1/(denom*denom*denom*denom);
     return val * sign;
 }
 
@@ -87,10 +88,10 @@ simd::Vec<simd::Float> simd_abramowitz_stegun_erf(simd::Vec<simd::Float> x)
 {
     const simd::Vec<simd::Float> sign = simd::ifelse(x < simd::set1(0.f), simd::set1(-1.f), simd::set1(1.f));
     x *= sign;
+    const simd::Vec<simd::Float> square = x*x;
     constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
-    // TODO: examine if x^4 is needed for accuracy (visibile in final image?)
-    simd::Vec<simd::Float> denom = simd::set1(1.f) + simd::set1(a[0])*x + simd::set1(a[1])*x*x + simd::set1(a[2])*x*x*x + simd::set1(a[3])*x*x*x*x;
-    simd::Vec<simd::Float> val = simd::set1(1.f) - simd::set1(1.f)/(denom*denom*denom*denom);
+    const simd::Vec<simd::Float> denom = simd::set1(1.f) + simd::set1(a[0])*x + simd::set1(a[1])*square + simd::set1(a[2])*square*x + simd::set1(a[3])*square*square;
+    const simd::Vec<simd::Float> val = simd::set1(1.f) - simd::set1(1.f)/(denom*denom*denom*denom);
     return val * sign;
 }
 

@@ -56,12 +56,13 @@ int main(i32 argc, char **argv)
     std::vector<gaussian_t> gaussians;
     if (grid)
     {
-        for (u8 i = 0; i < 4; ++i)
-            for (u8 j = 0; j < 4; ++j)
+        constexpr u8 num = 4;
+        for (u8 i = 0; i < num; ++i)
+            for (u8 j = 0; j < num; ++j)
                 gaussians.push_back(gaussian_t{
-                        .albedo{ 1.f, 0.f, 0.f, 1.f },
-                        .mu{ -1.f + i * 1.f/2.f, -1.f + j * 1.f/2.f, 0.f },
-                        .sigma = 1.f/8.f,
+                        .albedo{ 1.f - (i * num + j)/(float)(num*num), 0.f, 0.f + (i * num + j)/(float)(num*num), 1.f },
+                        .mu{ -1.f + 1.f/num + i * 1.f/(num/2.f), -1.f + 1.f/num + j * 1.f/(num/2.f), 0.f },
+                        .sigma = 1.f/(2 * num),
                         .magnitude = 1.f
                         });
     }
