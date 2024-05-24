@@ -161,6 +161,34 @@ struct gaussian_vec_t
     } mu;
     float *sigma;
     float *magnitude;
+    u64 size;
+
+    void load_gaussians(const std::vector<gaussian_t> &gaussians)
+    {
+        for (u64 i = 0; i < this->size; ++i)
+        {
+            if (i >= gaussians.size())
+            {
+                this->mu.x[i]      = 0.f;
+                this->mu.y[i]      = 0.f;
+                this->mu.z[i]      = 0.f;
+                this->albedo.r[i]  = 0.f;
+                this->albedo.g[i]  = 0.f;
+                this->albedo.b[i]  = 0.f;
+                this->sigma[i]     = 1.f;
+                this->magnitude[i] = 0.f;
+                continue;
+            }
+            this->mu.x[i]      = gaussians[i].mu.x;
+            this->mu.y[i]      = gaussians[i].mu.y;
+            this->mu.z[i]      = gaussians[i].mu.z;
+            this->albedo.r[i]  = gaussians[i].albedo.x;
+            this->albedo.g[i]  = gaussians[i].albedo.y;
+            this->albedo.b[i]  = gaussians[i].albedo.z;
+            this->sigma[i]     = gaussians[i].sigma;
+            this->magnitude[i] = gaussians[i].magnitude;
+        }
+    }
 
     static gaussian_vec_t from_gaussians(const std::vector<gaussian_t> &gaussians)
     {
@@ -186,7 +214,7 @@ struct gaussian_vec_t
                 vec.albedo.r[i]  = 0.f;
                 vec.albedo.g[i]  = 0.f;
                 vec.albedo.b[i]  = 0.f;
-                vec.sigma[i]     = 0.f;
+                vec.sigma[i]     = 1.f;
                 vec.magnitude[i] = 0.f;
                 continue;
             }
@@ -199,6 +227,7 @@ struct gaussian_vec_t
             vec.sigma[i]     = gaussians[i].sigma;
             vec.magnitude[i] = gaussians[i].magnitude;
         }
+        vec.size = size;
         return vec;
     }
 
@@ -213,6 +242,12 @@ struct gaussian_vec_t
         free(this->sigma);
         free(this->magnitude);
     }
+};
+
+struct gaussians_t
+{
+    std::vector<gaussian_t> gaussians;
+    gaussian_vec_t gaussians_broadcast;
 };
 
 struct simd_gaussian_t

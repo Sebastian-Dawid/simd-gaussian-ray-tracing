@@ -1,10 +1,10 @@
 #include "rt.h"
 #include <include/definitions.h>
 
-float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::vector<gaussian_t> gaussians)
+float transmittance(const vec4f_t o, const vec4f_t n, const float s, const gaussians_t &gaussians)
 {
     float T = 0.f;
-    for (const gaussian_t &g_q : gaussians)
+    for (const gaussian_t &g_q : gaussians.gaussians)
     {
         const float mu_bar = (g_q.mu - o).dot(n);
         const float c_bar = g_q.magnitude * _exp(-((g_q.mu - o).dot(g_q.mu - o) - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)));
@@ -13,36 +13,18 @@ float transmittance(const vec4f_t o, const vec4f_t n, const float s, const std::
     return _exp(T);
 }
 
-float simd_transmittance(const vec4f_t _o, const vec4f_t _n, const float s, const std::vector<gaussian_t> gaussians)
+float simd_transmittance(const vec4f_t _o, const vec4f_t _n, const float s, const gaussians_t &gaussians)
 {
     simd::Vec<simd::Float> T = simd::set1(0.f);
-    // NOTE: this seems non-optimal, maybe use struct of arrays for gaussians and vec4s instead?
-    u64 size = ((gaussians.size()/SIMD_FLOATS) + 1) * SIMD_FLOATS;
-    float _mu_x[size], _mu_y[size], _mu_z[size], _magnitude[size], _sigma[size];
-    for (u64 j = 0; j < size; ++j)
-    {
-        if (j >= gaussians.size())
-        {
-            _mu_x[j]      = 0.f;
-            _mu_y[j]      = 0.f;
-            _mu_z[j]      = 0.f;
-            _magnitude[j] = 0.f;
-            _sigma[j]     = 1.f;
-            continue;
-        }
-        _mu_x[j]      = gaussians[j].mu.x;
-        _mu_y[j]      = gaussians[j].mu.y;
-        _mu_z[j]      = gaussians[j].mu.z;
-        _magnitude[j] = gaussians[j].magnitude;
-        _sigma[j]     = gaussians[j].sigma;
-    }
-    for (u64 i = 0; i < gaussians.size(); i += SIMD_FLOATS)
+    for (u64 i = 0; i < gaussians.gaussians.size(); i += SIMD_FLOATS)
     {
         simd_gaussian_t g_q{
             .albedo{},
-            .mu{ .x = simd::loadu(_mu_x), .y = simd::loadu(_mu_y), .z = simd::loadu(_mu_z) },
-            .sigma = simd::loadu(_sigma),
-            .magnitude = simd::loadu(_magnitude)
+            .mu{ .x = simd::loadu(gaussians.gaussians_broadcast.mu.x + i),
+                .y = simd::loadu(gaussians.gaussians_broadcast.mu.y + i),
+                .z = simd::loadu(gaussians.gaussians_broadcast.mu.z + i) },
+            .sigma = simd::loadu(gaussians.gaussians_broadcast.sigma + i),
+            .magnitude = simd::loadu(gaussians.gaussians_broadcast.magnitude + i)
         };
         simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
         simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
@@ -78,10 +60,10 @@ float density(const vec4f_t pt, const std::vector<gaussian_t> gaussians)
     return D;
 }
 
-vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const std::vector<gaussian_t> gaussians)
+vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
 {
     vec4f_t L_hat{ .x = 0.f, .y = 0.f, .z = 0.f };
-    for (const gaussian_t &G_q : gaussians)
+    for (const gaussian_t &G_q : gaussians.gaussians)
     {
         const float lambda_q = G_q.sigma;
         float inner = 0.f;
