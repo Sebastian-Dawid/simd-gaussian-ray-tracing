@@ -281,7 +281,7 @@ bool renderer_t::update()
     transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
     const vk::ClearColorValue color(std::array<float, 4>{0.f, 0.f, 0.f, 1.f});
-    cmd.clearColorImage(this->swapchain.images[swapchain_image_index], vk::ImageLayout::eGeneral, color, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+    cmd.clearColorImage(this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, color, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
     std::lock_guard<std::mutex> guard(this->staging_buffers.mutex);
     vk::BufferImageCopy copy_region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0 ,1), {}, this->staging_buffers.extent);

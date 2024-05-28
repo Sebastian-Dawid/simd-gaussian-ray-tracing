@@ -57,24 +57,25 @@ int main(i32 argc, char **argv)
         ++idx;
     }
 
-    std::vector<gaussian_t> gaussians;
+    std::vector<gaussian_t> _gaussians;
     if (grid)
     {
-        constexpr u8 num = 4;
+        constexpr u8 num = 5;
         for (u8 i = 0; i < num; ++i)
             for (u8 j = 0; j < num; ++j)
-                gaussians.push_back(gaussian_t{
+                _gaussians.push_back(gaussian_t{
                         .albedo{ 1.f - (i * num + j)/(float)(num*num), 0.f, 0.f + (i * num + j)/(float)(num*num), 1.f },
                         .mu{ -1.f + 1.f/num + i * 1.f/(num/2.f), -1.f + 1.f/num + j * 1.f/(num/2.f), 0.f },
                         .sigma = 1.f/(2 * num),
-                        .magnitude = 1.f
+                        .magnitude = 3.f
                         });
     }
     else
     {
-        gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
     }
-    std::vector<gaussian_t> staging_gaussians = gaussians;
+    std::vector<gaussian_t> staging_gaussians = _gaussians;
+    gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     const vec4f_t origin = { 0.f, 0.f, -5.f };
     
     renderer_t renderer;
@@ -86,6 +87,7 @@ int main(i32 argc, char **argv)
     bool use_fast_exp = false;
     bool use_simd_transmittance = false;
     bool use_simd_pixels = false;
+
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Gaussians");
@@ -129,7 +131,8 @@ int main(i32 argc, char **argv)
             height = new_height;
             image = (u32*)std::realloc(image, width * height * sizeof(u32));
         }
-        gaussians = staging_gaussians;
+        gaussians.gaussians = staging_gaussians;
+        gaussians.gaussians_broadcast.load_gaussians(staging_gaussians);
         if (use_spline_approx) _erf = spline_erf;
         else if (use_mirror_approx) _erf = spline_erf_mirror;
         else if (use_taylor_approx) _erf = taylor_erf;
