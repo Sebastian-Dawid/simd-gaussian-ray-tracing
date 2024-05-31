@@ -195,14 +195,14 @@ struct gaussian_vec_t
         gaussian_vec_t vec;
         u64 size = ((gaussians.size() / SIMD_FLOATS) + 1) * SIMD_FLOATS;
 
-        vec.mu.x = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.mu.y = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.mu.z = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.r = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.g = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.b = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.sigma = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
-        vec.magnitude = (float*)std::aligned_alloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.x = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.y = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.z = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.r = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.g = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.albedo.b = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.sigma = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.magnitude = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
 
         for (u64 i = 0; i < size; ++i)
         {
@@ -233,14 +233,14 @@ struct gaussian_vec_t
 
     ~gaussian_vec_t()
     {
-        free(this->mu.x);
-        free(this->mu.y);
-        free(this->mu.z);
-        free(this->albedo.r);
-        free(this->albedo.g);
-        free(this->albedo.b);
-        free(this->sigma);
-        free(this->magnitude);
+        simd_aligned_free(this->mu.x);
+        simd_aligned_free(this->mu.y);
+        simd_aligned_free(this->mu.z);
+        simd_aligned_free(this->albedo.r);
+        simd_aligned_free(this->albedo.g);
+        simd_aligned_free(this->albedo.b);
+        simd_aligned_free(this->sigma);
+        simd_aligned_free(this->magnitude);
     }
 };
 

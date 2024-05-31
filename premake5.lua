@@ -2,12 +2,17 @@ ARCH = os.getenv("ARCH")
 if ARCH == nil then
     ARCH = "native"
 end
+NVIDIA = os.getenv("NVIDIA")
 
 workspace "ba-thesis"
     toolset "clang"
     cppdialect "c++20"
     configurations { "debug", "release" }
     location "build"
+
+    if NVIDIA ~= nil then
+        defines { "NVIDIA" }
+    end
 
     filter "configurations:debug"
         defines { "DEBUG" }
@@ -94,4 +99,14 @@ workspace "ba-thesis"
 
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt" }
+
+    project "image-timing-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt" }

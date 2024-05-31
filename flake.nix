@@ -34,6 +34,7 @@
             shellHook = ''
                 exec zsh
                 '';
+            NVIDIA=1;
         };
     };
 }
