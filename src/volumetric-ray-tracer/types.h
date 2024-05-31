@@ -260,4 +260,13 @@ struct simd_gaussian_t
     {
         return this->magnitude * _simd_exp(-((x - this->mu).dot(x - this->mu))/(simd::set1(2.f) * this->sigma * this->sigma));
     }
+    static simd_gaussian_t from_gaussian_t(const gaussian_t &other)
+    {
+        simd_gaussian_t g;
+        g.albedo = simd_vec4f_t::from_vec4f_t(other.albedo);
+        g.mu = simd_vec4f_t::from_vec4f_t(other.mu);
+        g.sigma = simd::set1(other.sigma);
+        g.magnitude = simd::set1(other.magnitude);
+        return g;
+    }
 };

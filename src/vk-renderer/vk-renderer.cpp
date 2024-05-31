@@ -362,7 +362,7 @@ void renderer_t::run(bool &running)
 bool renderer_t::create_swapchain(u32 width, u32 height)
 {
     vkb::SwapchainBuilder swapchain_builder{ this->physical_device, this->device.device, this->window.surface };
-    this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
+    this->swapchain.format = vk::Format::eR8G8B8A8Unorm;
 
     const vkb::Result<vkb::Swapchain> swapchain_or_error = swapchain_builder.set_desired_format((VkSurfaceFormatKHR)vk::SurfaceFormatKHR(this->swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
         .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)

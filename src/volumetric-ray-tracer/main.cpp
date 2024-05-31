@@ -156,7 +156,7 @@ int main(i32 argc, char **argv)
             u32 R = (u32)(color.x * 255);
             u32 G = (u32)(color.y * 255);
             u32 B = (u32)(color.z * 255);
-            image[i] = A | R << 16 | G << 8 | B;
+            image[i] = A | R | G << 8 | B << 16;
             if (!running) goto cleanup;
         }
 

@@ -39,6 +39,8 @@ float simd_transmittance(const vec4f_t _o, const vec4f_t _n, const float s, cons
     return _exp(simd::hadds(T));
 }
 
+simd::Vec<simd::Float> broadcast_transmittance();
+
 float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians)
 {
     float T = 0.f;
@@ -75,6 +77,25 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);
+    }
+    return L_hat;
+}
+
+simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
+{
+    simd_vec4f_t L_hat{ .x = simd::set1(0.f), .y = simd::set1(0.f), .z = simd::set1(0.f) };
+    for (const gaussian_t &G_q : gaussians.gaussians)
+    {
+        const simd::Vec<simd::Float> lambda_q = simd::set1(G_q.sigma);
+        simd::Vec<simd::Float> inner = simd::set1(0.f);
+        for (i8 k = -4; k <= 0; ++k)
+        {
+            const simd::Vec<simd::Float> s = (simd_vec4f_t::from_vec4f_t(G_q.mu) - o).dot(n) + simd::set1((float)k) * lambda_q;
+            simd::Vec<simd::Float> T;
+            T = broadcast_transmittance();
+            inner += simd_gaussian_t::from_gaussian_t(G_q).pdf(o + (n * s)) * T * lambda_q;
+        }
+        L_hat = L_hat + (simd_vec4f_t::from_vec4f_t(G_q.albedo) * inner);
     }
     return L_hat;
 }
