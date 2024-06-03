@@ -27,5 +27,5 @@ if abspath(PROGRAM_FILE) == @__FILE__
         mkdir(img_dir)
     end
     approx, err = load_data()
-    savefig(plot(approx, err), img_dir*"/cmp_erf.png")
+    savefig(plot(approx, err), img_dir*"/"*ENV["ARCH"]*"_cmp_erf.png")
 end

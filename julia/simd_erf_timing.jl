@@ -40,7 +40,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         mkdir(img_dir)
     end
     plt_erf, plt_exp = load_data()
-    savefig(plt_erf, img_dir*"/simd_erf_timing.png")
-    savefig(plt_exp, img_dir*"/simd_exp_timing.png")
+    savefig(plt_erf, img_dir*"/"*ENV["ARCH"]*"_simd_erf_timing.png")
+    savefig(plt_exp, img_dir*"/"*ENV["ARCH"]*"_simd_exp_timing.png")
 end
 

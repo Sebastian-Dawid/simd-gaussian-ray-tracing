@@ -7,7 +7,7 @@ int main()
 {
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    CPU_SET(6, &mask);
+    CPU_SET(10, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
     
     FILE *CSV = std::fopen("csv/erf.csv", "wd");

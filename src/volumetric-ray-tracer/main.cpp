@@ -52,23 +52,30 @@ int main(i32 argc, char **argv)
     bool grid = false;
     u64 idx = 0;
     u64 filename_idx = -1;
+    u64 grid_width_idx = -1;
     for (char *s : args)
     {
-        if (std::strncmp(s, "--grid", 7) == 0) grid = true;
-        if (std::strncmp(s, "-o", 3) == 0) filename_idx = idx+1;
+        if (std::strncmp(s, "--grid", 7) == 0)
+        {
+            grid = true;
+            if ((u64)argc > idx + 1 && isdigit(argv[idx + 1][0]))
+                grid_width_idx = idx + 1;
+        }
+        if (std::strncmp(s, "-o", 3) == 0) filename_idx = idx + 1;
         ++idx;
     }
 
     std::vector<gaussian_t> _gaussians;
     if (grid)
     {
-        constexpr u8 num = 5;
-        for (u8 i = 0; i < num; ++i)
-            for (u8 j = 0; j < num; ++j)
+        constexpr u8 base_dim = 4;
+        u8 grid_dim = (grid_width_idx != (u64)-1) ? strtoul(argv[grid_width_idx], NULL, 10) : base_dim;
+        for (u8 i = 0; i < grid_dim; ++i)
+            for (u8 j = 0; j < grid_dim; ++j)
                 _gaussians.push_back(gaussian_t{
-                        .albedo{ 1.f - (i * num + j)/(float)(num*num), 0.f, 0.f + (i * num + j)/(float)(num*num), 1.f },
-                        .mu{ -1.f + 1.f/num + i * 1.f/(num/2.f), -1.f + 1.f/num + j * 1.f/(num/2.f), 0.f },
-                        .sigma = 1.f/(2 * num),
+                        .albedo{ 1.f - (i * grid_dim + j)/(float)(grid_dim*grid_dim), 0.f, 0.f + (i * grid_dim + j)/(float)(grid_dim*grid_dim), 1.f },
+                        .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 0.f },
+                        .sigma = 1.f/(2 * grid_dim),
                         .magnitude = 3.f
                         });
     }

@@ -12,7 +12,7 @@ int main()
     CPU_ZERO(&mask);
 
     // bind process to CPU2
-    CPU_SET(2, &mask);
+    CPU_SET(6, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
 
     vec4f_t dir = {0.f, 0.f, 1.f};        

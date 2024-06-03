@@ -14,7 +14,7 @@ int main()
     CPU_ZERO(&mask);
 
     // bind process to CPU4
-    CPU_SET(2, &mask);
+    CPU_SET(4, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
 
     FILE *CSV = std::fopen("csv/timing_erf.csv", "wd");

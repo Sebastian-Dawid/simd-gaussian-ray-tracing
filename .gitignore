@@ -2,7 +2,6 @@ compile_commands.json
 build
 .cache
 out
-images
 *.csv
 *.pdf
 imgui.ini
