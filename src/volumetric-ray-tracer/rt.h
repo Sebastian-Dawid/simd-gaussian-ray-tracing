@@ -1,16 +1,34 @@
 #pragma once
 
 #include <vector>
-#include <cmath>
 #include "types.h"
 #include <include/tsimd_sh.H>
 
-float transmittance(const vec4f_t o, const vec4f_t n, const float s, const gaussians_t &gaussians);
-float simd_transmittance(const vec4f_t o, const vec4f_t n, const float s, const gaussians_t &gaussians);
-float transmittance_step(const vec4f_t o, const vec4f_t n, const float s, const float delta, const std::vector<gaussian_t> gaussians);
-float density(const vec4f_t pt, const std::vector<gaussian_t> gaussians);
+#define GENERATE_PROJECTION_PLANE(XS, YS, W, H)                        \
+{                                                                      \
+    XS = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * W * H);   \
+    YS = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * W * H);   \
+    for (u64 i = 0; i < H; ++i)                                        \
+    {                                                                  \
+        for (u64 j = 0; j < W; ++j)                                    \
+        {                                                              \
+            xs[i * W + j] = -1.f + j/(W/2.f);                          \
+            ys[i * W + j] = -1.f + i/(H/2.f);                          \
+        }                                                              \
+    }                                                                  \
+}
 
-inline float (*_transmittance)(const vec4f_t, const vec4f_t, const float, const gaussians_t&) = transmittance;
+f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians);
+f32 simd_transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians);
+f32 transmittance_step(const vec4f_t o, const vec4f_t n, const f32 s, const f32 delta, const std::vector<gaussian_t> gaussians);
+f32 density(const vec4f_t pt, const std::vector<gaussian_t> gaussians);
+
+inline f32 (*_transmittance)(const vec4f_t, const vec4f_t, const f32, const gaussians_t&) = transmittance;
 
 vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians);
 simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians);
+
+bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running = true);
+
+/// reqiores `image`, `xs` and `ys` to be aligned to SIMD_BYTES
+bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running = true);

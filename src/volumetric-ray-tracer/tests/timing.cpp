@@ -86,19 +86,19 @@ int main()
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            float t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
+            f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             _exp = fast_exp;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            float t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
+            f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             _exp = std::exp;
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            float t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
+            f32 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             fmt::println(CSV, "{}, {}, {}, {}", i * 16 + j + 1, t_spline, t_fast, t_std);
         }
@@ -128,7 +128,7 @@ int main()
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            float t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
+            f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             _erf = abramowitz_stegun_erf;
             _exp = fast_exp;
@@ -136,7 +136,7 @@ int main()
             GETTIME(start);
             l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
-            float t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
+            f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             fmt::println(CSV, "{}, {}, {}", i * 16 + j + 1, t_spline, t_fast);
         }

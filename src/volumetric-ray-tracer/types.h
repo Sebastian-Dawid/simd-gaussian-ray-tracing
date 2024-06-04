@@ -16,7 +16,7 @@
 
 struct vec4f_t
 {
-    float x, y, z, w = 0.f;
+    f32 x, y, z, w = 0.f;
     vec4f_t operator+(const vec4f_t &other) const
     {
         return vec4f_t{ .x = this->x + other.x, .y = this->y + other.y, .z = this->z + other.z, .w = this->w + other.w };
@@ -25,7 +25,7 @@ struct vec4f_t
     {
         return vec4f_t{ .x = this->x - other.x, .y = this->y - other.y, .z = this->z - other.z, .w = this->w - other.w };
     }
-    vec4f_t operator*(const float &lambda) const
+    vec4f_t operator*(const f32 &lambda) const
     {
         return vec4f_t{ .x = this->x * lambda, .y = this->y * lambda, .z = this->z * lambda, .w = this->w * lambda };
     }
@@ -33,7 +33,7 @@ struct vec4f_t
     {
         return vec4f_t{ .x = this->x / other.x, .y = this->y / other.y, .z = this->z / other.z, .w = this->w / other.w };
     }
-    float dot(const vec4f_t &other) const
+    f32 dot(const vec4f_t &other) const
     {
         return this->x * other.x + this->y * other.y + this->z * other.z + this->w * other.w;
     }
@@ -43,14 +43,14 @@ struct vec4f_t
     }
     void normalize()
     {
-        float norm = std::sqrt(this->dot(*this));
+        f32 norm = std::sqrt(this->dot(*this));
         this->x /= norm;
         this->y /= norm;
         this->z /= norm;
         this->w /= norm;
     }
 #ifdef INCLUDE_IMGUI
-    void imgui_controls(std::string label = "x, y, z, w", float min = -10.f, float max = 10.f, bool color = false)
+    void imgui_controls(std::string label = "x, y, z, w", f32 min = -10.f, f32 max = 10.f, bool color = false)
     {
         ImGui::PushID(this);
         if (color)
@@ -119,9 +119,9 @@ struct gaussian_t
 {
     vec4f_t albedo;
     vec4f_t mu;
-    float sigma;
-    float magnitude;
-    float pdf(vec4f_t x) const
+    f32 sigma;
+    f32 magnitude;
+    f32 pdf(vec4f_t x) const
     {
         return this->magnitude * _exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
     }
@@ -149,18 +149,18 @@ struct gaussian_vec_t
 {
     struct
     {
-        float *r;
-        float *g;
-        float *b;
+        f32 *r;
+        f32 *g;
+        f32 *b;
     } albedo;
     struct
     {
-        float *x;
-        float *y;
-        float *z;
+        f32 *x;
+        f32 *y;
+        f32 *z;
     } mu;
-    float *sigma;
-    float *magnitude;
+    f32 *sigma;
+    f32 *magnitude;
     u64 size;
 
     void load_gaussians(const std::vector<gaussian_t> &gaussians)
@@ -195,14 +195,14 @@ struct gaussian_vec_t
         gaussian_vec_t vec;
         u64 size = ((gaussians.size() / SIMD_FLOATS) + 1) * SIMD_FLOATS;
 
-        vec.mu.x = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.mu.y = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.mu.z = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.r = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.g = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.albedo.b = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.sigma = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
-        vec.magnitude = (float*)simd_aligned_malloc(SIMD_BYTES, sizeof(float) * size);
+        vec.mu.x = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.mu.y = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.mu.z = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.albedo.r = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.albedo.g = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.albedo.b = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.sigma = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec.magnitude = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
 
         for (u64 i = 0; i < size; ++i)
         {

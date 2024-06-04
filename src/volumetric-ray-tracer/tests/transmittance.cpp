@@ -19,13 +19,13 @@ int main()
     FILE *CSV = std::fopen("csv/data.csv", "wd");
     if (!CSV) exit(EXIT_FAILURE);
     fmt::println(CSV, "s, T, T_s, err, D");
-    for (float k = -6.f; k <= 6; k += .1f)
+    for (f32 k = -6.f; k <= 6; k += .1f)
     {
-        float s = (gaussians.gaussians[2].mu - origin).dot(dir) + k * gaussians.gaussians[2].sigma;
-        float T = transmittance(origin, dir, s, gaussians);
-        float T_s = transmittance_step(origin, dir, s, gaussians.gaussians[2].sigma, gaussians.gaussians);
-        float err = std::abs(T - T_s);
-        float D = density(origin + dir * s, gaussians.gaussians);
+        f32 s = (gaussians.gaussians[2].mu - origin).dot(dir) + k * gaussians.gaussians[2].sigma;
+        f32 T = transmittance(origin, dir, s, gaussians);
+        f32 T_s = transmittance_step(origin, dir, s, gaussians.gaussians[2].sigma, gaussians.gaussians);
+        f32 err = std::abs(T - T_s);
+        f32 D = density(origin + dir * s, gaussians.gaussians);
         fmt::println(CSV, "{}, {}, {}, {}, {}", s, T, T_s, err, D);
     }
     std::fclose(CSV);

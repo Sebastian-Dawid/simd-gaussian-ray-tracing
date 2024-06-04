@@ -13,7 +13,7 @@ int main()
     FILE *CSV = std::fopen("csv/erf.csv", "wd");
     if (!CSV) exit(EXIT_FAILURE);
     fmt::println(CSV, "x, spline, spline_mirror, taylor, abramowitz-stegun, erf");
-    for (float x = -6.f; x <= 6.f; x+=0.1f)
+    for (f32 x = -6.f; x <= 6.f; x+=0.1f)
     {
         fmt::println(CSV, "{}, {}, {}, {}, {}, {}", x, spline_erf(x), spline_erf_mirror(x), taylor_erf(x), abramowitz_stegun_erf(x), std::erf(x));
     }
@@ -22,12 +22,12 @@ int main()
     CSV = std::fopen("csv/exp.csv", "wd");
     if (!CSV) exit(EXIT_FAILURE);
     fmt::println(CSV, "x, exp");
-    float t[160] = {0};
-    float v_std[160] = {0};
-    float v_fast[160] = {0};
-    float v_fast_simd[160] = {0};
+    f32 t[160] = {0};
+    f32 v_std[160] = {0};
+    f32 v_fast[160] = {0};
+    f32 v_fast_simd[160] = {0};
     u64 idx = 0;
-    for (float x = -16.f; x <= 0.f; x += SIMD_FLOATS * 0.1)
+    for (f32 x = -16.f; x <= 0.f; x += SIMD_FLOATS * 0.1)
     {
         for (u8 i = 0; i < SIMD_FLOATS; ++i)
         {

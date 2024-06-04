@@ -280,7 +280,7 @@ bool renderer_t::update()
 
     transition_image(cmd, this->swapchain.images[swapchain_image_index], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
-    const vk::ClearColorValue color(std::array<float, 4>{0.f, 0.f, 0.f, 1.f});
+    const vk::ClearColorValue color(std::array<f32, 4>{0.f, 0.f, 0.f, 1.f});
     cmd.clearColorImage(this->swapchain.images[swapchain_image_index], vk::ImageLayout::eTransferDstOptimal, color, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
     std::lock_guard<std::mutex> guard(this->staging_buffers.mutex);
@@ -362,11 +362,7 @@ void renderer_t::run(bool &running)
 bool renderer_t::create_swapchain(u32 width, u32 height)
 {
     vkb::SwapchainBuilder swapchain_builder{ this->physical_device, this->device.device, this->window.surface };
-#ifdef NVIDIA
     this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
-#else
-    this->swapchain.format = vk::Format::eR8G8B8A8Unorm;
-#endif
 
     const vkb::Result<vkb::Swapchain> swapchain_or_error = swapchain_builder.set_desired_format((VkSurfaceFormatKHR)vk::SurfaceFormatKHR(this->swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
         .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)

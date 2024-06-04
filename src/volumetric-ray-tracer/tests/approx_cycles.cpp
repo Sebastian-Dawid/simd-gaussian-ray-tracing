@@ -49,38 +49,38 @@ i32 main()
     if (rdpmc_open(PERF_COUNT_HW_CPU_CYCLES, &ctx) < 0) exit(EXIT_FAILURE);
     for (u64 i = 1; i <= COUNT; ++i)
     {
-        float t[SIMD_FLOATS * i];
-        float s[SIMD_FLOATS * i];
+        f32 t[SIMD_FLOATS * i];
+        f32 s[SIMD_FLOATS * i];
         for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
             t[j] = -6.f + 12.f * drand48();
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
                 simd::storeu(s + j, simd_spline_erf(simd::loadu(t + j))););
-        float t_simd = (float)acc/ITER;
+        f32 t_simd = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
                 simd::storeu(s + j, simd_spline_erf_mirror(simd::loadu(t + j))););
-        float t_simd_mirror = (float)acc/ITER;
+        f32 t_simd_mirror = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
                 simd::storeu(s + j, simd_abramowitz_stegun_erf(simd::loadu(t + j))););
-        float t_simd_abramowitz = (float)acc/ITER;
+        f32 t_simd_abramowitz = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = spline_erf(t[j]););
-        float t_spline = (float)acc/ITER;
+        f32 t_spline = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = spline_erf_mirror(t[j]););
-        float t_spline_mirror = (float)acc/ITER;
+        f32 t_spline_mirror = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = abramowitz_stegun_erf(t[j]););
-        float t_abramowitz = (float)acc/ITER;
+        f32 t_abramowitz = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = std::erf(t[j]););
-        float t_std = (float)acc/ITER;
+        f32 t_std = (f32)acc/ITER;
 
         fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_simd, t_simd_mirror, t_simd_abramowitz, t_spline, t_spline_mirror, t_abramowitz, t_std);
     }
@@ -90,30 +90,30 @@ i32 main()
     fmt::println(CSV, "count, t_simd, t_spline, t_fast, t_simd_fast, t_std");
     for (u64 i = 1; i < 100; ++i)
     {
-        float t[SIMD_FLOATS * i];
-        float s[SIMD_FLOATS * i];
+        f32 t[SIMD_FLOATS * i];
+        f32 s[SIMD_FLOATS * i];
         for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
             t[j] = -10.f + 10.f * drand48();
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
                 simd::storeu(s + j, simd_spline_exp(simd::loadu(t + j))););
-        float t_simd = (float)acc/ITER;
+        f32 t_simd = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = spline_exp(t[j]););
-        float t_spline = (float)acc/ITER;
+        f32 t_spline = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = fast_exp(t[j]););
-        float t_fast = (float)acc/ITER;
+        f32 t_fast = (f32)acc/ITER;
         
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
                 simd::storeu(s + j, simd_fast_exp(simd::loadu(t + j))););
-        float t_simd_fast = (float)acc/ITER;
+        f32 t_simd_fast = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = std::exp(t[j]););
-        float t_std = (float)acc/ITER;
+        f32 t_std = (f32)acc/ITER;
 
         fmt::println(CSV, "{}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_simd, t_spline, t_fast, t_simd_fast, t_std);
     }

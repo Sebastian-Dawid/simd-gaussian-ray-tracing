@@ -1,11 +1,10 @@
 #include "approx.h"
-#include "include/definitions.h"
 #include <fmt/core.h>
 
 #define SIGN(x) ((x >= 0) - (x < 0))
 
 /// generated using spline interpolation from -3.1 to 3.1 in steps of .6
-float spline_erf(const float x)
+f32 spline_erf(const f32 x)
 {
     if (x < -2.9f) return -1.f;
     else if (x < -2.3f) { return 0.00019103826f * (x - -2.9f) * (x - -2.9f) * (x - -2.9f) + 0.00034386886f * (x - -2.9f) * (x - -2.9f) + 0.0002048055f * (x - -2.9f) + -0.9999589f; }
@@ -40,10 +39,10 @@ simd::Vec<simd::Float> simd_spline_erf(const simd::Vec<simd::Float> x)
 
 /// use half of the spline approximation and mirror it w.r.t. the origin
 /// might be valid to use in case of simd since all if cases have to be considered regardless
-float spline_erf_mirror(float x)
+f32 spline_erf_mirror(f32 x)
 {
-    const float sign = -SIGN(x);
-    float value = -1.f;
+    const f32 sign = -SIGN(x);
+    f32 value = -1.f;
     x = x > 0 ? -x : x; // take the negative absolute value
     if (-3.3f < x && x < -2.6f) { value = -0.000112409376f * (x - -3.3f) * (x - -3.3f) * (x - -3.3f) + -0.00023605968f * (x - -3.3f) * (x - -3.3f) + -0.00010581506f * (x - -3.3f) + -0.99999696f; }
     else if (-2.6f <= x && x < -1.9f) { value = 0.0012324096f * (x - -2.6f) * (x - -2.6f) * (x - -2.6f) + 0.0023520004f * (x - -2.6f) * (x - -2.6f) + 0.0013753435f * (x - -2.6f) + -0.99976397f; }
@@ -66,21 +65,21 @@ simd::Vec<simd::Float> simd_spline_erf_mirror(simd::Vec<simd::Float> x)
     return value * sign;
 }
 
-float taylor_erf(const float x)
+f32 taylor_erf(const f32 x)
 {
     if (x <= -2.f) return -1.f;
     if (x >= 2.f) return 1.f;
     return 2/std::sqrt(M_PIf) * (x + 1/3.f * -std::pow(x, 3.f) + 1/10.f * std::pow(x, 5.f) + 1/42.f * -std::pow(x, 7.f));
 }
 
-float abramowitz_stegun_erf(float x)
+f32 abramowitz_stegun_erf(f32 x)
 {
-    float sign = SIGN(x);
+    f32 sign = SIGN(x);
     x *= sign;
-    const float square = x*x;
-    constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
-    const float denom = 1 + a[0]*x + a[1]*square + a[2]*square*x + a[3]*square*square;
-    const float val = 1 - 1/(denom*denom*denom*denom);
+    const f32 square = x*x;
+    constexpr f32 a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
+    const f32 denom = 1 + a[0]*x + a[1]*square + a[2]*square*x + a[3]*square*square;
+    const f32 val = 1 - 1/(denom*denom*denom*denom);
     return val * sign;
 }
 
@@ -89,17 +88,17 @@ simd::Vec<simd::Float> simd_abramowitz_stegun_erf(simd::Vec<simd::Float> x)
     const simd::Vec<simd::Float> sign = simd::ifelse(x < simd::set1(0.f), simd::set1(-1.f), simd::set1(1.f));
     x *= sign;
     const simd::Vec<simd::Float> square = x*x;
-    constexpr float a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
+    constexpr f32 a[] = { 0.278393f, 0.230389f, 0.000972f, 0.078108f };
     const simd::Vec<simd::Float> denom = simd::set1(1.f) + simd::set1(a[0])*x + simd::set1(a[1])*square + simd::set1(a[2])*square*x + simd::set1(a[3])*square*square;
     const simd::Vec<simd::Float> val = simd::set1(1.f) - simd::set1(1.f)/(denom*denom*denom*denom);
     return val * sign;
 }
 
-static constexpr float a = (1 << 23)/std::numbers::ln2_v<float>;
-static constexpr float b = (1 << 23) * (127 - 0.043677448f);
-static constexpr float c = (1 << 23);
-static constexpr float d = (1 << 23) * 255;
-float fast_exp(float x)
+static constexpr f32 a = (1 << 23)/std::numbers::ln2_v<f32>;
+static constexpr f32 b = (1 << 23) * (127 - 0.043677448f);
+static constexpr f32 c = (1 << 23);
+static constexpr f32 d = (1 << 23) * 255;
+f32 fast_exp(f32 x)
 {
     x = a *x + b;
     if (x < c || x > d)
@@ -118,7 +117,7 @@ simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x)
 }
 
 /// generated using spline interpolation with supports [-10.0 -9.0 -8.0 -7.0 -6.0 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.75 -1.5 -1.25 -1.0 -0.75 -0.5 -0.25 0.0]
-float spline_exp(float x)
+f32 spline_exp(f32 x)
 {
     if (x <= -9.0f) return -1.f;
     else if (-9.0f <= x && x <= -8.0f) { return 2.0944866e-5f * (x - -9.0f) * (x - -9.0f) * (x - -9.0f) + 6.2834595e-5f * (x - -9.0f) * (x - -9.0f) + 0.0001198996f * (x - -9.0f) + 0.0001234098f; }
