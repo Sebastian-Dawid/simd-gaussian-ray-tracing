@@ -61,6 +61,19 @@ workspace "ba-thesis"
         files { "./src/volumetric-ray-tracer/*.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
 
+    project "hip-volumetric-ray-tracer"
+        kind "Utility" -- I can't force premake to use hipcc and Makefile projects are only supported for VS according to the docs
+        targetdir "build/bin/%{cfg.buildcfg}"
+        dependson { "imgui", "vk-renderer" }
+
+        filter "files:**.hip"
+            buildmessage 'BUILDING %{file.name}'
+            buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -I../src/external/imgui -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -lfmt -lglfw -lvulkan "-L./lib/%{cfg.buildcfg}" -lvk-renderer -limgui -DGRID' }
+            buildoutputs { 'bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}' }
+        filter {}
+
+        files { "./src/volumetric-ray-tracer/rocm-rt.hip" }
+
     project "cycles-test"
         kind "ConsoleApp"
         language "C++"

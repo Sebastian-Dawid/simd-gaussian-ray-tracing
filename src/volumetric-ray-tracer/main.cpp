@@ -92,7 +92,7 @@ int main(i32 argc, char **argv)
     bool use_taylor_approx = false;
     bool use_abramowitz_approx = false;
     bool use_fast_exp = false;
-    bool use_simd_transmittance = false;
+    bool use_simd_transmittance = true;
     bool use_simd_pixels = false;
 
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
