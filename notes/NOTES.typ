@@ -1,6 +1,6 @@
 #import "@preview/cetz:0.2.2"
 
-#set page(width: auto, height: auto, margin: .5cm)
+#set page(width: 20cm, height: auto, margin: .5cm)
 
 #show math.equation: block.with(fill: white, inset: 1pt)
 
@@ -30,8 +30,31 @@ for (uint64_t q = 0; q < no_gaussians; ++q) // gaussians
 }
 ```
 
-= Display Model
+= Image Tiling
+#set align(center)
+#cetz.canvas(length: 10cm, {
+    import cetz.draw: *
 
+    circle((0.3, 0.15), radius: 0.01, fill: red, stroke: red)
+    circle((0.3, 0.15), radius: (0.2, 0.1), stroke: red)
+    circle((0.4, 0.3), radius: 0.01, fill: green, stroke: green)
+    circle((0.4, 0.3), radius: (0.1, 0.15), stroke: green)
+    circle((0.5, 0.2), radius: 0.01, fill: blue, stroke: blue)
+    circle((0.5, 0.2), radius: (0.1, 0.1), stroke: blue)
+
+    circle((1.3, 0.6), radius: 0.01, fill: purple, stroke: purple)
+    circle((1.3, 0.6), radius: (0.275, 0.29), stroke: purple)
+
+    rect((0,0), (rel: (1.6, 0.9)), name: "image")
+    grid((0,0), (rel: (1.6, 0.9)), stroke: gray + .5pt, step: (0.4, 0.225))
+})
+
+#set align(left)
+This image has a lot of empty space. We do not need to make the calculations for every gaussian for every tile of the image.
+Therefore we project the centers of the gaussians onto the image plane and check if they are in a 2 sigma bounding box around the tile.
+
+= Display Model
+#set align(center)
 #cetz.canvas(length: 3cm, {
     import cetz.draw: *
 
