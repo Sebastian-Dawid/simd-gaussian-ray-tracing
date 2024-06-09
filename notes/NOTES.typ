@@ -53,6 +53,9 @@ for (uint64_t q = 0; q < no_gaussians; ++q) // gaussians
 This image has a lot of empty space. We do not need to make the calculations for every gaussian for every tile of the image.
 Therefore we project the centers of the gaussians onto the image plane and check if they are in a 2 sigma bounding box around the tile.
 
+= References
+projecting 3d (anisotropic) gaussians to 2d: https://www.cs.umd.edu/~zwicker/publications/EWAVolumeSplatting-VIS01.pdf
+
 = Display Model
 #set align(center)
 #cetz.canvas(length: 3cm, {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include "vk-mem-alloc/vk_mem_alloc.h"
 #include <include/definitions.h>
 #include <mutex>
