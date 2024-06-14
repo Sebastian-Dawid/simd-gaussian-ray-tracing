@@ -23,11 +23,11 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
     {
         simd_gaussian_t g_q{
             .albedo{},
-            .mu{ .x = simd::load(gaussians.gaussians_broadcast.mu.x + i),
-                .y = simd::load(gaussians.gaussians_broadcast.mu.y + i),
-                .z = simd::load(gaussians.gaussians_broadcast.mu.z + i) },
-            .sigma = simd::load(gaussians.gaussians_broadcast.sigma + i),
-            .magnitude = simd::load(gaussians.gaussians_broadcast.magnitude + i)
+            .mu{ .x = simd::load(gaussians.gaussians_broadcast->mu.x + i),
+                .y = simd::load(gaussians.gaussians_broadcast->mu.y + i),
+                .z = simd::load(gaussians.gaussians_broadcast->mu.z + i) },
+            .sigma = simd::load(gaussians.gaussians_broadcast->sigma + i),
+            .magnitude = simd::load(gaussians.gaussians_broadcast->magnitude + i)
         };
         simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
         simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
@@ -74,6 +74,34 @@ f32 density(const vec4f_t pt, const std::vector<gaussian_t> gaussians)
     return D;
 }
 
+tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t> &gaussians, const glm::mat4 &view)
+{
+    std::vector<gaussians_t> tiles;
+
+    for (f32 y = -1.f + th/2; y < 1.f; y += th)
+    {
+        for (f32 x = -1.f + tw/2; x < 1.f; x += tw)
+        {
+            tiles.push_back(gaussians_t());
+            gaussians_t &gs = tiles.back();
+            for (const gaussian_t &g : gaussians)
+            {
+                const glm::vec4 proj = view * g.mu.to_glm();
+                const glm::vec2 mu(proj.x/proj.z, proj.y/proj.z);
+                const f32 sigma = g.sigma / proj.z;
+                const glm::vec2 p = glm::abs(glm::vec2(x, y) - mu);
+                if ((p.x <= tw/2 + 2 * sigma && p.y <= th/2 + 2 * sigma))
+                {
+                    gs.gaussians.push_back(g);
+                }
+            }
+            gs.gaussians_broadcast = gaussian_vec_t::from_gaussians(gs.gaussians);
+        }
+    }
+
+    return tiles_t(tiles, tw, th);
+}
+
 vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
 {
     vec4f_t L_hat{ .x = 0.f, .y = 0.f, .z = 0.f };
@@ -84,11 +112,11 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
         for (i8 k = -4; k <= 0; ++k)
         {
             const f32 s = (G_q.mu - o).dot(n) + k * lambda_q;
-            f32 T;
-            T = _transmittance(o, n, s, gaussians);
+            f32 T = _transmittance(o, n, s, gaussians);
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);
+        //fmt::println("{}, {}, {}, {}", L_hat.x, L_hat.y, L_hat.z, L_hat.w);
     }
     return L_hat;
 }
@@ -113,20 +141,21 @@ simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussi
     return L_hat;
 }
 
-bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running)
+bool render_image(const u32 width, const u32 height, u32 *image, const u32 *bg_image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running)
 {
     static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
-    static const vec4f_t origin = { 0.f, 0.f, -5.f };
+    static const vec4f_t origin = { 0.f, 0.f, 0.f };
 
     for (u64 i = 0; i < width * height; ++i)
     {
-        vec4f_t dir = vec4f_t{ xs[i], ys[i], 0.f } - origin;
+        vec4f_t dir = vec4f_t{ xs[i], ys[i], 1.f } - origin;
         dir.normalize();
-        vec4f_t color = l_hat(origin, dir, gaussians);
-        u32 A = 0xFF000000; // final alpha channel is always 1
-        u32 R = (u32)(color.x * 255);
-        u32 G = (u32)(color.y * 255);
-        u32 B = (u32)(color.z * 255);
+        const vec4f_t color = l_hat(origin, dir, gaussians);
+        const u32 bg = bg_image[i];
+        const u32 A = 0xFF000000; // final alpha channel is always 1
+        const u32 R = (u32)((1 - color.w) * ((0x00FF0000 & bg) >> 16) + std::min(color.x, 1.0f) * 255);
+        const u32 G = (u32)((1 - color.w) * ((0x0000FF00 & bg) >> 8) + std::min(color.y, 1.0f) * 255);
+        const u32 B = (u32)((1 - color.w) * ((0x000000FF & bg)) + std::min(color.z, 1.0f) * 255);
         if (is_wayland_display)
             image[i] = A | R | G << 8 | B << 16;
         else
@@ -136,20 +165,76 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
     return false;
 }
 
-bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running)
+bool render_image(const u32 width, const u32 height, u32 *image, const u32 *bg_image, const f32 *xs, const f32 *ys, const tiles_t &tiles, const bool &running)
 {
     static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
-    static const simd_vec4f_t simd_origin = simd_vec4f_t::from_vec4f_t(vec4f_t{ 0.f, 0.f, -5.f });
+    static const vec4f_t origin = { 0.f, 0.f, 0.f };
+    u64 tidx = 0;
+
+    for (u64 i = 0; i < width * height; ++i)
+    {
+        tidx = u64((xs[i] + 1.f)/tiles.tw) + u64((ys[i] + 1.f)/tiles.th) * tiles.w;
+        vec4f_t dir = vec4f_t{ xs[i], ys[i], 1.f } - origin;
+        dir.normalize();
+        const vec4f_t color = l_hat(origin, dir, tiles.gaussians[tidx]);
+        const u32 bg = bg_image[i];
+        const u32 A = 0xFF000000; // final alpha channel is always 1
+        // NOTE: clamp color values to [0, 1]
+        const u32 R = (u32)((1 - color.w) * ((0x00FF0000 & bg) >> 16) + std::min(color.x, 1.0f) * 255);
+        const u32 G = (u32)((1 - color.w) * ((0x0000FF00 & bg) >> 8) + std::min(color.y, 1.0f) * 255);
+        const u32 B = (u32)((1 - color.w) * ((0x000000FF & bg)) + std::min(color.z, 1.0f) * 255);
+        if (is_wayland_display)
+            image[i] = A | R | G << 8 | B << 16;
+        else
+            image[i] = A | R << 16 | G << 8 | B;
+        if (!running) return true;
+    }
+    return false;
+}
+
+bool simd_render_image(const u32 width, const u32 height, u32 *image, const i32 *bg_image, const f32 *xs, const f32 *ys, const gaussians_t &gaussians, const bool &running)
+{
+    static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
+    static const simd_vec4f_t simd_origin = simd_vec4f_t::from_vec4f_t(vec4f_t{ 0.f, 0.f, 0.f });
 
     for (u64 i = 0; i < width * height; i += SIMD_FLOATS)
     {
-        simd_vec4f_t dir = simd_vec4f_t{ .x = simd::load(xs + i), .y = simd::load(ys + i), .z = simd::set1(0.f) } - simd_origin;
+        simd_vec4f_t dir = simd_vec4f_t{ .x = simd::load(xs + i), .y = simd::load(ys + i), .z = simd::set1(1.f) } - simd_origin;
         dir.normalize();
         const simd_vec4f_t color = simd_l_hat(simd_origin, dir, gaussians);
+        const simd::Vec<simd::Int> bg = simd::load(bg_image + i);
+        const simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
+        const simd::Vec<simd::Int> R = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(simd::srli<16>(bg & simd::set1(0x00FF0000))) + color.x * simd::set1(255.f));
+        const simd::Vec<simd::Int> G = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(simd::srli<8>(bg & simd::set1(0x0000FF00))) + color.y * simd::set1(255.f));
+        const simd::Vec<simd::Int> B = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(bg & simd::set1(0x000000FF)) + color.z * simd::set1(255.f));
+        if (is_wayland_display)
+            simd::store((i32*)image + i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
+        else
+            simd::store((i32*)image + i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
+        if (!running) return true;
+    }
+    return false;
+}
+
+/// NOTE: Tiles need to be a multiple of SIMD_FLOAT pixels wide
+bool simd_render_image(const u32 width, const u32 height, u32 *image, const i32 *bg_image, const f32 *xs, const f32 *ys, const tiles_t &tiles, const bool &running)
+{
+    assert(tiles.w % SIMD_FLOATS == 0);
+    static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
+    static const simd_vec4f_t simd_origin = simd_vec4f_t::from_vec4f_t(vec4f_t{ 0.f, 0.f, 0.f });
+    u64 tidx = 0;
+
+    for (u64 i = 0; i < width * height; i += SIMD_FLOATS)
+    {
+        tidx = u64((xs[i] + 1.f)/tiles.tw) + u64((ys[i] + 1.f)/tiles.th) * tiles.w;
+        simd_vec4f_t dir = simd_vec4f_t{ .x = simd::load(xs + i), .y = simd::load(ys + i), .z = simd::set1(1.f) } - simd_origin;
+        dir.normalize();
+        const simd_vec4f_t color = simd_l_hat(simd_origin, dir, tiles.gaussians[tidx]);
+        simd::Vec<simd::Int> bg = simd::load(bg_image + i);
         simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
-        simd::Vec<simd::Int> R = simd::cvts<simd::Int>(color.x * simd::set1(255.f));
-        simd::Vec<simd::Int> G = simd::cvts<simd::Int>(color.y * simd::set1(255.f));
-        simd::Vec<simd::Int> B = simd::cvts<simd::Int>(color.z * simd::set1(255.f));
+        simd::Vec<simd::Int> R = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(simd::srli<16>(bg & simd::set1(0x00FF0000))) + color.x * simd::set1(255.f));
+        simd::Vec<simd::Int> G = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(simd::srli<8>(bg & simd::set1(0x0000FF00))) + color.y * simd::set1(255.f));
+        simd::Vec<simd::Int> B = simd::cvts<simd::Int>((simd::set1(1.f) - color.w) * simd::cvts<simd::Float>(bg & simd::set1(0x000000FF)) + color.z * simd::set1(255.f));
         if (is_wayland_display)
             simd::store((i32*)image + i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
         else

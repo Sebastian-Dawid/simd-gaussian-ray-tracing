@@ -14,6 +14,8 @@
 
 #include "approx.h"
 
+#include <glm/glm.hpp>
+
 struct vec4f_t
 {
     f32 x, y, z, w = 0.f;
@@ -48,6 +50,11 @@ struct vec4f_t
         this->y /= norm;
         this->z /= norm;
         this->w /= norm;
+    }
+    // TODO: It might be a better idea to refactor everything to use glm vectors.
+    glm::vec4 to_glm() const
+    {
+        return glm::vec4(this->x, this->y, this->z, this->w);
     }
 #ifdef INCLUDE_IMGUI
     void imgui_controls(std::string label = "x, y, z, w", f32 min = -10.f, f32 max = 10.f, bool color = false)
@@ -131,7 +138,7 @@ struct gaussian_t
         ImGui::PushID(this);
         this->albedo.imgui_controls("albedo", 0.f, 0.f, true);
         this->mu.imgui_controls("mu");
-        ImGui::SliderFloat("sigma", &this->sigma, 0.f, 1.f);
+        ImGui::SliderFloat("sigma", &this->sigma, .1f, 1.f);
         ImGui::SliderFloat("magnitude", &this->magnitude, 0.f, 10.f);
         ImGui::PopID();
     }
@@ -149,19 +156,19 @@ struct gaussian_vec_t
 {
     struct
     {
-        f32 *r;
-        f32 *g;
-        f32 *b;
+        f32 *r = nullptr;
+        f32 *g = nullptr;
+        f32 *b = nullptr;
     } albedo;
     struct
     {
-        f32 *x;
-        f32 *y;
-        f32 *z;
+        f32 *x = nullptr;
+        f32 *y = nullptr;
+        f32 *z = nullptr;
     } mu;
-    f32 *sigma;
-    f32 *magnitude;
-    u64 size;
+    f32 *sigma = nullptr;
+    f32 *magnitude = nullptr;
+    u64 size = 0;
 
     void load_gaussians(const std::vector<gaussian_t> &gaussians)
     {
@@ -190,64 +197,78 @@ struct gaussian_vec_t
         }
     }
 
-    static gaussian_vec_t from_gaussians(const std::vector<gaussian_t> &gaussians)
+    static gaussian_vec_t *from_gaussians(const std::vector<gaussian_t> &gaussians)
     {
-        gaussian_vec_t vec;
+        gaussian_vec_t *vec = new gaussian_vec_t();
         u64 size = ((gaussians.size() / SIMD_FLOATS) + 1) * SIMD_FLOATS;
 
-        vec.mu.x = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.mu.y = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.mu.z = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.albedo.r = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.albedo.g = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.albedo.b = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.sigma = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec.magnitude = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->mu.x = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->mu.y = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->mu.z = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->albedo.r = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->albedo.g = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->albedo.b = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->sigma = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->magnitude = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
 
         for (u64 i = 0; i < size; ++i)
         {
             if (i >= gaussians.size())
             {
-                vec.mu.x[i]      = 0.f;
-                vec.mu.y[i]      = 0.f;
-                vec.mu.z[i]      = 0.f;
-                vec.albedo.r[i]  = 0.f;
-                vec.albedo.g[i]  = 0.f;
-                vec.albedo.b[i]  = 0.f;
-                vec.sigma[i]     = 1.f;
-                vec.magnitude[i] = 0.f;
+                vec->mu.x[i]      = 0.f;
+                vec->mu.y[i]      = 0.f;
+                vec->mu.z[i]      = 0.f;
+                vec->albedo.r[i]  = 0.f;
+                vec->albedo.g[i]  = 0.f;
+                vec->albedo.b[i]  = 0.f;
+                vec->sigma[i]     = 1.f;
+                vec->magnitude[i] = 0.f;
                 continue;
             }
-            vec.mu.x[i]      = gaussians[i].mu.x;
-            vec.mu.y[i]      = gaussians[i].mu.y;
-            vec.mu.z[i]      = gaussians[i].mu.z;
-            vec.albedo.r[i]  = gaussians[i].albedo.x;
-            vec.albedo.g[i]  = gaussians[i].albedo.y;
-            vec.albedo.b[i]  = gaussians[i].albedo.z;
-            vec.sigma[i]     = gaussians[i].sigma;
-            vec.magnitude[i] = gaussians[i].magnitude;
+            vec->mu.x[i]      = gaussians[i].mu.x;
+            vec->mu.y[i]      = gaussians[i].mu.y;
+            vec->mu.z[i]      = gaussians[i].mu.z;
+            vec->albedo.r[i]  = gaussians[i].albedo.x;
+            vec->albedo.g[i]  = gaussians[i].albedo.y;
+            vec->albedo.b[i]  = gaussians[i].albedo.z;
+            vec->sigma[i]     = gaussians[i].sigma;
+            vec->magnitude[i] = gaussians[i].magnitude;
         }
-        vec.size = size;
+        vec->size = size;
         return vec;
     }
 
     ~gaussian_vec_t()
     {
-        simd_aligned_free(this->mu.x);
-        simd_aligned_free(this->mu.y);
-        simd_aligned_free(this->mu.z);
-        simd_aligned_free(this->albedo.r);
-        simd_aligned_free(this->albedo.g);
-        simd_aligned_free(this->albedo.b);
-        simd_aligned_free(this->sigma);
-        simd_aligned_free(this->magnitude);
+        if (this->mu.x) simd_aligned_free(this->mu.x);
+        if (this->mu.y) simd_aligned_free(this->mu.y);
+        if (this->mu.z) simd_aligned_free(this->mu.z);
+        if (this->albedo.r) simd_aligned_free(this->albedo.r);
+        if (this->albedo.g) simd_aligned_free(this->albedo.g);
+        if (this->albedo.b) simd_aligned_free(this->albedo.b);
+        if (this->sigma) simd_aligned_free(this->sigma);
+        if (this->magnitude) simd_aligned_free(this->magnitude);
     }
 };
 
 struct gaussians_t
 {
     std::vector<gaussian_t> gaussians;
-    gaussian_vec_t gaussians_broadcast;
+    gaussian_vec_t *gaussians_broadcast = nullptr;
+};
+
+struct tiles_t
+{
+    const std::vector<gaussians_t> gaussians;
+    const f32 tw;
+    const f32 th;
+    const u64 w;
+
+    tiles_t(const std::vector<gaussians_t> &gaussians, const f32 tw, const f32 th) : gaussians(gaussians), tw(tw), th(th), w(2.f/tw) {}
+    ~tiles_t() {
+        for (const gaussians_t &g : this->gaussians)
+            delete g.gaussians_broadcast;
+    }
 };
 
 struct simd_gaussian_t

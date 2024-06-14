@@ -1,8 +1,11 @@
-#include "imgui.h"
 #include <hip/hip_runtime.h>
 #include <include/definitions.h>
 #include <include/TimeMeasurement.H>
+#include <vector>
+#ifdef WITH_RENDERER
+#include "imgui.h"
 #include <vk-renderer/vk-renderer.h>
+#endif
 
 #ifndef GRID
 #define GRID 0
@@ -151,6 +154,12 @@ __global__ void render(const f32 *xs, const f32 *ys, u32 *image, gaussian_t* gau
 
 i32 main(i32 argc, char **argv)
 {
+    int device_id;
+    hipGetDevice(&device_id);
+    hipDeviceProp_t prop;
+    hipGetDeviceProperties(&prop, device_id);
+    printf("Running on: %s\n", prop.name);
+
     constexpr u32 W = 256;
     constexpr u32 H = 256;
     u32 image[W * H];
@@ -165,9 +174,10 @@ i32 main(i32 argc, char **argv)
     HIP_CHECK(hipMemcpy(hip_xs, xs, img_size, hipMemcpyHostToDevice));
     HIP_CHECK(hipMemcpy(hip_ys, ys, img_size, hipMemcpyHostToDevice));
 
+    double frame_time = 0.0;
+#ifdef WITH_RENDERER
     renderer_t renderer;
     if (!renderer.init(W, H, "GPU Test")) return EXIT_FAILURE;
-    double frame_time = 0.0;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Debug");
         ImGui::Text("frame time: %g ms", frame_time);
@@ -175,7 +185,9 @@ i32 main(i32 argc, char **argv)
     };    
     bool running = true;
     std::thread render_thread([&](){ renderer.run(running); });
-
+#else
+    bool running = false;
+#endif
     std::vector<gaussian_t> gaussians;
     if (GRID)
     {
@@ -197,7 +209,7 @@ i32 main(i32 argc, char **argv)
     HIP_CHECK(hipMalloc(&hip_gaussians, sizeof(*hip_gaussians) * gaussians.size()));
     HIP_CHECK(hipMemcpy(hip_gaussians, gaussians.data(), sizeof(*hip_gaussians) * gaussians.size(), hipMemcpyHostToDevice));
 
-    while (running)
+    do
     {
         struct timespec start, end;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -206,10 +218,15 @@ i32 main(i32 argc, char **argv)
         HIP_CHECK(hipMemcpy(image, hip_image, img_size, hipMemcpyDeviceToHost));
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
         frame_time = simd::timeSpecDiffNsec(end, start)/1000000.0;
+        printf("frame time: %g\n", frame_time);
+#ifdef WITH_RENDERER
         renderer.stage_image(image, W, H);
-    }
+#endif
+    } while(running);
 
+#ifdef WITH_RENDERER
     render_thread.join();
+#endif
 
     HIP_CHECK(hipFree(hip_gaussians));
     HIP_CHECK(hipFree(hip_image));

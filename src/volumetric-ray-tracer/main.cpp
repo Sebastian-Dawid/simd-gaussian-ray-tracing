@@ -44,7 +44,6 @@ int main(i32 argc, char **argv)
             height = 256;
         }
     }
-    u64 new_width = width, new_height = height;
     
     std::vector<char*> args(argc);
     std::memcpy(args.data(), argv, sizeof(*argv) * argc);
@@ -73,15 +72,17 @@ int main(i32 argc, char **argv)
             for (u8 j = 0; j < grid_dim; ++j)
                 _gaussians.push_back(gaussian_t{
                         .albedo{ 1.f - (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 0.f, 0.f + (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 1.f },
-                        .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 0.f },
+                        .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 1.f },
                         .sigma = 1.f/(2 * grid_dim),
                         .magnitude = 3.f
                         });
     }
     else
     {
-        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, .1f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, .7f }, .mu{ -.3f, -.3f, 0.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
     }
+
+
     std::vector<gaussian_t> staging_gaussians = _gaussians;
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
@@ -94,6 +95,7 @@ int main(i32 argc, char **argv)
     bool use_fast_exp = false;
     bool use_simd_transmittance = true;
     bool use_simd_pixels = false;
+    bool use_tiling = false;
 
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
@@ -107,6 +109,7 @@ int main(i32 argc, char **argv)
         ImGui::Checkbox("erf taylor", &use_taylor_approx);
         ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
         ImGui::Checkbox("exp fast", &use_fast_exp);
+        ImGui::Checkbox("use tiling", &use_tiling);
         ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
         ImGui::Checkbox("use simd pixels", &use_simd_pixels);
         ImGui::End();
@@ -115,19 +118,28 @@ int main(i32 argc, char **argv)
     std::thread render_thread([&](){ renderer.run(running); });
 
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+    u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+
+    bool w = false, h = false;
+    for (size_t x = 0; x < width; ++x)
+    {
+        if (!(x % 16)) w = !w;
+        for (size_t y = 0; y < height; ++y)
+        {
+            if (!(y % 16)) h = !h;
+            bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
+        }
+    }
+
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
+    struct timespec start, end;
 
     while (running)
     {
-        if (new_width != width || new_height != height)
-        {
-            width = new_width;
-            height = new_height;
-            image = (u32*)std::realloc(image, width * height * sizeof(u32));
-        }
         gaussians.gaussians = staging_gaussians;
-        gaussians.gaussians_broadcast.load_gaussians(staging_gaussians);
+        gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
+        tiles_t tiles = tile_gaussians(.5f, .5f, staging_gaussians, glm::mat4(1));
         if (use_spline_approx) _erf = spline_erf;
         else if (use_mirror_approx) _erf = spline_erf_mirror;
         else if (use_taylor_approx) _erf = taylor_erf;
@@ -138,12 +150,22 @@ int main(i32 argc, char **argv)
         if (use_simd_transmittance) _transmittance = simd_transmittance;
         else { _transmittance = transmittance; }
 
-        auto start_time = std::chrono::system_clock::now();
+        //auto start_time = std::chrono::system_clock::now();
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
         bool res = false;
-        if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, gaussians, running);
-        else res = render_image(width, height, image, xs, ys, gaussians, running);
-        auto end_time = std::chrono::system_clock::now();
-        draw_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        if (use_tiling)
+        {
+            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles, running);
+            else res = render_image(width, height, image, bg_image, xs, ys, tiles, running);
+        }
+        else
+        {
+            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, gaussians, running);
+            else res = render_image(width, height, image, bg_image, xs, ys, gaussians, running);
+        }
+        //auto end_time = std::chrono::system_clock::now();
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         if (res) break;
 
         if (filename_idx != (u64)-1)
@@ -153,9 +175,16 @@ int main(i32 argc, char **argv)
 
     render_thread.join();
     simd_aligned_free(image);
+    simd_aligned_free(bg_image);
     simd_aligned_free(xs);
     simd_aligned_free(ys);
+    //for (const gaussians_t &gs : tiles.gaussians)
+    //{
+    //    delete gs.gaussians_broadcast;
+    //}
 
+    // TODO: this looks like something is leaking memory, I just don't know what it is
+    //       this could also be related to memory being released in destructors called after the end of the scope
     malloc_stats();
 
     return EXIT_SUCCESS;

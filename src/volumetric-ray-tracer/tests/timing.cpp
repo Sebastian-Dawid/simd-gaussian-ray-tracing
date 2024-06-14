@@ -121,7 +121,7 @@ int main()
                     .sigma = 1.f/8.f,
                     .magnitude = 1.f
                     });
-            growing.gaussians_broadcast.load_gaussians(growing.gaussians);
+            growing.gaussians_broadcast->load_gaussians(growing.gaussians);
             _simd_erf = simd_abramowitz_stegun_erf;
             _simd_exp = simd_fast_exp;
             _transmittance = simd_transmittance;
