@@ -19,12 +19,32 @@
     }                                                                  \
 }
 
+#ifndef EXP
+#define EXP(x) fast_exp(x)
+#endif
+
+#ifndef ERF
+#define ERF(x) abramowitz_stegun_erf(x)
+#endif
+
+#ifndef SIMD_EXP
+#define SIMD_EXP(x) simd_fast_exp(x)
+#endif
+
+#ifndef SIMD_ERF
+#define SIMD_ERF(x) simd_abramowitz_stegun_erf(x)
+#endif
+
 f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians);
 f32 simd_transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians);
 f32 transmittance_step(const vec4f_t o, const vec4f_t n, const f32 s, const f32 delta, const std::vector<gaussian_t> gaussians);
 f32 density(const vec4f_t pt, const std::vector<gaussian_t> gaussians);
 
 inline f32 (*_transmittance)(const vec4f_t, const vec4f_t, const f32, const gaussians_t&) = transmittance;
+
+#ifndef TRANSMITTANCE
+#define TRANSMITTANCE(o, n, s, g) simd_transmittance(o, n, s, g)
+#endif
 
 tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t> &gaussians, const glm::mat4 &view);
 

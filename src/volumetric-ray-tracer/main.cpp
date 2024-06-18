@@ -22,6 +22,12 @@
 
 #pragma GCC diagnostic pop
 
+#define EXP(x) _exp(x)
+#define ERF(x) _erf(x)
+#define SIMD_EXP(x) _simd_exp(x)
+#define SIMD_ERF(x) _simd_erf(x)
+#define TRANSMITTANCE(o, n, s, g) _transmittance(o, n, s, g)
+
 #include "types.h"
 #include "approx.h"
 #include "rt.h"

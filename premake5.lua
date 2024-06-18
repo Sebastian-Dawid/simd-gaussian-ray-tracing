@@ -128,3 +128,13 @@ workspace "ba-thesis"
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/image-timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt" }
+
+    project "perf-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt" }

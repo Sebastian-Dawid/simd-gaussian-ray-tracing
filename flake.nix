@@ -29,6 +29,9 @@
                 vulkan-loader
                 julia
                 openspecfun
+                rocmPackages.clr
+                rocmPackages.hip-common
+                glm
             ];
 
             shellHook = ''
