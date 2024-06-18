@@ -21,6 +21,7 @@ workspace "ba-thesis"
     filter "configurations:release"
         defines { "NDEBUG" }
         optimize "On"
+        symbols "On"
 
     project "imgui"
         kind "StaticLib"
@@ -68,7 +69,11 @@ workspace "ba-thesis"
 
         filter "files:**.hip"
             buildmessage 'BUILDING %{file.name}'
-            buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -I../src/external/imgui -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -lfmt -lglfw -lvulkan "-L./lib/%{cfg.buildcfg}" -lvk-renderer -limgui -DGRID' }
+            if NVIDIA == nil then
+                buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -I../src/external/imgui -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -lfmt -lglfw -lvulkan "-L./lib/%{cfg.buildcfg}" -lvk-renderer -limgui -DGRID -DWITH_RENDERER' }
+            else
+                buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -DGRID' }
+            end
             buildoutputs { 'bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}' }
         filter {}
 

@@ -95,7 +95,7 @@ int main(i32 argc, char **argv)
     bool use_fast_exp = false;
     bool use_simd_transmittance = true;
     bool use_simd_pixels = false;
-    bool use_tiling = false;
+    bool use_tiling = true;
 
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){

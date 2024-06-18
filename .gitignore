@@ -5,3 +5,4 @@ out
 *.csv
 *.pdf
 imgui.ini
+perf.*

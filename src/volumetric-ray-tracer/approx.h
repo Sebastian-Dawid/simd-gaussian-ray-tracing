@@ -21,5 +21,6 @@ simd::Vec<simd::Float> simd_spline_exp(simd::Vec<simd::Float> x);
 
 inline f32 (*_erf)(f32) = std::erf;
 inline f32 (*_exp)(f32) = std::exp;
+// TODO: replace occurances with templates. test impact
 inline simd::Vec<simd::Float> (*_simd_erf)(simd::Vec<simd::Float>) = simd_abramowitz_stegun_erf;
 inline simd::Vec<simd::Float> (*_simd_exp)(simd::Vec<simd::Float>) = simd_fast_exp;

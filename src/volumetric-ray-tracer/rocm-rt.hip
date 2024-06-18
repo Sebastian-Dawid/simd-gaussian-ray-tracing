@@ -155,9 +155,9 @@ __global__ void render(const f32 *xs, const f32 *ys, u32 *image, gaussian_t* gau
 i32 main(i32 argc, char **argv)
 {
     int device_id;
-    hipGetDevice(&device_id);
+    HIP_CHECK(hipGetDevice(&device_id));
     hipDeviceProp_t prop;
-    hipGetDeviceProperties(&prop, device_id);
+    HIP_CHECK(hipGetDeviceProperties(&prop, device_id));
     printf("Running on: %s\n", prop.name);
 
     constexpr u32 W = 256;
@@ -218,9 +218,10 @@ i32 main(i32 argc, char **argv)
         HIP_CHECK(hipMemcpy(image, hip_image, img_size, hipMemcpyDeviceToHost));
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
         frame_time = simd::timeSpecDiffNsec(end, start)/1000000.0;
-        printf("frame time: %g\n", frame_time);
 #ifdef WITH_RENDERER
         renderer.stage_image(image, W, H);
+#else
+        printf("frame time: %g\n", frame_time);
 #endif
     } while(running);
 
