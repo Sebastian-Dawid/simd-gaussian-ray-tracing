@@ -1,0 +1,133 @@
+version: 0
+inputs:
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-execution
+    metric: CPUTIME (sec)
+    scope: execution
+    formula: $$
+    combine: sum
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-lex_aware
+    metric: CPUTIME (sec)
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-function
+    metric: CPUTIME (sec)
+    scope: function
+    formula: $$
+    combine: sum
+  - &INSTRUCTIONS-sum-x5b_0x0x5d_-execution
+    metric: INSTRUCTIONS
+    scope: execution
+    formula: $$
+    combine: sum
+  - &INSTRUCTIONS-sum-x5b_0x0x5d_-lex_aware
+    metric: INSTRUCTIONS
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &INSTRUCTIONS-sum-x5b_0x0x5d_-function
+    metric: INSTRUCTIONS
+    scope: function
+    formula: $$
+    combine: sum
+  - &DIV_OP_COUNT-sum-x5b_0x0x5d_-execution
+    metric: DIV_OP_COUNT
+    scope: execution
+    formula: $$
+    combine: sum
+  - &DIV_OP_COUNT-sum-x5b_0x0x5d_-lex_aware
+    metric: DIV_OP_COUNT
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &DIV_OP_COUNT-sum-x5b_0x0x5d_-function
+    metric: DIV_OP_COUNT
+    scope: function
+    formula: $$
+    combine: sum
+  - &CPU-CYCLES-sum-x5b_0x0x5d_-execution
+    metric: CPU-CYCLES
+    scope: execution
+    formula: $$
+    combine: sum
+  - &CPU-CYCLES-sum-x5b_0x0x5d_-lex_aware
+    metric: CPU-CYCLES
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &CPU-CYCLES-sum-x5b_0x0x5d_-function
+    metric: CPU-CYCLES
+    scope: function
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-execution
+    metric: PAPI_VEC_INS
+    scope: execution
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-lex_aware
+    metric: PAPI_VEC_INS
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-function
+    metric: PAPI_VEC_INS
+    scope: function
+    formula: $$
+    combine: sum
+roots:
+  - name: PAPI_VEC_INS
+    description: PAPI_VEC_INS
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *PAPI_VEC_INS-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *PAPI_VEC_INS-sum-x5b_0x0x5d_-lex_aware
+            standard: *PAPI_VEC_INS-sum-x5b_0x0x5d_-function
+  - name: CPU-CYCLES
+    description: PERF_COUNT_HW_CPU_CYCLES
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *CPU-CYCLES-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *CPU-CYCLES-sum-x5b_0x0x5d_-lex_aware
+            standard: *CPU-CYCLES-sum-x5b_0x0x5d_-function
+  - name: INSTRUCTIONS
+    description: PERF_COUNT_HW_INSTRUCTIONS
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *INSTRUCTIONS-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *INSTRUCTIONS-sum-x5b_0x0x5d_-lex_aware
+            standard: *INSTRUCTIONS-sum-x5b_0x0x5d_-function
+  - name: DIV_OP_COUNT
+    description: Number of divide ops
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *DIV_OP_COUNT-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *DIV_OP_COUNT-sum-x5b_0x0x5d_-lex_aware
+            standard: *DIV_OP_COUNT-sum-x5b_0x0x5d_-function
+  - name: CPUTIME (sec)
+    description: CPUTIME (sec)
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-lex_aware
+            standard: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-function

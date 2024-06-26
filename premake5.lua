@@ -5,7 +5,13 @@ end
 NVIDIA = os.getenv("NVIDIA")
 
 workspace "ba-thesis"
-    toolset "clang"
+    newoption {
+        trigger = "with-clang",
+        description = "compile using the clang toolset"
+    }
+    filter { "options:with-clang" }
+        toolset "clang"
+    filter {}
     cppdialect "c++20"
     configurations { "debug", "release" }
     location "build"
@@ -138,3 +144,14 @@ workspace "ba-thesis"
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/perf-test.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt" }
+
+    project "svml-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+        
+        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/svml-test.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        links { "fmt", "svml" }

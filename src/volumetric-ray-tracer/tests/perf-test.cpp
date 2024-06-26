@@ -29,16 +29,16 @@ int main(i32 argc, char **argv)
     CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
 
-    constexpr u64 width = 256, height = 256;
+    constexpr u64 width = 512, height = 512;
 
     std::vector<gaussian_t> _gaussians;
-    constexpr u8 grid_dim = 4;
+    constexpr u8 grid_dim = 16;
     for (u8 i = 0; i < grid_dim; ++i)
         for (u8 j = 0; j < grid_dim; ++j)
             _gaussians.push_back(gaussian_t {
                     .albedo{ 1.f - (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 0.f, 0.f + (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 1.f },
                     .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 1.f },
-                    .sigma = 1.f/(2 * grid_dim),
+                    .sigma = 1.f/4.f,
                     .magnitude = 3.f
                     });
 
@@ -68,28 +68,16 @@ int main(i32 argc, char **argv)
     switch (v)
     {
         case 0:
-            for (u64 i = 0; i < 100; ++i)
-            {
                 render_image(width, height, image, bg_image, xs, ys, gaussians);
-            }
             break;
         case 1:
-            for (u64 i = 0; i < 100; ++i)
-            {
                 render_image(width, height, image, bg_image, xs, ys, tiles);
-            }
             break;
         case 2:
-            for (u64 i = 0; i < 100; ++i)
-            {
                 simd_render_image(width, height, image, (i32*)bg_image, xs, ys, gaussians);
-            }
             break;
         default:
-            for (u64 i = 0; i < 100; ++i)
-            {
                 simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles);
-            }
             break;
     }
 

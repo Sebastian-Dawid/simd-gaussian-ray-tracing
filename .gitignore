@@ -2,7 +2,8 @@ compile_commands.json
 build
 .cache
 out
-*.csv
+csv
 *.pdf
 imgui.ini
-perf.*
+perf*
+*measurements
