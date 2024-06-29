@@ -155,3 +155,14 @@ workspace "ba-thesis"
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/svml-test.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
         links { "fmt", "svml" }
+
+    project "img-error-test"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+        
+        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
+        links { "fmt", "svml" }

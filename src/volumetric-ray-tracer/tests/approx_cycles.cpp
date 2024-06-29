@@ -32,6 +32,8 @@
     }                                       \
 }
 
+using namespace approx;
+
 i32 main()
 {
     cpu_set_t mask;

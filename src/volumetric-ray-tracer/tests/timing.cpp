@@ -7,6 +7,8 @@
 
 #define GETTIME(ts) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(ts))
 
+using namespace approx;
+
 int main()
 {
     const vec4f_t origin = { 0.f, 0.f, -5.f };

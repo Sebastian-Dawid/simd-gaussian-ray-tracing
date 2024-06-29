@@ -3,6 +3,8 @@
 #include "include/definitions.h"
 #include <sched.h>
 
+using namespace approx;
+
 int main()
 {
     cpu_set_t mask;

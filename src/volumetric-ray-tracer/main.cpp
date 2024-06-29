@@ -146,12 +146,12 @@ int main(i32 argc, char **argv)
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
         tiles_t tiles = tile_gaussians(.5f, .5f, staging_gaussians, glm::mat4(1));
-        if (use_spline_approx) _erf = spline_erf;
-        else if (use_mirror_approx) _erf = spline_erf_mirror;
-        else if (use_taylor_approx) _erf = taylor_erf;
-        else if (use_abramowitz_approx) _erf = abramowitz_stegun_erf;
+        if (use_spline_approx) _erf = approx::spline_erf;
+        else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
+        else if (use_taylor_approx) _erf = approx::taylor_erf;
+        else if (use_abramowitz_approx) _erf = approx::abramowitz_stegun_erf;
         else _erf = std::erf;
-        if (use_fast_exp) _exp = fast_exp;
+        if (use_fast_exp) _exp = approx::fast_exp;
         else _exp = std::exp;
         if (use_simd_transmittance) _transmittance = simd_transmittance;
         else { _transmittance = transmittance; }

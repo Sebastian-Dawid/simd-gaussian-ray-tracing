@@ -13,7 +13,7 @@ clean: ## Remove build artifacts
 	rm -rf $(BUILD_DIR)
 
 build:	## Compile and link
-	@premake5 gmake2;		\
+	@premake5 $(ARGS) gmake2;		\
 	cd $(BUILD_DIR);		\
 	make config=$(CONFIG);	\
 	cd ..

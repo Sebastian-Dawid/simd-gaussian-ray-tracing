@@ -32,10 +32,10 @@ int main()
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     struct timespec start, end;
 
-    _simd_erf = simd_abramowitz_stegun_erf;
-    _simd_exp = simd_fast_exp;
-    _erf = abramowitz_stegun_erf;
-    _exp = fast_exp;
+    _simd_erf = approx::simd_abramowitz_stegun_erf;
+    _simd_exp = approx::simd_fast_exp;
+    _erf = approx::abramowitz_stegun_erf;
+    _exp = approx::fast_exp;
 
     for (u64 dim = 16; dim <= 512; dim += 16)
     {
