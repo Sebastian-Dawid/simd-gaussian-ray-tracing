@@ -9,6 +9,10 @@ workspace "ba-thesis"
         trigger = "with-clang",
         description = "compile using the clang toolset"
     }
+    newoption {
+        trigger = "with-rocm",
+        description = "compile gpu version of the software"
+    }
     filter { "options:with-clang" }
         toolset "clang"
     filter {}
@@ -69,7 +73,10 @@ workspace "ba-thesis"
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
 
     project "hip-volumetric-ray-tracer"
-        kind "Utility" -- I can't force premake to use hipcc and Makefile projects are only supported for VS according to the docs
+        kind "None"
+        filter { "options:with-rocm" }
+            kind "Utility" -- I can't force premake to use hipcc and Makefile projects are only supported for VS according to the docs
+        filter {}
         targetdir "build/bin/%{cfg.buildcfg}"
         dependson { "imgui", "vk-renderer" }
 
@@ -150,7 +157,7 @@ workspace "ba-thesis"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
-        
+
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/svml-test.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
@@ -161,7 +168,7 @@ workspace "ba-thesis"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
-        
+
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }

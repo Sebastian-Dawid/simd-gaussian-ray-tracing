@@ -6,7 +6,7 @@
 #include <include/error_fmt.h>
 #include <sys/wait.h>
 #include <sched.h>
-
+#include <getopt.h>
 #include <malloc.h>
 
 #pragma GCC diagnostic push
@@ -22,58 +22,69 @@
 
 #pragma GCC diagnostic pop
 
-#define EXP(x) _exp(x)
-#define ERF(x) _erf(x)
-#define SIMD_EXP(x) _simd_exp(x)
-#define SIMD_ERF(x) _simd_erf(x)
-#define TRANSMITTANCE(o, n, s, g) _transmittance(o, n, s, g)
-
 #include "types.h"
 #include "approx.h"
 #include "rt.h"
 
-int main(i32 argc, char **argv)
+struct cmd_args_t
 {
-    u64 width = 256, height = 256;
-    if (argc >= 3)
+    u64 w = -1, h = -1;
+    u64 grid_dim = 4;
+    char *outfile = nullptr;
+    char *infile = nullptr;
+    bool use_grid = false;
+    cmd_args_t(i32 argc, char **argv)
     {
-        width = strtoul(argv[1], NULL, 10);
-        if (width == 0)
+        static struct option opts[] = {
+            { "grid", optional_argument, NULL, 'g' },
+            { "file", required_argument, NULL, 'f' },
+            { "output", required_argument, NULL, 'o' },
+            { "width", required_argument, NULL, 'w' },
+            { "height", required_argument, NULL, 'h' }
+        };
+        i32 lidx;
+        while (1)
         {
-            fmt::println(stderr, "[ {} ]\tInvaid width set! Setting width to 256.", ERROR_FMT("ERROR"));
-            width = 256;
+            char c = getopt_long(argc, argv, "w:o:f:g:h:", opts, &lidx);
+            if (c == -1)
+                break;
+            switch(c)
+            {
+                case 'g':
+                    this->use_grid = true;
+                    if (optarg != NULL)
+                    {
+                        this->grid_dim = strtoul(optarg, NULL, 10);
+                    }
+                    break;
+                case 'f':
+                    this->infile = optarg;
+                    break;
+                case 'o':
+                    this->outfile = optarg;
+                    break;
+                case 'w':
+                    this->w = strtoul(optarg, NULL, 10);
+                    if (this->h == (u64)-1) this->h = this->w;
+                    break;
+                case 'h':
+                    this->h = strtoul(optarg, NULL, 10);
+                    if (this->w == (u64)-1) this->w = this->h;
+                    break;
+            }
         }
-        height = strtoul(argv[2], NULL, 10);
-        if (height == 0)
-        {
-            fmt::println(stderr, "[ {} ]\tInvaid height set! Setting height to 256.", ERROR_FMT("ERROR"));
-            height = 256;
-        }
+        if (this->w == (u64)-1) this->w = 256;
+        if (this->h == (u64)-1) this->h = 256;
     }
-    
-    std::vector<char*> args(argc);
-    std::memcpy(args.data(), argv, sizeof(*argv) * argc);
-    bool grid = false;
-    u64 idx = 0;
-    u64 filename_idx = -1;
-    u64 grid_width_idx = -1;
-    for (char *s : args)
-    {
-        if (std::strncmp(s, "--grid", 7) == 0)
-        {
-            grid = true;
-            if ((u64)argc > idx + 1 && isdigit(argv[idx + 1][0]))
-                grid_width_idx = idx + 1;
-        }
-        if (std::strncmp(s, "-o", 3) == 0) filename_idx = idx + 1;
-        ++idx;
-    }
+};
 
+i32 main(i32 argc, char **argv)
+{
+    cmd_args_t cmd(argc, argv);
     std::vector<gaussian_t> _gaussians;
-    if (grid)
+    if (cmd.use_grid)
     {
-        constexpr u8 base_dim = 4;
-        u8 grid_dim = (grid_width_idx != (u64)-1) ? strtoul(argv[grid_width_idx], NULL, 10) : base_dim;
+        u8 grid_dim = cmd.grid_dim;
         for (u8 i = 0; i < grid_dim; ++i)
             for (u8 j = 0; j < grid_dim; ++j)
                 _gaussians.push_back(gaussian_t{
@@ -103,6 +114,7 @@ int main(i32 argc, char **argv)
     bool use_simd_pixels = false;
     bool use_tiling = true;
 
+    u64 width = cmd.w, height = cmd.h;
     if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
     renderer.custom_imgui = [&](){
         ImGui::Begin("Gaussians");
@@ -174,8 +186,8 @@ int main(i32 argc, char **argv)
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         if (res) break;
 
-        if (filename_idx != (u64)-1)
-            stbi_write_png(argv[filename_idx], width, height, 4, image, width * 4);
+        if (cmd.outfile != nullptr)
+            stbi_write_png(cmd.outfile, width, height, 4, image, width * 4);
         renderer.stage_image(image, width, height);
     }
 
@@ -184,14 +196,6 @@ int main(i32 argc, char **argv)
     simd_aligned_free(bg_image);
     simd_aligned_free(xs);
     simd_aligned_free(ys);
-    //for (const gaussians_t &gs : tiles.gaussians)
-    //{
-    //    delete gs.gaussians_broadcast;
-    //}
-
-    // TODO: this looks like something is leaking memory, I just don't know what it is
-    //       this could also be related to memory being released in destructors called after the end of the scope
-    malloc_stats();
 
     return EXIT_SUCCESS;
 }
