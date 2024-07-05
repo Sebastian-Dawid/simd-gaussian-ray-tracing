@@ -7,7 +7,7 @@
 = Integrals
 $ hat(L)(o, n, gamma) = sum_q a_q sum_(s in S_q) lambda_q T(o, n, s, gamma) G_q (o + s n) $
 $ T(o, n, s, gamma) = exp(-integral_0^s sum_q G_q (o + t n) dif t)\
-                    = exp(sum_q frac(macron(sigma)_q macron(c)_q, sqrt(frac(2, pi))) ("erf"(frac(macron(mu)_q, sqrt(2)macron(sigma)_q)) - "erf"(frac(s - macron(mu)_q, sqrt(2) macron(mu)_q)))) $
+                    = exp(sum_q frac(macron(sigma)_q macron(c)_q, sqrt(frac(2, pi))) ("erf"(frac(-macron(mu)_q, sqrt(2)macron(sigma)_q)) - "erf"(frac(s - macron(mu)_q, sqrt(2) macron(sigma)_q)))) $
 
 === Loop Structure
 ```c

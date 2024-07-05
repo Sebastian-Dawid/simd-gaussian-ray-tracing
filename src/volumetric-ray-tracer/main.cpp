@@ -25,6 +25,7 @@
 #include "types.h"
 #include "approx.h"
 #include "rt.h"
+#include "gaussians-from-file.h"
 
 struct cmd_args_t
 {
@@ -33,6 +34,8 @@ struct cmd_args_t
     char *outfile = nullptr;
     char *infile = nullptr;
     bool use_grid = false;
+    bool use_threads = false;
+    u64 thread_count = std::thread::hardware_concurrency();
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -40,12 +43,13 @@ struct cmd_args_t
             { "file", required_argument, NULL, 'f' },
             { "output", required_argument, NULL, 'o' },
             { "width", required_argument, NULL, 'w' },
-            { "height", required_argument, NULL, 'h' }
+            { "height", required_argument, NULL, 'h' },
+            { "with-threads", required_argument, NULL, 't' }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "w:o:f:g:h:", opts, &lidx);
+            char c = getopt_long(argc, argv, "w:o:f:g:h:t:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -71,10 +75,15 @@ struct cmd_args_t
                     this->h = strtoul(optarg, NULL, 10);
                     if (this->w == (u64)-1) this->w = this->h;
                     break;
+                case 't':
+                    this->use_threads = true;
+                    this->thread_count = strtoul(optarg, NULL, 10);
+                    break;
             }
         }
         if (this->w == (u64)-1) this->w = 256;
         if (this->h == (u64)-1) this->h = 256;
+        if (this->use_grid && this->infile != nullptr) this->use_grid = false;
     }
 };
 
@@ -94,6 +103,10 @@ i32 main(i32 argc, char **argv)
                         .magnitude = 3.f
                         });
     }
+    else if (cmd.infile != nullptr)
+    {
+        _gaussians = read_from_obj(cmd.infile);
+    }
     else
     {
         _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
@@ -111,7 +124,7 @@ i32 main(i32 argc, char **argv)
     bool use_abramowitz_approx = false;
     bool use_fast_exp = false;
     bool use_simd_transmittance = true;
-    bool use_simd_pixels = false;
+    bool use_simd_pixels = true;
     bool use_tiling = true;
 
     u64 width = cmd.w, height = cmd.h;
@@ -153,6 +166,9 @@ i32 main(i32 argc, char **argv)
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     struct timespec start, end;
 
+    thread_pool_t pool(cmd.thread_count);
+    thread_pool_t *tp = (cmd.use_threads) ? &pool : nullptr;
+
     while (running)
     {
         gaussians.gaussians = staging_gaussians;
@@ -168,12 +184,11 @@ i32 main(i32 argc, char **argv)
         if (use_simd_transmittance) _transmittance = simd_transmittance;
         else { _transmittance = transmittance; }
 
-        //auto start_time = std::chrono::system_clock::now();
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         bool res = false;
         if (use_tiling)
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles, running);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles, running, tp);
             else res = render_image(width, height, image, bg_image, xs, ys, tiles, running);
         }
         else
@@ -181,8 +196,7 @@ i32 main(i32 argc, char **argv)
             if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, gaussians, running);
             else res = render_image(width, height, image, bg_image, xs, ys, gaussians, running);
         }
-        //auto end_time = std::chrono::system_clock::now();
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         if (res) break;
 

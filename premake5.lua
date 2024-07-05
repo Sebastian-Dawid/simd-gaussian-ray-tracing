@@ -68,9 +68,10 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
+        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
-        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt" }
+        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt", "svml" }
 
     project "hip-volumetric-ray-tracer"
         kind "None"
@@ -173,3 +174,14 @@ workspace "ba-thesis"
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
         links { "fmt", "svml" }
+
+    project "vrt-unit-tests"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "build/bin/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-ffast-math" }
+
+        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+        includedirs { "./src" }
+        files { "./src/volumetric-ray-tracer/unit-tests/**", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
+        links { "fmt", "svml", "gtest" }

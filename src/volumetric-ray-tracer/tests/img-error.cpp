@@ -41,14 +41,14 @@ i32 main()
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, 256, 256);
 
-    render_image(256, 256, ref_image, bg_image, xs, ys, tiles, true);
+    render_image(256, 256, ref_image, bg_image, xs, ys, tiles, true, transmittance<decltype(std::expf), decltype(std::erff)>, std::expf, std::erff);
 
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    simd_render_image(256, 256, svml_image, (i32*)bg_image, xs, ys, tiles, true, simd::exp, simd::erf);
-    simd_render_image(256, 256, fog_image, (i32*)bg_image, xs, ys, tiles, true, _expf, approx::simd_abramowitz_stegun_erf);
-    simd_render_image(256, 256, my_image, (i32*)bg_image, xs, ys, tiles, true, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, svml_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, simd::exp, simd::erf);
+    simd_render_image(256, 256, fog_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, _expf, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, my_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 
     double svml_err = 0.0, fog_err = 0.0, my_err = 0.0;
     for (u64 i = 0; i < 256 * 256; ++i)

@@ -6,6 +6,8 @@
 * maybe use lokal compies of libraries?
 * Test with more complex scene. teapot? monkey? -> load verticies from .obj - in progress
 * new CLI - done
+* unit tests for transmittance etc.
+* add threads
 
 # Used Libraries
 * [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)
