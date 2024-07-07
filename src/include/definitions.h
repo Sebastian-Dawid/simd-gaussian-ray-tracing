@@ -21,3 +21,12 @@ typedef double f64;
 #define SIMD_BYTES 32
 #endif
 #define SIMD_FLOATS (SIMD_BYTES/sizeof(f32))
+
+#define ASSERT(expr)        \
+{                           \
+    if (!(expr))            \
+    {                       \
+        fprintf(stderr, "Assertion: %s failed in %s:%d\n", #expr, __FILE__, __LINE__);\
+        _exit(1);           \
+    }                       \
+}

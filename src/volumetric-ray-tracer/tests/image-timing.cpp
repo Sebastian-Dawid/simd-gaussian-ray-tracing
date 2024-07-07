@@ -40,31 +40,31 @@ int main()
     for (u64 dim = 16; dim <= 512; dim += 16)
     {
         u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * dim * dim);
-        u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * dim * dim);
+        //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * dim * dim);
         f32 *xs, *ys;
         GENERATE_PROJECTION_PLANE(xs, ys, dim, dim);
 
         _transmittance = transmittance;
         GETTIME(start);
-        render_image(dim, dim, image, bg_image, xs, ys, gaussians);
+        render_image(dim, dim, image, xs, ys, gaussians);
         GETTIME(end);
         f32 t_seq = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         _transmittance = simd_transmittance;
         GETTIME(start);
-        render_image(dim, dim, image, bg_image, xs, ys, gaussians);
+        render_image(dim, dim, image, xs, ys, gaussians);
         GETTIME(end);
         f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         GETTIME(start);
-        simd_render_image(dim, dim, image, (i32*)bg_image, xs, ys, gaussians);
+        simd_render_image(dim, dim, image, xs, ys, gaussians);
         GETTIME(end);
         f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         fmt::println(CSV, "{}, {}, {}, {}", dim, t_seq, t_simd_inner, t_simd_pixels);
 
         simd_aligned_free(image);
-        simd_aligned_free(bg_image);
+        //simd_aligned_free(bg_image);
         simd_aligned_free(xs);
         simd_aligned_free(ys);
     }
@@ -97,12 +97,12 @@ int main()
 
             _transmittance = simd_transmittance;
             GETTIME(start);
-            render_image(dim, dim, image, bg_image, xs, ys, gaussians);
+            render_image(dim, dim, image, xs, ys, gaussians);
             GETTIME(end);
             f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            simd_render_image(dim, dim, image, (i32*)bg_image, xs, ys, gaussians);
+            simd_render_image(dim, dim, image, xs, ys, gaussians);
             GETTIME(end);
             f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 

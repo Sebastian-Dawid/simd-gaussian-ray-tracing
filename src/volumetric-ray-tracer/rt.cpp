@@ -38,7 +38,7 @@ tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t>
                 const glm::vec2 mu(proj.x/proj.z, proj.y/proj.z);
                 const f32 sigma = g.sigma / proj.z;
                 const glm::vec2 p = glm::abs(glm::vec2(x, y) - mu);
-                if ((p.x <= tw/2 + 2.5f * sigma && p.y <= th/2 + 2.5f * sigma))
+                if ((p.x <= tw/2 + 3.f * sigma && p.y <= th/2 + 3.f * sigma))
                 {
                     gs.gaussians.push_back(g);
                 }

@@ -27,7 +27,7 @@ std::vector<gaussian_t> read_from_obj(const char *const filename)
     {
         i32 c = rand() % 3;
         f32 depth = attrib.vertices[i + 2];
-        gaussians.push_back(gaussian_t{
+        gaussians.emplace_back(gaussian_t{
                 .albedo = vec4f_t{ (f32)(c == 0)/depth, (f32)(c == 1)/depth, (f32)(c == 2)/depth, 1.0f },
                 .mu = { .x = attrib.vertices[i], .y = attrib.vertices[i+1], .z = attrib.vertices[i+2], .w = 0.0f },
                 .sigma = 0.2f,

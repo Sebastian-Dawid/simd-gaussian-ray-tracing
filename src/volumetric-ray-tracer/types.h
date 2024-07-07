@@ -312,9 +312,10 @@ struct tiles_t
     const std::vector<gaussians_t> gaussians;
     const f32 tw;
     const f32 th;
-    const u64 w;
+    const u64 w, h;
 
-    tiles_t(const std::vector<gaussians_t> &gaussians, const f32 tw, const f32 th) : gaussians(gaussians), tw(tw), th(th), w(2.f/tw) {}
+    /// BUG: number of horizontal tiles and vertical tiles should probably be given explicitly
+    tiles_t(const std::vector<gaussians_t> &gaussians, const f32 tw, const f32 th) : gaussians(gaussians), tw(tw), th(th), w(std::ceil(2.f/tw)), h(std::ceil(2.f/th)) {}
 
     /// Destroy all `gaussian_vec_t`s since they will not go out of scope naturally.
     ~tiles_t() {

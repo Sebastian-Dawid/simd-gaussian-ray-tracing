@@ -34,8 +34,8 @@ struct cmd_args_t
     char *outfile = nullptr;
     char *infile = nullptr;
     bool use_grid = false;
-    bool use_threads = false;
-    u64 thread_count = std::thread::hardware_concurrency();
+    //bool use_threads = false;
+    u64 thread_count = 1;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -76,7 +76,7 @@ struct cmd_args_t
                     if (this->w == (u64)-1) this->w = this->h;
                     break;
                 case 't':
-                    this->use_threads = true;
+                    //this->use_threads = true;
                     this->thread_count = strtoul(optarg, NULL, 10);
                     break;
             }
@@ -109,7 +109,7 @@ i32 main(i32 argc, char **argv)
     }
     else
     {
-        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 1.f } };
+        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 10.f } };
     }
 
 
@@ -149,25 +149,22 @@ i32 main(i32 argc, char **argv)
     std::thread render_thread([&](){ renderer.run(running); });
 
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-    u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+    //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
 
-    bool w = false, h = false;
-    for (size_t x = 0; x < width; ++x)
-    {
-        if (!(x % 16)) w = !w;
-        for (size_t y = 0; y < height; ++y)
-        {
-            if (!(y % 16)) h = !h;
-            bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
-        }
-    }
+    //bool w = false, h = false;
+    //for (size_t x = 0; x < width; ++x)
+    //{
+    //    if (!(x % 16)) w = !w;
+    //    for (size_t y = 0; y < height; ++y)
+    //    {
+    //        if (!(y % 16)) h = !h;
+    //        bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
+    //    }
+    //}
 
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     struct timespec start, end;
-
-    thread_pool_t pool(cmd.thread_count);
-    thread_pool_t *tp = (cmd.use_threads) ? &pool : nullptr;
 
     while (running)
     {
@@ -188,13 +185,13 @@ i32 main(i32 argc, char **argv)
         bool res = false;
         if (use_tiling)
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles, running, tp);
-            else res = render_image(width, height, image, bg_image, xs, ys, tiles, running);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
+            else res = render_image(width, height, image, xs, ys, tiles, running);
         }
         else
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, (i32*)bg_image, xs, ys, gaussians, running);
-            else res = render_image(width, height, image, bg_image, xs, ys, gaussians, running);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, gaussians, running);
+            else res = render_image(width, height, image, xs, ys, gaussians, running);
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
@@ -207,7 +204,7 @@ i32 main(i32 argc, char **argv)
 
     render_thread.join();
     simd_aligned_free(image);
-    simd_aligned_free(bg_image);
+    //simd_aligned_free(bg_image);
     simd_aligned_free(xs);
     simd_aligned_free(ys);
 

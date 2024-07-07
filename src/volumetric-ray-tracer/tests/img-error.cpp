@@ -1,4 +1,5 @@
 #include "../rt.h"
+#include "include/error_fmt.h"
 #define VCL_NAMESPACE vcl
 #include <include/vectorclass/vectormath_exp.h>
 
@@ -35,20 +36,21 @@ i32 main()
     tiles_t tiles = tile_gaussians(1.f/8.f, 1.f/8.f, _gaussians, glm::mat4(1.f));
 
     u32 *ref_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    memset(bg_image, 0x0, sizeof(u32) * 256 * 256);
+    //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
+    //memset(bg_image, 0x0, sizeof(u32) * 256 * 256);
 
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, 256, 256);
+    fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
+    render_image(256, 256, ref_image, xs, ys, tiles, true, 16, transmittance<decltype(std::expf), decltype(std::erff)>, std::expf, std::erff);
 
-    render_image(256, 256, ref_image, bg_image, xs, ys, tiles, true, transmittance<decltype(std::expf), decltype(std::erff)>, std::expf, std::erff);
-
+    fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    simd_render_image(256, 256, svml_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, simd::exp, simd::erf);
-    simd_render_image(256, 256, fog_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, _expf, approx::simd_abramowitz_stegun_erf);
-    simd_render_image(256, 256, my_image, (i32*)bg_image, xs, ys, tiles, true, nullptr, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, svml_image, xs, ys, tiles, true, 16, simd::exp, simd::erf);
+    simd_render_image(256, 256, fog_image, xs, ys, tiles, true, 16, _expf, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, my_image, xs, ys, tiles, true, 16, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 
     double svml_err = 0.0, fog_err = 0.0, my_err = 0.0;
     for (u64 i = 0; i < 256 * 256; ++i)

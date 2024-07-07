@@ -46,18 +46,18 @@ int main(i32 argc, char **argv)
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-    u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+    //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
 
-    bool w = false, h = false;
-    for (size_t x = 0; x < width; ++x)
-    {
-        if (!(x % 16)) w = !w;
-        for (size_t y = 0; y < height; ++y)
-        {
-            if (!(y % 16)) h = !h;
-            bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
-        }
-    }
+    //bool w = false, h = false;
+    //for (size_t x = 0; x < width; ++x)
+    //{
+    //    if (!(x % 16)) w = !w;
+    //    for (size_t y = 0; y < height; ++y)
+    //    {
+    //        if (!(y % 16)) h = !h;
+    //        bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
+    //    }
+    //}
 
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
@@ -68,21 +68,21 @@ int main(i32 argc, char **argv)
     switch (v)
     {
         case 0:
-                render_image(width, height, image, bg_image, xs, ys, gaussians);
+                render_image(width, height, image, xs, ys, gaussians);
             break;
         case 1:
-                render_image(width, height, image, bg_image, xs, ys, tiles);
+                render_image(width, height, image, xs, ys, tiles, true, 32);
             break;
         case 2:
-                simd_render_image(width, height, image, (i32*)bg_image, xs, ys, gaussians);
+                simd_render_image(width, height, image, xs, ys, gaussians);
             break;
         default:
-                simd_render_image(width, height, image, (i32*)bg_image, xs, ys, tiles);
+                simd_render_image(width, height, image, xs, ys, tiles, true, 32);
             break;
     }
 
     simd_aligned_free(image);
-    simd_aligned_free(bg_image);
+    //simd_aligned_free(bg_image);
     simd_aligned_free(xs);
     simd_aligned_free(ys);
 
