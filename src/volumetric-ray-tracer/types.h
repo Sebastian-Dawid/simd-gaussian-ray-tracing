@@ -169,7 +169,7 @@ struct gaussian_t
     /// Returns the density of the gaussian at point `x`. Templated to allow for substitution
     /// of the used approximation of the exponential function.
     template<typename Fn>
-    f32 pdf(vec4f_t x, Fn &&_exp = std::expf) const
+    f32 pdf(vec4f_t x, Fn &&_exp = expf) const
     {
         return this->magnitude * _exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
     }
@@ -285,6 +285,28 @@ struct gaussian_vec_t
         }
         vec->size = size;
         return vec;
+    }
+
+    gaussian_vec_t() {}
+    gaussian_vec_t(gaussian_vec_t &other)
+    {
+        this->size = other.size;
+        this->mu.x = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->mu.x, other.mu.x, this->size * sizeof(f32));
+        this->mu.y = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->mu.y, other.mu.y, this->size * sizeof(f32));
+        this->mu.z = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->mu.z, other.mu.z, this->size * sizeof(f32));
+        this->albedo.r = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->albedo.r, other.albedo.r, this->size * sizeof(f32));
+        this->albedo.g = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->albedo.g, other.albedo.g, this->size * sizeof(f32));
+        this->albedo.b = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->albedo.b, other.albedo.b, this->size * sizeof(f32));
+        this->sigma = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->sigma, other.sigma, this->size * sizeof(f32));
+        this->magnitude = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        memcpy(this->magnitude, other.magnitude, this->size * sizeof(f32));
     }
 
     /// Frees all allocated memory.

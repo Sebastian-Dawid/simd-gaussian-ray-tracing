@@ -1,8 +1,6 @@
 #pragma once
 
-#include <condition_variable>
 #include <functional>
-#include <queue>
 #include <thread>
 #include <vector>
 #include "types.h"
@@ -50,7 +48,7 @@ f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians
 /// Default version of `transmittance` that uses `std::expf` and `std::erff`.
 inline f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians)
 {
-    return transmittance(o, n, s, gaussians, std::expf, std::erff);
+    return transmittance(o, n, s, gaussians, expf, std::erff);
 }
 
 /// Accelerated version of `transmittance` that operates on `SIMD_FLOATS` gaussians in parallel.
@@ -81,7 +79,7 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
         const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * g_q.sigma;
         T += ((g_q.sigma * c_bar)/simd::set1(SQRT_2_PI)) * (_erf(-mu_bar/sqrt_2_sig) - _erf((simd::set1(s) - mu_bar)/sqrt_2_sig));
     }
-    return std::expf(simd::hadds(T));
+    return expf(simd::hadds(T));
 }
 
 inline f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
@@ -257,9 +255,11 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
         {
             tile_buffers.push_back((i32*)simd_aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
             /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
-            gaussians_t g{ tiles.gaussians[tidx].gaussians };
-            std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height, g, &tiles, xs, ys, &_tr, &_exp, &_erf] () {
-                for (u64 _i = 0; _i < tile_width * tile_height; _i += SIMD_FLOATS)
+            //gaussians_t g{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*tiles.gaussians[tidx].gaussians_broadcast) };
+            std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height,
+                g{gaussians_t{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*(tiles.gaussians[tidx].gaussians_broadcast)) }},
+                &tiles, xs, ys, &_tr, &_exp, &_erf] () {
+                for (u64 _i = 0; _i < tile_width * tile_height; ++_i)
                 {
                     const u64 i = (tidx % tiles.w) * tile_width + _i % tile_width // horizontal position
                         + (tile_width * tiles.w) * (_i/tile_width + (tidx/tiles.w) * tile_height); // vertical position
@@ -306,7 +306,7 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
 inline bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
 {
     return render_image(width,  height, image, xs, ys, tiles, running, tc,
-            simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+            simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.

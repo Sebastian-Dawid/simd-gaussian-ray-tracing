@@ -32,9 +32,11 @@
                 rocmPackages.clr
                 rocmPackages.hip-common
                 glm
+                gtest
             ];
 
             shellHook = ''
+                export NIX_LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib:$NIX_LD_LIBRARY_PATH"
                 exec zsh
                 '';
             NVIDIA=1;

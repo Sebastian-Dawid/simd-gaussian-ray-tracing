@@ -7,9 +7,13 @@
 
 simd::Vec<simd::Float> _expf(simd::Vec<simd::Float> x)
 {
-    float __x[16];
+    float __x[SIMD_FLOATS];
     simd::storeu(__x, x);
+#ifndef __AVX512F__
+    vcl::Vec8f _x;
+#else
     vcl::Vec16f _x;
+#endif
     _x.load(__x);
     _x = vcl::exp(_x);
     _x.store(__x);
@@ -42,7 +46,7 @@ i32 main()
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, 256, 256);
     fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
-    render_image(256, 256, ref_image, xs, ys, tiles, true, 16, transmittance<decltype(std::expf), decltype(std::erff)>, std::expf, std::erff);
+    render_image(256, 256, ref_image, xs, ys, tiles, true, 16, transmittance<decltype(expf), decltype(std::erff)>, expf, std::erff);
 
     fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);

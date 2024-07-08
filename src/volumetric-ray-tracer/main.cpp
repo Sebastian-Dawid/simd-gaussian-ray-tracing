@@ -124,7 +124,7 @@ i32 main(i32 argc, char **argv)
     bool use_abramowitz_approx = false;
     bool use_fast_exp = false;
     bool use_simd_transmittance = true;
-    bool use_simd_pixels = true;
+    bool use_simd_pixels = false;
     bool use_tiling = true;
 
     u64 width = cmd.w, height = cmd.h;
@@ -186,7 +186,7 @@ i32 main(i32 argc, char **argv)
         if (use_tiling)
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
-            else res = render_image(width, height, image, xs, ys, tiles, running);
+            else res = render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
         }
         else
         {

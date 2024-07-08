@@ -28,6 +28,7 @@ namespace approx {
 
     /// SIMD implementation of the error function from intels SVML library.
     /// Requires linking SVML which is distributed through intels icx compiler.
+    extern "C" __m256 __svml_erff8(__m256);
     extern "C" __m512 __svml_erff16(__m512);
 
     /// Fast implementation of the exponential function based on:
@@ -44,10 +45,21 @@ namespace approx {
 
     /// SIMD implementation of the exponential function from intels SVML library.
     /// Requires linking SVML which is distributed through intels icx compiler.
+    extern "C" __m256 __svml_expf8(__m256);
     extern "C" __m512 __svml_expf16(__m512);
 }
 
 namespace simd {
+#ifndef __AVX512F__
+    inline simd::Vec<simd::Float> erf(simd::Vec<simd::Float> x)
+    {
+        return approx::__svml_erff8(x);
+    }
+    inline simd::Vec<simd::Float> exp(simd::Vec<simd::Float> x)
+    {
+        return approx::__svml_expf8(x);
+    }
+#else
     inline simd::Vec<simd::Float> erf(simd::Vec<simd::Float> x)
     {
         return approx::__svml_erff16(x);
@@ -56,6 +68,7 @@ namespace simd {
     {
         return approx::__svml_expf16(x);
     }
+#endif
 }
 
 // TODO: replace occurrences with templates. Test impact!

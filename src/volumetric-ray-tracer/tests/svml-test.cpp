@@ -38,9 +38,9 @@ i32 main()
         {
             for (u64 j = 0; j < COUNT; j += SIMD_FLOATS)
             {
-                __m512 x = _mm512_loadu_ps(_x + j);
-                x = approx::__svml_expf16(x);
-                _mm512_storeu_ps(res_svml + j, x);
+                simd::Vec<simd::Float> x = simd::loadu(_x + j);
+                x = simd::exp(x);
+                simd::storeu(res_svml + j, x);
             }
         } 
         GETTIME(end);
@@ -52,7 +52,11 @@ i32 main()
         {
             for (u64 j = 0; j < COUNT; j += SIMD_FLOATS)
             {
+#ifndef __AVX512F__
+                vcl::Vec8f x;
+#else
                 vcl::Vec16f x;
+#endif
                 x.load(_x + j);
                 x = vcl::exp(x);
                 x.store(res_fog + j);
@@ -111,9 +115,9 @@ i32 main()
         {
             for (u64 j = 0; j < COUNT; j += SIMD_FLOATS)
             {
-                __m512 x = _mm512_loadu_ps(_x + j);
-                x = approx::__svml_erff16(x);
-                _mm512_storeu_ps(res_svml + j, x);
+                simd::Vec<simd::Float> x = simd::loadu(_x + j);
+                x = simd::erf(x);
+                simd::storeu(res_svml + j, x);
             }
         } 
         GETTIME(end);

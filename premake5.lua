@@ -158,7 +158,8 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+        -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj",  "-fverbose-asm", "-ffast-math" }
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
@@ -169,7 +170,8 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
+        -- see svml-test on why -masm=intel is missing
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }

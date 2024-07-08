@@ -25,7 +25,7 @@ TEST_F(vrt_test_transmittance, transmittance_is_acurate_at_a_small_gaussians_cen
 {
     for (u64 i = 0; i < this->inputs_small.size(); ++i)
     {
-        f32 got = transmittance(o, n, this->inputs_small[i], this->sg, std::expf, approx::abramowitz_stegun_erf);
+        f32 got = transmittance(o, n, this->inputs_small[i], this->sg, expf, approx::abramowitz_stegun_erf);
         EXPECT_LE(abs(got - this->expected_small[i]), 1e-3);
     }
 }
@@ -34,7 +34,7 @@ TEST_F(vrt_test_transmittance, transmittance_is_acurate_at_a_large_gaussians_cen
 {
     for (u64 i = 0; i < this->inputs_large.size(); ++i)
     {
-        f32 got = transmittance(o, n, this->inputs_large[i], this->lg, std::expf, approx::abramowitz_stegun_erf);
+        f32 got = transmittance(o, n, this->inputs_large[i], this->lg, expf, approx::abramowitz_stegun_erf);
         EXPECT_LE(abs(got - this->expected_large[i]), 1e-3);
     }
 }
