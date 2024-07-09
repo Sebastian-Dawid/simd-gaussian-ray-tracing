@@ -149,14 +149,15 @@ template<typename Tr, typename Exp, typename Erf>
 vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians, const Tr &&_tr, const Exp &&_exp, const Erf &&_erf)
 {
     vec4f_t L_hat{ .x = 0.f, .y = 0.f, .z = 0.f };
-    for (const gaussian_t &G_q : gaussians.gaussians)
+    for (u64 i = 0; i < gaussians.gaussians.size(); ++i)
     {
+        const gaussian_t &G_q = gaussians.gaussians[i];
         const f32 lambda_q = G_q.sigma;
         f32 inner = 0.f;
         for (i8 k = -4; k <= 0; ++k)
         {
             const f32 s = (G_q.mu - o).dot(n) + k * lambda_q;
-            f32 T = _tr(o, n, s, gaussians, _exp, _erf);
+            const f32 T = _tr(o, n, s, gaussians, _exp, _erf);
             inner += G_q.pdf(o + (n * s)) * T * lambda_q;
         }
         L_hat = L_hat + (G_q.albedo * inner);
@@ -199,8 +200,6 @@ inline simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const
 {
     return simd_l_hat(o, n, gaussians, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 }
-
-// TODO: Add template version for normal render_image
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
 /// The rays are defined in `xs` and `ys`.

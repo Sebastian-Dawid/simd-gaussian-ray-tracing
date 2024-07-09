@@ -30,9 +30,14 @@ Algorithm
 
 # Mathematical Representation
 
-* Integrate Radiance for each pixel in the image via approximation:
+Integrate Radiance for each pixel in the image via approximation:
 ```latex +render
-\[ \hat{L}(\mathbf{o}, \mathbf{n}) = \sum_{q = 0}^{N - 1} \mathbf{a}_q \sum_{s \in S_q} \lambda_q T(\mathbf{o}, \mathbf{n}, s)G_q(\mathbf{o} + s\mathbf{n}) \]
+\begin{align}
+    \hat{L}(\mathbf{o}, \mathbf{n}) &= \sum_{q = 0}^{N - 1} \mathbf{a}_q \sum_{s \in S_q} \lambda_q T(\mathbf{o}, \mathbf{n}, s)G_q(\mathbf{o} + s\mathbf{n})\\
+    T(\mathbf{o}, \mathbf{n}, s) &= \exp{\left( \sum_{q = 0}^{N - 1} \frac{\overbar{\sigma}_q\overbar{c}_q}{\sqrt{\frac{2}{\pi}}} \left( \text{erf}{\left( \frac{- \overbar{\mu}_q}{\sqrt{2}\overbar{\sigma}_q} \right)} - \text{erf}{\left( \frac{s - \overbar{\mu}_q}{\sqrt{2}\overbar{\sigma}_q} \right)} \right) \right)}\\
+    \overbar{\mu}_q &= (\mathbf{\mu}_q - \mathbf{o})^T\mathbf{n},\quad \overbar{\sigma}_q = \sigma_q\\
+    \overbar{c}_q &= c \exp{\left( -\frac{(\mathbf{\mu}_q - \mathbf{o})^T(\mathbf{\mu}_q - \mathbf{o}) - \overbar{\mu}_q}{2\overbar{\sigma}_q} \right)}
+\end{align}
 ```
 ```typst +render
 - $hat(L)$: Radiance
@@ -76,14 +81,16 @@ Optimization
 Now we can rewrite the radiance formular to operate on multiple gaussians at the same time:
 ```latex +render
 \begin{align}
-    \hat{L}^W(\mathbf{o}, \mathbf{n}) = \sum_{m = 0}^{\lceil{\frac{N}{W}}\rceil - 1} \left(\begin{pmatrix}
-            \mathbf{a}_{mW}\\\vdots\\\mathbf{a}_{(m + 1)W - 1}
-        \end{pmatrix} \odot \begin{pmatrix}
-            \sum_{s \in S_{mW}} \lambda_{mW} T(\mathbf{o}, \mathbf{n}, s)G_{mW}(\mathbf{o} + s\mathbf{n})\\
-            \vdots\\
-           \sum_{s \in S_{(m + 1)W - 1}} \lambda_{(m + 1)W - 1} T(\mathbf{o}, \mathbf{n}, s)G_{(m + 1)W - 1}(\mathbf{o} + s\mathbf{n}) 
-        \end{pmatrix}\right)\\
-    \hat{L}(\mathbf{o}, \mathbf{n}) = \sum_{i = 0}^W \hat{L}^W_i(\mathbf{o}, \mathbf{n})
+    T^W(\mathbf{o}, \mathbf{n}, s) &= \exp{\left( \sum_{m = 0}^{\lceil\frac{N}{W}\rceil - 1} \begin{pmatrix}
+        \frac{\overbar{\sigma}_{mW}\overbar{c}_{mW}}{\sqrt{\frac{2}{\pi}}}\\
+        \vdots\\
+        \frac{\overbar{\sigma}_{(m + 1)W - 1}\overbar{c}_{(m + 1)W - 1}}{\sqrt{\frac{2}{\pi}}}\\
+    \end{pmatrix} \odot \begin{pmatrix}
+        \text{erf}{\left( \frac{- \overbar{\mu}_{mW}}{\sqrt{2}\overbar{\sigma}_{mW}} \right)} - \text{erf}{\left( \frac{s - \overbar{\mu}_{mW}}{\sqrt{2}\overbar{\sigma}_{mW}} \right)}\\
+        \vdots\\
+        \text{erf}{\left( \frac{- \overbar{\mu}_{(m + 1)W - 1}}{\sqrt{2}\overbar{\sigma}_{(m + 1)W - 1}} \right)} - \text{erf}{\left( \frac{s - \overbar{\mu}_{(m + 1)W - 1}}{\sqrt{2}\overbar{\sigma}_{(m + 1)W - 1}} \right)}
+    \end{pmatrix} \right)}\\
+    \hat{L}(\mathbf{o}, \mathbf{n}) &= \sum_{q = 0}^{N - 1} \left(\mathbf{a}_q \sum_{s \in S_q} \lambda_q \sum_{i = 1}^W \left( T^W_i(\mathbf{o}, \mathbf{n}, s) \right) G_q(\mathbf{o} + s\mathbf{n}) \right)\\
 \end{align}
 ```
 

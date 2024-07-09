@@ -131,6 +131,11 @@ struct simd_vec4f_t
         return this->dot(*this);
     }
 
+    vec4f_t hadds() const
+    {
+        return vec4f_t{ .x = simd::hadds(this->x), .y = simd::hadds(this->y), .z = simd::hadds(this->z), .w = simd::hadds(this->w) };
+    }
+
     /// Normalizes all vectors in this set to unit length.
     void normalize()
     {
