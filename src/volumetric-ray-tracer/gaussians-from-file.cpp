@@ -31,7 +31,7 @@ std::vector<gaussian_t> read_from_obj(const char *const filename)
         gaussians.emplace_back(gaussian_t{
                 .albedo = c * 0.5f + vec4f_t{ 0.5f, 0.5f, 0.5f, 1.0f },
                 .mu = pt,
-                .sigma = 0.05f,
+                .sigma = (attrib.vertices.size() < 100) ? 0.2f : 0.05f,
                 .magnitude = 1.0f
                 });
     }

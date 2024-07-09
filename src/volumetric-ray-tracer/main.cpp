@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <malloc.h>
 
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
@@ -37,6 +38,9 @@ struct cmd_args_t
     bool quiet = false;
     u64 thread_count = 1;
     u64 tiles = 4;
+    bool use_tiling = true;
+    bool use_simd_transmittance = false;
+    bool use_simd_pixels = true;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -47,12 +51,13 @@ struct cmd_args_t
             { "height", required_argument, NULL, 'h' },
             { "with-threads", required_argument, NULL, 't' },
             { "quiet", no_argument, NULL, 'q' },
-            { "tiles", required_argument, NULL, 'l' }
+            { "tiles", required_argument, NULL, 'l' },
+            { "mode", required_argument, NULL, 'm' }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "qw:o:f:g:h:t:", opts, &lidx);
+            char c = getopt_long(argc, argv, "m:qw:o:f:g:h:t:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -87,6 +92,29 @@ struct cmd_args_t
                     break;
                 case 'l':
                     this->tiles = strtoul(optarg, NULL, 10);
+                    break;
+                case 'm':
+                    u64 mode = strtoul(optarg, NULL, 10);
+                    this->use_tiling = false;
+                    this->use_simd_transmittance = false;
+                    this->use_simd_pixels = false;
+                    switch (mode) {
+                        case 4: // tiling sequential
+                            this->use_tiling = true;
+                        case 1: // no tiling sequential
+                            break;
+                        case 5: // tiling transmittance
+                            this->use_tiling = true;
+                        case 2: // no tiling transmittance
+                            this->use_simd_transmittance = true;
+                            break;
+                        default:
+                        case 6: // tiling pixels
+                            this->use_tiling = true;
+                        case 3: // no tiling pixels
+                            this->use_simd_pixels = true;
+                            break;
+                    }
                     break;
             }
         }
@@ -127,14 +155,14 @@ i32 main(i32 argc, char **argv)
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
     f32 draw_time = 0.f;
-    bool use_spline_approx = false;
-    bool use_mirror_approx = false;
-    bool use_taylor_approx = false;
-    bool use_abramowitz_approx = false;
-    bool use_fast_exp = false;
-    bool use_simd_transmittance = true;
-    bool use_simd_pixels = false;
-    bool use_tiling = true;
+    //bool use_spline_approx = false;
+    //bool use_mirror_approx = false;
+    //bool use_taylor_approx = false;
+    //bool use_abramowitz_approx = false;
+    //bool use_fast_exp = false;
+    bool use_simd_transmittance = cmd.use_simd_transmittance;
+    bool use_simd_pixels = cmd.use_simd_pixels;
+    bool use_tiling = cmd.use_tiling;
 
     u64 width = cmd.w, height = cmd.h;
     bool running = true;
@@ -147,11 +175,11 @@ i32 main(i32 argc, char **argv)
             ImGui::End();
             ImGui::Begin("Debug");
             ImGui::Text("Draw Time: %f ms", draw_time);
-            ImGui::Checkbox("erf spline", &use_spline_approx);
-            ImGui::Checkbox("erf mirror", &use_mirror_approx);
-            ImGui::Checkbox("erf taylor", &use_taylor_approx);
-            ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
-            ImGui::Checkbox("exp fast", &use_fast_exp);
+            //ImGui::Checkbox("erf spline", &use_spline_approx);
+            //ImGui::Checkbox("erf mirror", &use_mirror_approx);
+            //ImGui::Checkbox("erf taylor", &use_taylor_approx);
+            //ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
+            //ImGui::Checkbox("exp fast", &use_fast_exp);
             ImGui::Checkbox("use tiling", &use_tiling);
             ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
             ImGui::Checkbox("use simd pixels", &use_simd_pixels);
@@ -169,27 +197,29 @@ i32 main(i32 argc, char **argv)
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
         tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, glm::mat4(1));
-        if (use_spline_approx) _erf = approx::spline_erf;
-        else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
-        else if (use_taylor_approx) _erf = approx::taylor_erf;
-        else if (use_abramowitz_approx) _erf = approx::abramowitz_stegun_erf;
-        else _erf = std::erf;
-        if (use_fast_exp) _exp = approx::fast_exp;
-        else _exp = std::exp;
-        if (use_simd_transmittance) _transmittance = simd_transmittance;
-        else { _transmittance = transmittance; }
+        //if (use_spline_approx) _erf = approx::spline_erf;
+        //else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
+        //else if (use_taylor_approx) _erf = approx::taylor_erf;
+        //else if (use_abramowitz_approx) _erf = approx::abramowitz_stegun_erf;
+        //else _erf = std::erf;
+        //if (use_fast_exp) _exp = approx::fast_exp;
+        //else _exp = std::exp;
+        //if (use_simd_transmittance) _transmittance = simd_transmittance;
+        //else { _transmittance = transmittance; }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         bool res = false;
         if (use_tiling)
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
-            else res = render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
+            else if (use_simd_transmittance) res =render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count); 
+            else res = render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         else
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, gaussians, running);
-            else res = render_image(width, height, image, xs, ys, gaussians, running);
+            else if (use_simd_transmittance) res = render_image(width, height, image, xs, ys, gaussians, running);
+            else res = render_image(width, height, image, xs, ys, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
@@ -197,7 +227,11 @@ i32 main(i32 argc, char **argv)
 
         if (cmd.outfile != nullptr)
             stbi_write_png(cmd.outfile, width, height, 4, image, width * 4);
-        if (cmd.quiet) break;
+        if (cmd.quiet)
+        {
+            fmt::println("TIME: {} ms", draw_time);
+            break;
+        }
         renderer->stage_image(image, width, height);
     }
 
