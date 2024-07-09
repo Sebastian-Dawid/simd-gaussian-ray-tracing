@@ -6,23 +6,13 @@ author: Sebastian Dawid (sdawid@techfak.uni-bielefeld.de)
 Agenda
 ===
 
-* Notation
 * Algorithm
     * Overview
     * Maths
 * Optimization
     * SIMD
     * Tiling
-    * Threads
-    * What are the challanges?
 * Preliminary Results
-
-<!--end_slide-->
-
-Notation
-===
-
-We will use the following notation:
 
 <!--end_slide-->
 
@@ -42,7 +32,7 @@ Algorithm
 
 * Integrate Radiance for each pixel in the image via approximation:
 ```latex +render
-\[ \hat{L}(\mathbf{o}, \mathbf{n}) = \sum_q \mathbf{a}_q \sum_{s \in S_q} \lambda_q T(\mathbf{o}, \mathbf{n}, s)G_q(\mathbf{o} + s\mathbf{n}) \]
+\[ \hat{L}(\mathbf{o}, \mathbf{n}) = \sum_{q = 0}^{N - 1} \mathbf{a}_q \sum_{s \in S_q} \lambda_q T(\mathbf{o}, \mathbf{n}, s)G_q(\mathbf{o} + s\mathbf{n}) \]
 ```
 ```typst +render
 - $hat(L)$: Radiance
@@ -53,6 +43,7 @@ Algorithm
 - $bold(a)_q$: albedo of gaussian $q$
 - $S_q$: set of sample points along the ray to consider for gaussian $q$
 - $lambda_q$: step length for gaussian $q$
+- $N$: the number of gaussians
 ```
 <!--end_slide-->
 
@@ -65,7 +56,7 @@ Modern CPUs SIMD (Single Instruction Multiple Data) instruction sets allow us to
 
 <!--pause-->
 
-## Some More Notation
+## Some Notation
 
 ```latex +render
 \begin{itemize}
@@ -85,7 +76,7 @@ Optimization
 Now we can rewrite the radiance formular to operate on multiple gaussians at the same time:
 ```latex +render
 \begin{align}
-    \hat{L}^W(\mathbf{o}, \mathbf{n}) = \sum_{m = 0}^N \left(\begin{pmatrix}
+    \hat{L}^W(\mathbf{o}, \mathbf{n}) = \sum_{m = 0}^{\lceil{\frac{N}{W}}\rceil - 1} \left(\begin{pmatrix}
             \mathbf{a}_{mW}\\\vdots\\\mathbf{a}_{(m + 1)W - 1}
         \end{pmatrix} \odot \begin{pmatrix}
             \sum_{s \in S_{mW}} \lambda_{mW} T(\mathbf{o}, \mathbf{n}, s)G_{mW}(\mathbf{o} + s\mathbf{n})\\
@@ -140,26 +131,13 @@ Optimization
 
 <!--end_slide-->
 
-Optimization
-===
-
-# Threads
-
-Maybe remove this.
-
-<!--end_slide-->
-
-Optimization
-===
-
-# Challanges
-
-<!--end_slide-->
-
 Preliminary Results
 ===
 
-NOTE: Add some image here: e.g. teapot
+# Standford Teapot
+Interpreting the 3644 vertices of the standford teapot model as gaussians yields:
+
+![](./teapot.png)
 
 <!--end_slide-->
 
@@ -168,13 +146,18 @@ Preliminary Results
 
 # Timings
 ## Non Tiled
-* Sequential
-* SIMD along pixels:
-* SIMD along gaussians
+| Method | Time |
+| :-- | :-- |
+| Sequential           | >30 min |
+| SIMD along gaussians | >30 min |
+| SIMD along pixels    | >30 min |
+
 ## Tiled
-* Sequential:
-* SIMD along pixels:
-* SIMD along gaussians
-* Threads only:
-* SIMD along pixels + Threads:
-* SIMD along gaussians + Threads:
+| Method | Time |
+| :-- | :-- |
+| Sequential               | 1810664.6 ms |
+| SIMD along gaussians     | 343416.84 ms |
+| SIMD along pixels        | 310050.78 ms |
+| Threads                  | 400987.12 ms |
+| SIMD gaussians + Threads |  73612.66 ms |
+| SIMD pixels + Threads    |  66775.25 ms |
