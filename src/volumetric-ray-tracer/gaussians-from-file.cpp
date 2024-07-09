@@ -25,12 +25,13 @@ std::vector<gaussian_t> read_from_obj(const char *const filename)
     std::vector<gaussian_t> gaussians;
     for (u64 i = 0; i < attrib.vertices.size(); i+=3)
     {
-        i32 c = rand() % 3;
-        f32 depth = attrib.vertices[i + 2];
+        vec4f_t pt{ .x = attrib.vertices[i], .y = attrib.vertices[i+1], .z = attrib.vertices[i+2], .w = 0.0f };
+        vec4f_t c = pt;
+        c.normalize();
         gaussians.emplace_back(gaussian_t{
-                .albedo = vec4f_t{ (f32)(c == 0)/depth, (f32)(c == 1)/depth, (f32)(c == 2)/depth, 1.0f },
-                .mu = { .x = attrib.vertices[i], .y = attrib.vertices[i+1], .z = attrib.vertices[i+2], .w = 0.0f },
-                .sigma = 0.2f,
+                .albedo = c * 0.5f + vec4f_t{ 0.5f, 0.5f, 0.5f, 1.0f },
+                .mu = pt,
+                .sigma = 0.05f,
                 .magnitude = 1.0f
                 });
     }
