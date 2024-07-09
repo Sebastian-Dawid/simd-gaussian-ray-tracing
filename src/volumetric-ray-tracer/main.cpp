@@ -34,8 +34,9 @@ struct cmd_args_t
     char *outfile = nullptr;
     char *infile = nullptr;
     bool use_grid = false;
-    //bool use_threads = false;
+    bool quiet = false;
     u64 thread_count = 1;
+    u64 tiles = 4;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -44,12 +45,14 @@ struct cmd_args_t
             { "output", required_argument, NULL, 'o' },
             { "width", required_argument, NULL, 'w' },
             { "height", required_argument, NULL, 'h' },
-            { "with-threads", required_argument, NULL, 't' }
+            { "with-threads", required_argument, NULL, 't' },
+            { "quiet", no_argument, NULL, 'q' },
+            { "tiles", required_argument, NULL, 'l' }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "w:o:f:g:h:t:", opts, &lidx);
+            char c = getopt_long(argc, argv, "qw:o:f:g:h:t:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -78,6 +81,12 @@ struct cmd_args_t
                 case 't':
                     //this->use_threads = true;
                     this->thread_count = strtoul(optarg, NULL, 10);
+                    break;
+                case 'q':
+                    this->quiet = true;
+                    break;
+                case 'l':
+                    this->tiles = strtoul(optarg, NULL, 10);
                     break;
             }
         }
@@ -116,7 +125,7 @@ i32 main(i32 argc, char **argv)
     std::vector<gaussian_t> staging_gaussians = _gaussians;
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
-    renderer_t renderer;// = new renderer_t();
+    std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
     f32 draw_time = 0.f;
     bool use_spline_approx = false;
     bool use_mirror_approx = false;
@@ -128,40 +137,29 @@ i32 main(i32 argc, char **argv)
     bool use_tiling = true;
 
     u64 width = cmd.w, height = cmd.h;
-    if (!renderer.init(width, height, "Test")) return EXIT_FAILURE;
-    renderer.custom_imgui = [&](){
-        ImGui::Begin("Gaussians");
-        for (gaussian_t &g : staging_gaussians) g.imgui_controls();
-        ImGui::End();
-        ImGui::Begin("Debug");
-        ImGui::Text("Draw Time: %f ms", draw_time);
-        ImGui::Checkbox("erf spline", &use_spline_approx);
-        ImGui::Checkbox("erf mirror", &use_mirror_approx);
-        ImGui::Checkbox("erf taylor", &use_taylor_approx);
-        ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
-        ImGui::Checkbox("exp fast", &use_fast_exp);
-        ImGui::Checkbox("use tiling", &use_tiling);
-        ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
-        ImGui::Checkbox("use simd pixels", &use_simd_pixels);
-        ImGui::End();
-    };
     bool running = true;
-    std::thread render_thread([&](){ renderer.run(running); });
-
+    if (renderer != nullptr)
+    {
+        if (!renderer->init(width, height, "Test")) return EXIT_FAILURE;
+        renderer->custom_imgui = [&](){
+            ImGui::Begin("Gaussians");
+            for (gaussian_t &g : staging_gaussians) g.imgui_controls();
+            ImGui::End();
+            ImGui::Begin("Debug");
+            ImGui::Text("Draw Time: %f ms", draw_time);
+            ImGui::Checkbox("erf spline", &use_spline_approx);
+            ImGui::Checkbox("erf mirror", &use_mirror_approx);
+            ImGui::Checkbox("erf taylor", &use_taylor_approx);
+            ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
+            ImGui::Checkbox("exp fast", &use_fast_exp);
+            ImGui::Checkbox("use tiling", &use_tiling);
+            ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
+            ImGui::Checkbox("use simd pixels", &use_simd_pixels);
+            ImGui::End();
+        };
+    }
+    std::thread render_thread([&](){ if (renderer != nullptr) renderer->run(running); });
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-    //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-
-    //bool w = false, h = false;
-    //for (size_t x = 0; x < width; ++x)
-    //{
-    //    if (!(x % 16)) w = !w;
-    //    for (size_t y = 0; y < height; ++y)
-    //    {
-    //        if (!(y % 16)) h = !h;
-    //        bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
-    //    }
-    //}
-
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     struct timespec start, end;
@@ -170,7 +168,7 @@ i32 main(i32 argc, char **argv)
     {
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
-        tiles_t tiles = tile_gaussians(.5f, .5f, staging_gaussians, glm::mat4(1));
+        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, glm::mat4(1));
         if (use_spline_approx) _erf = approx::spline_erf;
         else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
         else if (use_taylor_approx) _erf = approx::taylor_erf;
@@ -199,7 +197,8 @@ i32 main(i32 argc, char **argv)
 
         if (cmd.outfile != nullptr)
             stbi_write_png(cmd.outfile, width, height, 4, image, width * 4);
-        renderer.stage_image(image, width, height);
+        if (cmd.quiet) break;
+        renderer->stage_image(image, width, height);
     }
 
     render_thread.join();
