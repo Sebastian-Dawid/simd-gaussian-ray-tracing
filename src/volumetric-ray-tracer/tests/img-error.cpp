@@ -45,16 +45,17 @@ i32 main()
 
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, 256, 256);
+    const vec4f_t origin{0.f, 0.f, 0.f};
     fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
-    render_image(256, 256, ref_image, xs, ys, tiles, true, 16, transmittance<decltype(expf), decltype(std::erff)>, expf, std::erff);
+    render_image(256, 256, ref_image, xs, ys, origin, tiles, true, 16, transmittance<decltype(expf), decltype(std::erff)>, expf, std::erff);
 
     fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    simd_render_image(256, 256, svml_image, xs, ys, tiles, true, 16, simd::exp, simd::erf);
-    simd_render_image(256, 256, fog_image, xs, ys, tiles, true, 16, _expf, approx::simd_abramowitz_stegun_erf);
-    simd_render_image(256, 256, my_image, xs, ys, tiles, true, 16, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, svml_image, xs, ys, origin, tiles, true, 16, simd::exp, simd::erf);
+    simd_render_image(256, 256, fog_image, xs, ys, origin, tiles, true, 16, _expf, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, my_image, xs, ys, origin, tiles, true, 16, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 
     double svml_err = 0.0, fog_err = 0.0, my_err = 0.0;
     for (u64 i = 0; i < 256 * 256; ++i)

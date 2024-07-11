@@ -61,6 +61,7 @@ int main(i32 argc, char **argv)
 
     f32 *xs, *ys;
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
+    const vec4f_t origin{0.f, 0.f, 0.f};
     tiles_t tiles = tile_gaussians(.5f, .5f, _gaussians, glm::mat4(1));
 
     u32 v = -1;
@@ -68,16 +69,16 @@ int main(i32 argc, char **argv)
     switch (v)
     {
         case 0:
-                render_image(width, height, image, xs, ys, gaussians);
+                render_image(width, height, image, xs, ys, origin, gaussians);
             break;
         case 1:
-                render_image(width, height, image, xs, ys, tiles, true, 32);
+                render_image(width, height, image, xs, ys, origin, tiles, true, 32);
             break;
         case 2:
-                simd_render_image(width, height, image, xs, ys, gaussians);
+                simd_render_image(width, height, image, xs, ys, origin, gaussians);
             break;
         default:
-                simd_render_image(width, height, image, xs, ys, tiles, true, 32);
+                simd_render_image(width, height, image, xs, ys, origin, tiles, true, 32);
             break;
     }
 

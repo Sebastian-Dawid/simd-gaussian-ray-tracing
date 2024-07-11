@@ -32,6 +32,8 @@ int main()
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     struct timespec start, end;
 
+    const vec4f_t origin{ 0.f, 0.f, 0.f };
+
     _simd_erf = approx::simd_abramowitz_stegun_erf;
     _simd_exp = approx::simd_fast_exp;
     _erf = approx::abramowitz_stegun_erf;
@@ -46,18 +48,18 @@ int main()
 
         _transmittance = transmittance;
         GETTIME(start);
-        render_image(dim, dim, image, xs, ys, gaussians);
+        render_image(dim, dim, image, xs, ys, origin, gaussians);
         GETTIME(end);
         f32 t_seq = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         _transmittance = simd_transmittance;
         GETTIME(start);
-        render_image(dim, dim, image, xs, ys, gaussians);
+        render_image(dim, dim, image, xs, ys, origin, gaussians);
         GETTIME(end);
         f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         GETTIME(start);
-        simd_render_image(dim, dim, image, xs, ys, gaussians);
+        simd_render_image(dim, dim, image, xs, ys, origin, gaussians);
         GETTIME(end);
         f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 
@@ -97,12 +99,12 @@ int main()
 
             _transmittance = simd_transmittance;
             GETTIME(start);
-            render_image(dim, dim, image, xs, ys, gaussians);
+            render_image(dim, dim, image, xs, ys, origin, gaussians);
             GETTIME(end);
             f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            simd_render_image(dim, dim, image, xs, ys, gaussians);
+            simd_render_image(dim, dim, image, xs, ys, origin, gaussians);
             GETTIME(end);
             f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 

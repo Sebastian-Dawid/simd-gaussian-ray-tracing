@@ -24,9 +24,10 @@
 #pragma GCC diagnostic pop
 
 #include "types.h"
-#include "approx.h"
 #include "rt.h"
 #include "gaussians-from-file.h"
+
+#include <glm/ext.hpp>
 
 struct cmd_args_t
 {
@@ -154,7 +155,7 @@ i32 main(i32 argc, char **argv)
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
-    f32 draw_time = 0.f;
+    f32 draw_time = 0.f, tiling_time = 0.f;
     //bool use_spline_approx = false;
     //bool use_mirror_approx = false;
     //bool use_taylor_approx = false;
@@ -174,7 +175,10 @@ i32 main(i32 argc, char **argv)
             for (gaussian_t &g : staging_gaussians) g.imgui_controls();
             ImGui::End();
             ImGui::Begin("Debug");
+            ImGui::Text("Tiling Time: %f ms", tiling_time);
             ImGui::Text("Draw Time: %f ms", draw_time);
+            ImGui::Text("Frame Time: %f ms", draw_time + tiling_time);
+            ImGui::Text("FPS: %f", 1000.f / (draw_time + tiling_time));
             //ImGui::Checkbox("erf spline", &use_spline_approx);
             //ImGui::Checkbox("erf mirror", &use_mirror_approx);
             //ImGui::Checkbox("erf taylor", &use_taylor_approx);
@@ -192,11 +196,18 @@ i32 main(i32 argc, char **argv)
     GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     struct timespec start, end;
 
+    const vec4f_t origin{ 0.f, 0.f, -5.f };
+    const glm::vec4 glm_origin = origin.to_glm();
+    glm::mat4 v = glm::translate(glm::mat4(1.f), glm::vec3(glm_origin));
+
     while (running)
     {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
-        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, glm::mat4(1));
+        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, v);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         //if (use_spline_approx) _erf = approx::spline_erf;
         //else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
         //else if (use_taylor_approx) _erf = approx::taylor_erf;
@@ -211,15 +222,15 @@ i32 main(i32 argc, char **argv)
         bool res = false;
         if (use_tiling)
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count);
-            else if (use_simd_transmittance) res =render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count); 
-            else res = render_image(width, height, image, xs, ys, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count);
+            else if (use_simd_transmittance) res =render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count); 
+            else res = render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         else
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, gaussians, running);
-            else if (use_simd_transmittance) res = render_image(width, height, image, xs, ys, gaussians, running);
-            else res = render_image(width, height, image, xs, ys, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, origin, gaussians, running);
+            else if (use_simd_transmittance) res = render_image(width, height, image, xs, ys, origin, gaussians, running);
+            else res = render_image(width, height, image, xs, ys, origin, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
