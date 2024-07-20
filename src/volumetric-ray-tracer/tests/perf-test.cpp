@@ -78,7 +78,7 @@ int main(i32 argc, char **argv)
                 simd_render_image(width, height, image, xs, ys, origin, gaussians);
             break;
         default:
-                simd_render_image(width, height, image, xs, ys, origin, tiles, true, 32);
+                simd_render_image(width, height, image, camera_t(origin.to_glm()), origin, tiles, true, 32);
             break;
     }
 

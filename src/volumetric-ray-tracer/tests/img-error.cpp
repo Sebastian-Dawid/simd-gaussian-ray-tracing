@@ -53,9 +53,10 @@ i32 main()
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    simd_render_image(256, 256, svml_image, xs, ys, origin, tiles, true, 16, simd::exp, simd::erf);
-    simd_render_image(256, 256, fog_image, xs, ys, origin, tiles, true, 16, _expf, approx::simd_abramowitz_stegun_erf);
-    simd_render_image(256, 256, my_image, xs, ys, origin, tiles, true, 16, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    camera_t cam(origin.to_glm());
+    simd_render_image(256, 256, svml_image, cam, origin, tiles, true, 16, simd::exp, simd::erf);
+    simd_render_image(256, 256, fog_image, cam, origin, tiles, true, 16, _expf, approx::simd_abramowitz_stegun_erf);
+    simd_render_image(256, 256, my_image, cam, origin, tiles, true, 16, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 
     double svml_err = 0.0, fog_err = 0.0, my_err = 0.0;
     for (u64 i = 0; i < 256 * 256; ++i)

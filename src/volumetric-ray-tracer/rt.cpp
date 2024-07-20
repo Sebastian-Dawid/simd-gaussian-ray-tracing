@@ -1,5 +1,7 @@
 #include "rt.h"
+#include <glm/ext/matrix_clip_space.hpp>
 #include <include/definitions.h>
+#include <glm/ext/matrix_transform.hpp>
 
 f32 transmittance_step(const vec4f_t o, const vec4f_t n, const f32 s, const f32 delta, const std::vector<gaussian_t> gaussians)
 {
@@ -25,6 +27,16 @@ f32 density(const vec4f_t pt, const std::vector<gaussian_t> gaussians)
 tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t> &gaussians, const glm::mat4 &view)
 {
     std::vector<gaussians_t> tiles;
+    std::vector<glm::vec2> projected_mu;
+    std::vector<f32> projected_sigma;
+    for (const gaussian_t &g : gaussians)
+    {
+        const glm::vec4 proj = view * glm::vec4(glm::vec3(g.mu.to_glm()), 1.f);
+        const glm::vec2 mu(proj.x/proj.z, proj.y/proj.z);
+        const f32 sigma = g.sigma / proj.z;
+        projected_mu.push_back(mu);
+        projected_sigma.push_back(sigma);
+    }
 
     for (f32 y = -1.f + th/2; y < 1.f; y += th)
     {
@@ -32,15 +44,14 @@ tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t>
         {
             tiles.push_back(gaussians_t());
             gaussians_t &gs = tiles.back();
-            for (const gaussian_t &g : gaussians)
+            for (u64 i = 0; i < gaussians.size(); ++i)
             {
-                const glm::vec4 proj = view * g.mu.to_glm();
-                const glm::vec2 mu(proj.x / proj.z, proj.y/proj.z);
-                const f32 sigma = g.sigma / proj.z;
+                const glm::vec2 &mu = projected_mu[i];
+                const f32 &sigma = projected_sigma[i];
                 const glm::vec2 p = glm::abs(glm::vec2(x, y) - mu);
                 if ((p.x <= tw/2 + 3.f * sigma && p.y <= th/2 + 3.f * sigma))
                 {
-                    gs.gaussians.push_back(g);
+                    gs.gaussians.push_back(gaussians[i]);
                 }
             }
             gs.gaussians_broadcast = gaussian_vec_t::from_gaussians(gs.gaussians);

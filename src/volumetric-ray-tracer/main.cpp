@@ -26,6 +26,7 @@
 #include "types.h"
 #include "rt.h"
 #include "gaussians-from-file.h"
+#include "camera.h"
 
 #include <glm/ext.hpp>
 
@@ -169,7 +170,7 @@ i32 main(i32 argc, char **argv)
     bool running = true;
     if (renderer != nullptr)
     {
-        if (!renderer->init(width, height, "Test")) return EXIT_FAILURE;
+        if (!renderer->init(width, height, "SIMD VRT")) return EXIT_FAILURE;
         renderer->custom_imgui = [&](){
             ImGui::Begin("Gaussians");
             for (gaussian_t &g : staging_gaussians) g.imgui_controls();
@@ -192,20 +193,24 @@ i32 main(i32 argc, char **argv)
     }
     std::thread render_thread([&](){ if (renderer != nullptr) renderer->run(running); });
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-    f32 *xs, *ys;
-    GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     struct timespec start, end;
 
-    const vec4f_t origin{ 0.f, 0.f, -5.f };
-    const glm::vec4 glm_origin = origin.to_glm();
-    glm::mat4 v = glm::translate(glm::mat4(1.f), glm::vec3(glm_origin));
+    vec4f_t origin{ 0.f, 0.f, -4.f };
+    camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
+    f32 *xs = cam.projection_plane.xs, *ys = cam.projection_plane.ys;
+    f32 angle = -100.f;
 
     while (running)
     {
+        cam.position = glm::vec3(glm::rotate_slow(glm::mat4(1.f), glm::radians(10.f), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
+        cam.turn(angle, 0.f);
+        angle -= 10.f;
+        origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
+
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
-        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, v);
+        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         //if (use_spline_approx) _erf = approx::spline_erf;
@@ -222,7 +227,7 @@ i32 main(i32 argc, char **argv)
         bool res = false;
         if (use_tiling)
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             else if (use_simd_transmittance) res =render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count); 
             else res = render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
@@ -248,9 +253,6 @@ i32 main(i32 argc, char **argv)
 
     render_thread.join();
     simd_aligned_free(image);
-    //simd_aligned_free(bg_image);
-    simd_aligned_free(xs);
-    simd_aligned_free(ys);
 
     return EXIT_SUCCESS;
 }

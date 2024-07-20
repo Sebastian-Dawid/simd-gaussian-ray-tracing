@@ -13,6 +13,10 @@ workspace "ba-thesis"
         trigger = "with-rocm",
         description = "compile gpu version of the software"
     }
+    newoption {
+        trigger = "with-svml",
+        description = "link intels svml library"
+    }
     filter { "options:with-clang" }
         toolset "clang"
     filter {}
@@ -58,7 +62,7 @@ workspace "ba-thesis"
         filter "files:src/vk-renderer/vk-mem-alloc/vk_mem_alloc.cpp"
             buildoptions { "-w" }
         filter {}
-        includedirs { "./src", "./src/external/imgui/" }
+        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
         files { "./src/vk-renderer/**.cpp" }
 
     project "volumetric-ray-tracer"
@@ -68,10 +72,14 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-masm=intel", "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src", "./src/external/imgui/" }
+        filter { "options:with-svml" }
+            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+            links { "svml" }
+        filter {}
+        libdirs { "./build/fmt" }
+        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
-        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "rt", "svml" }
+        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui" }
 
     project "hip-volumetric-ray-tracer"
         kind "None"
@@ -151,7 +159,7 @@ workspace "ba-thesis"
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
         links { "fmt", "svml" }
 
     project "svml-test"
@@ -175,7 +183,7 @@ workspace "ba-thesis"
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
+        files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
         links { "fmt", "svml" }
 
     project "vrt-unit-tests"

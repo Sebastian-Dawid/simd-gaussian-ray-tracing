@@ -70,6 +70,10 @@ struct vec4f_t
     {
         return glm::vec4(this->x, this->y, this->z, this->w);
     }
+    static vec4f_t from_glm(glm::vec4 other)
+    {
+        return vec4f_t{other.x, other.y, other.z, other.w};
+    }
 #ifdef INCLUDE_IMGUI
     /// Creates controls for this `vec4f_t` instance. Uniqueness is ensured by using the address of the instance
     /// as its ID.

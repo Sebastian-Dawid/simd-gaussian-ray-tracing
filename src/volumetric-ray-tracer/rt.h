@@ -5,9 +5,11 @@
 #include <vector>
 #include "types.h"
 #include "thread-pool.h"
+#include "volumetric-ray-tracer/camera.h"
 #include <include/tsimd_sh.H>
 #include <glm/glm.hpp>
 
+#define PRINT_MAT(V) fmt::println("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}", V[0].x, V[1].x, V[2].x, V[3].x, V[0].y, V[1].y, V[2].y, V[3].y, V[0].z, V[1].z, V[2].z, V[3].z, V[0].w, V[1].w, V[2].w, V[3].w);
 #define GENERATE_PROJECTION_PLANE(XS, YS, W, H)                        \
 {                                                                      \
     XS = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * W * H);   \
@@ -16,8 +18,8 @@
     {                                                                  \
         for (u64 j = 0; j < W; ++j)                                    \
         {                                                              \
-            xs[i * W + j] = -1.f + j/(W/2.f);                          \
-            ys[i * W + j] = -1.f + i/(H/2.f);                          \
+            XS[i * W + j] = -1.f + j/(W/2.f);                          \
+            YS[i * W + j] = -1.f + i/(H/2.f);                          \
         }                                                              \
     }                                                                  \
 }
@@ -344,11 +346,11 @@ inline bool simd_render_image(const u32 width, const u32 height, u32 *image, con
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
 /// The rays are defined in `xs` and `ys`.
 /// This function is parallelized along the image pixels.
-/// Requires `image`, `xs` and `ys` to be aligned to `SIMD_BYTES`.
+/// Requires `image` to be aligned to `SIMD_BYTES`.
 /// This version of the function takes a tiled set of gaussians.
 /// The width of the tiles needs to be a multiple of `SIMD_FLOATS`.
 template<typename Exp, typename Erf>
-bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t origin, const tiles_t &tiles,
+bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t origin, const tiles_t &tiles,
         const bool &running, const u64 tc, const Exp &&_exp, const Erf &&_erf)
 {
     const u64 tile_width = width * tiles.tw/2.f;
@@ -365,12 +367,16 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 
             tile_buffers.push_back((i32*)simd_aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
             /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
             gaussians_t g{ tiles.gaussians[tidx].gaussians };
-            std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height, g, &tiles, xs, ys, &simd_origin, &_exp, &_erf] () {
+            std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height, g, &tiles, &cam, &simd_origin, &_exp, &_erf] () {
                 for (u64 _i = 0; _i < tile_width * tile_height; _i += SIMD_FLOATS)
                 {
                     const u64 i = (tidx % tiles.w) * tile_width + _i % tile_width // horizontal position
                         + (tile_width * tiles.w) * (_i/tile_width + (tidx/tiles.w) * tile_height); // vertical position
-                    simd_vec4f_t dir = simd_vec4f_t{ .x = simd::load(xs + i), .y = simd::load(ys + i), .z = simd::set1(-4.f) } - simd_origin;
+                    simd_vec4f_t dir = simd_vec4f_t{
+                        .x = simd::load(cam.projection_plane.xs + i),
+                        .y = simd::load(cam.projection_plane.ys + i),
+                        .z = simd::load(cam.projection_plane.zs + i)
+                    } - simd_origin;
                     dir.normalize();
                     const simd_vec4f_t color = simd_l_hat<decltype(_exp), decltype(_erf)>(simd_origin, dir, g, _exp, _erf);
                     //simd::Vec<simd::Int> bg = simd::load(bg_image + i);
@@ -411,8 +417,8 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 
     return false;
 }
 
-inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys,
+inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam,
         const vec4f_t &origin, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
 {
-    return simd_render_image(width, height, image, xs, ys, origin, tiles, running, tc, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return simd_render_image(width, height, image, cam, origin, tiles, running, tc, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
