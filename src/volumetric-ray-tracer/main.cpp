@@ -200,9 +200,8 @@ i32 main(i32 argc, char **argv)
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
     struct timespec start, end;
 
-    vec4f_t origin{ 0.f, 0.f, -4.f };
+    vec4f_t origin{ 0.f, 0.f, -3.f };
     camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
-    f32 *xs = cam.projection_plane.xs, *ys = cam.projection_plane.ys;
     f32 angle = -90.f;
     u64 frames = 0;
 
@@ -230,14 +229,14 @@ i32 main(i32 argc, char **argv)
         if (use_tiling)
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
-            else if (use_simd_transmittance) res =render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count); 
-            else res = render_image(width, height, image, xs, ys, origin, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            else if (use_simd_transmittance) res =render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
+            else res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         else
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, xs, ys, origin, gaussians, running);
-            else if (use_simd_transmittance) res = render_image(width, height, image, xs, ys, origin, gaussians, running);
-            else res = render_image(width, height, image, xs, ys, origin, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, gaussians, running);
+            else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, gaussians, running);
+            else res = render_image(width, height, image, cam, origin, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;

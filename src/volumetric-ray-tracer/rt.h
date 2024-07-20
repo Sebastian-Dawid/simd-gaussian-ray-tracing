@@ -206,14 +206,18 @@ inline simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
 /// The rays are defined in `xs` and `ys`.
 template<typename Tr, typename Exp, typename Erf>
-bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const gaussians_t &gaussians,
+bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians,
         const bool &running, const Tr &&_tr, const Exp &&_exp, const Erf &&_erf)
 {
     //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
 
     for (u64 i = 0; i < width * height; ++i)
     {
-        vec4f_t dir = vec4f_t{ xs[i], ys[i], 1.f } - origin;
+        vec4f_t dir = vec4f_t{
+            .x = cam.projection_plane.xs[i],
+            .y = cam.projection_plane.ys[i],
+            .z = cam.projection_plane.zs[i],
+        } - origin;
         dir.normalize();
         const vec4f_t color = l_hat(origin, dir, gaussians, _tr, _exp, _erf);
         const u32 A = 0xFF000000; // final alpha channel is always 1
@@ -230,9 +234,9 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
     return false;
 }
 
-inline bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
+inline bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
-    return render_image(width,  height, image, xs, ys, origin, gaussians, running,
+    return render_image(width,  height, image, cam, origin, gaussians, running,
             simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 }
 
@@ -240,7 +244,7 @@ inline bool render_image(const u32 width, const u32 height, u32 *image, const f3
 /// The rays are defined in `xs` and `ys`.
 /// This version of the function takes a tiled set of gaussians.
 template<typename Tr, typename Exp, typename Erf>
-bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const tiles_t &tiles, const bool &running,
+bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const tiles_t &tiles, const bool &running,
         const u64 tc, const Tr &&_tr, const Exp &&_exp, const Erf &&_erf)
 {
     const u64 tile_width = width * tiles.tw/2.f;
@@ -257,12 +261,16 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
             //gaussians_t g{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*tiles.gaussians[tidx].gaussians_broadcast) };
             std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height,
                 g{gaussians_t{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*(tiles.gaussians[tidx].gaussians_broadcast)) }},
-                &tiles, xs, ys, &origin, &_tr, &_exp, &_erf] () {
+                &tiles, &cam, &origin, &_tr, &_exp, &_erf] () {
                 for (u64 _i = 0; _i < tile_width * tile_height; ++_i)
                 {
                     const u64 i = (tidx % tiles.w) * tile_width + _i % tile_width // horizontal position
                         + (tile_width * tiles.w) * (_i/tile_width + (tidx/tiles.w) * tile_height); // vertical position
-                    vec4f_t dir = vec4f_t{ .x = xs[i], .y = ys[i], .z = 1.f } - origin;
+                    vec4f_t dir = vec4f_t{
+                        .x = cam.projection_plane.xs[i],
+                        .y = cam.projection_plane.ys[i],
+                        .z = cam.projection_plane.zs[i]
+                    } - origin;
                     dir.normalize();
                     const vec4f_t color = l_hat(origin, dir, g, _tr, _exp, _erf);
                     //simd::Vec<simd::Int> bg = simd::load(bg_image + i);
@@ -302,9 +310,9 @@ bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, 
     return false;
 }
 
-inline bool render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
+inline bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
 {
-    return render_image(width,  height, image, xs, ys, origin, tiles, running, tc,
+    return render_image(width,  height, image, cam, origin, tiles, running, tc,
             simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
@@ -313,7 +321,7 @@ inline bool render_image(const u32 width, const u32 height, u32 *image, const f3
 /// This function is parallelized along the image pixels.
 /// Requires `image`, `xs` and `ys` to be aligned to `SIMD_BYTES`.
 template<typename Exp, typename Erf>
-bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running,
+bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running,
         const Exp &&_exp, const Erf &&_erf)
 {
     //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
@@ -321,7 +329,11 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 
 
     for (u64 i = 0; i < width * height; i += SIMD_FLOATS)
     {
-        simd_vec4f_t dir = simd_vec4f_t{ .x = simd::load(xs + i), .y = simd::load(ys + i), .z = simd::set1(1.f) } - simd_origin;
+        simd_vec4f_t dir = simd_vec4f_t{
+            .x = simd::load(cam.projection_plane.xs + i),
+            .y = simd::load(cam.projection_plane.ys + i),
+            .z = simd::load(cam.projection_plane.zs + i)
+        } - simd_origin;
         dir.normalize();
         const simd_vec4f_t color = simd_l_hat(simd_origin, dir, gaussians, _exp, _erf);
         const simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
@@ -338,9 +350,9 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 
     return false;
 }
 
-inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const f32 *xs, const f32 *ys, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
+inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
-    return simd_render_image(width, height, image, xs, ys, origin, gaussians, running, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    return simd_render_image(width, height, image, cam, origin, gaussians, running, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
