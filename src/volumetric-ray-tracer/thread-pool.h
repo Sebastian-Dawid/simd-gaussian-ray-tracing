@@ -3,7 +3,6 @@
 #include <functional>
 #include <queue>
 
-// BUG: Something is causing a deadlock in here...
 struct thread_pool_t
 {
     std::condition_variable cond;

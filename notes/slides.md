@@ -151,6 +151,8 @@ Interpreting the 3644 vertices of the standford teapot model as gaussians yields
 Preliminary Results
 ===
 
+Measurements using up to 32 Threads @ ~5.0GHz
+
 # Timings
 ## Non Tiled
 | Method | Time |

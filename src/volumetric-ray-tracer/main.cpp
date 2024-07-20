@@ -39,6 +39,7 @@ struct cmd_args_t
     bool use_grid = false;
     bool quiet = false;
     u64 thread_count = 1;
+    u64 nr_frames = 1;
     u64 tiles = 4;
     bool use_tiling = true;
     bool use_simd_transmittance = false;
@@ -54,12 +55,13 @@ struct cmd_args_t
             { "with-threads", required_argument, NULL, 't' },
             { "quiet", no_argument, NULL, 'q' },
             { "tiles", required_argument, NULL, 'l' },
-            { "mode", required_argument, NULL, 'm' }
+            { "mode", required_argument, NULL, 'm' },
+            { "frames", required_argument, NULL, 'r' }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "m:qw:o:f:g:h:t:", opts, &lidx);
+            char c = getopt_long(argc, argv, "r:m:qw:o:f:g:h:t:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -94,6 +96,9 @@ struct cmd_args_t
                     break;
                 case 'l':
                     this->tiles = strtoul(optarg, NULL, 10);
+                    break;
+                case 'r':
+                    this->nr_frames = strtoul(optarg, NULL, 10);
                     break;
                 case 'm':
                     u64 mode = strtoul(optarg, NULL, 10);
@@ -198,15 +203,12 @@ i32 main(i32 argc, char **argv)
     vec4f_t origin{ 0.f, 0.f, -4.f };
     camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
     f32 *xs = cam.projection_plane.xs, *ys = cam.projection_plane.ys;
-    f32 angle = -100.f;
+    f32 angle = -90.f;
+    u64 frames = 0;
 
     while (running)
     {
-        cam.position = glm::vec3(glm::rotate_slow(glm::mat4(1.f), glm::radians(10.f), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
-        cam.turn(angle, 0.f);
-        angle -= 10.f;
-        origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
-
+        frames++;
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
@@ -242,13 +244,29 @@ i32 main(i32 argc, char **argv)
         if (res) break;
 
         if (cmd.outfile != nullptr)
-            stbi_write_png(cmd.outfile, width, height, 4, image, width * 4);
+        {
+            std::string outfile = std::string(cmd.outfile).substr(0, std::string(cmd.outfile).find_last_of("."));
+            fmt::println("{}", outfile);
+            if (cmd.nr_frames > 1)
+                outfile = fmt::format("{}_{}.{}", outfile, frames, cmd.outfile + outfile.length() + 1);
+            fmt::println("{}", outfile);
+            stbi_write_png(outfile.c_str(), width, height, 4, image, width * 4);
+        }
         if (cmd.quiet)
         {
-            fmt::println("TIME: {} ms", draw_time);
-            break;
+            fmt::println("TIME: {} ms", draw_time + tiling_time);
+            if (cmd.nr_frames == frames) break;
         }
-        renderer->stage_image(image, width, height);
+        else
+        {
+            renderer->stage_image(image, width, height);
+        }
+
+        f32 angle_change = (draw_time + tiling_time)/(1000.f/60) * 10.f;
+        cam.position = glm::vec3(glm::rotate_slow(glm::mat4(1.f), glm::radians(angle_change), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
+        origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
+        angle -= angle_change;
+        cam.turn(angle, 0.f);
     }
 
     render_thread.join();

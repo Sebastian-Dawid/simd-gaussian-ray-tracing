@@ -3,6 +3,10 @@
 #include "include/definitions.h"
 #include <include/tsimd_sh.H>
 
+#define VCL_NAMESPACE vcl
+#include <include/vectorclass/vectorclass.h>
+#include <include/vectorclass/vectormath_exp.h>
+
 namespace approx {
     /// Approximation of the error function using cubic spline interpolation.
     f32 spline_erf(f32 x);
@@ -50,25 +54,34 @@ namespace approx {
 }
 
 namespace simd {
-#ifndef __AVX512F__
     inline simd::Vec<simd::Float> erf(simd::Vec<simd::Float> x)
     {
-        return approx::__svml_erff8(x);
-    }
-    inline simd::Vec<simd::Float> exp(simd::Vec<simd::Float> x)
-    {
-        return approx::__svml_expf8(x);
-    }
+#ifndef WITH_SVML
+        return approx::simd_abramowitz_stegun_erf(x);
 #else
-    inline simd::Vec<simd::Float> erf(simd::Vec<simd::Float> x)
-    {
+#ifndef __AVX512F__
+        return approx::__svml_erff8(x);
+#else
         return approx::__svml_erff16(x);
+#endif
+#endif
     }
     inline simd::Vec<simd::Float> exp(simd::Vec<simd::Float> x)
     {
-        return approx::__svml_expf16(x);
-    }
+#ifndef __AVX512F__
+#ifndef WITH_SVML
+        return (__m256)vcl::exp(static_cast<__m256>(x));
+#else
+        return approx::__svml_expf8(x);
 #endif
+#else
+#ifndef WITH_SVML
+        return (__m512)vcl::exp(static_cast<__m512>(x));
+#else
+        return approx::__svml_expf16(x);
+#endif
+#endif
+    }
 }
 
 // TODO: replace occurrences with templates. Test impact!
