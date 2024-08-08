@@ -1,0 +1,52 @@
+\documentclass[a4paper, 11pt]{memoir}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage[english]{babel}
+
+\input{smart-thesis/style}
+\input{smart-thesis/common-packages}
+\input{smart-thesis/common-macros}
+
+\addbibresource{main.bib}
+
+\makeglossaries
+\input{glossary}
+
+\thesistype{Bachelor Thesis}
+\discipline{Computer Science}
+\title{Parallel Gaussian Raytracing on the CPU}
+\author{Sebastian Dawid}
+\institution{Bielefeld University,Technical Faculty,Visual AI for Extended Reality Group}
+\supervisors{Prof.\@~Dr.\@~Helge Rhodin,Prof.\@~Dr.-Ing.\@~Ralf M\"oller}
+
+\begin{document}
+    \frontmatter
+    \smarttitle
+    \newpage
+    \tableofcontents
+
+    \mainmatter
+    \chapter{Introduction}
+    \section{Gaussian Ray Tracing}
+    \cite{Rhodin:2015}
+    \gls{transmittance}
+    \section{Gaussian Splatting}
+    \cite{kerbl3Dgaussians}
+    \chapter{Optimizations}
+    \section{SIMD}
+    \section{Tiling}
+    \chapter{Approximations}
+    \cite{fast_exp}
+    \cite{AbraSteg72}
+    \chapter{Implementation}
+    \cite{own_moeller_16_2}
+    \chapter{Experiments}
+    \chapter{Results}
+    \chapter{Conclusion and Future Work}
+
+    \backmatter
+    \printglossaries
+    \printbibliography[heading=bibintoc]
+\end{document}

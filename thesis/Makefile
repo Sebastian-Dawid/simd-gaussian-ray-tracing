@@ -1,27 +1,28 @@
 # source: https://scaron.info/blog/makefiles-for-latex.html
 
+SHELL := zsh
 .DEFAULT_GOAL := help
 .PHONY: help
 
 PAPER=main.tex
 NAME=sdawid_ba
-LATEX=rubber --shell-escape --pdf --into target
+LATEX=latexmk -pdf -jobname=./target/$(NAME)
 
 FIGURES=
 
 all: $(FIGURES) ## Build full thesis
 	mkdir -p target
-	$(LATEX) $(PAPER) --jobname $(NAME)
+	$(LATEX) $(PAPER)
 
 clean:	## Clean LaTeX output
-	rubber --clean --into target $(PAPER) --jobname $(NAME)
+	rm -rf target
 
 watch:	## Recompile when source changes
-	@while [ 1 ]; do;				\
-		inotifywait $(PAPER);		\
-		sleep 0.01;					\
-		make all;					\
-		echo "\n================\n" \
+	@while [ 1 ]; do;				 \
+		inotifywait $(PAPER);		 \
+		sleep 0.01;					 \
+		make all;					 \
+		echo "\n================\n"; \
 		done
 
 help:

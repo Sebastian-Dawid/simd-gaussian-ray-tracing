@@ -1,0 +1,35 @@
+% Abbreviations
+\newcommand*{\eg}{e.\,g.\@\xspace}
+\newcommand*{\ie}{i.\,e.\@\xspace}
+\newcommand*{\cf}{cf.\@\xspace}
+\newcommand*{\etal}{et.\@ al.\@\xspace}
+%\newcommand*{\etc}{etc.\@\xspace}
+\makeatletter
+\newcommand*{\etc}{%
+  \@ifnextchar{.}%
+    {etc}%
+      {etc.\@\xspace}%
+}
+\makeatother
+
+% Sets
+\newcommand*{\R}{\mathbb{R}}
+\newcommand*{\Q}{\mathbb{Q}}
+\newcommand*{\Z}{\mathbb{Z}}
+\newcommand*{\N}{\mathbb{N}}
+
+% Matrix/vector operations
+\newcommand*{\transpose}[1]{{#1^{\top}}}
+\newcommand*{\inverse}[1]{{#1^{-1}}}
+\newcommand*{\conjugate}[1]{{#1^{\ast}}}
+\newcommand*{\pseudoinverse}[1]{{#1^{+}}}
+
+% Stochastics
+\newcommand*{\probability}[1]{{\mathrm{Pr}{#1}}}
+\newcommand*{\expectation}[1]{{#1}}
+
+% Optimization
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\lb}{lb}
+\DeclareMathOperator{\sign}{sgn}
