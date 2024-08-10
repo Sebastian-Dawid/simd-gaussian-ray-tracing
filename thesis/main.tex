@@ -5,6 +5,9 @@
 
 \usepackage[english]{babel}
 
+\usepackage{lipsum}
+\usepackage{color, colortbl}
+
 \input{smart-thesis/style}
 \input{smart-thesis/common-packages}
 \input{smart-thesis/common-macros}
@@ -25,25 +28,76 @@
     \frontmatter
     \smarttitle
     \newpage
-    \tableofcontents
+    \tableofcontents*
+
+    \clearpage
+    \thispagestyle{plain}
+    \abstractintoc
+    \begin{abstract}
+        \lipsum[1]
+    \end{abstract}
 
     \mainmatter
     \chapter{Introduction}
     \section{Gaussian Ray Tracing}
     \cite{Rhodin:2015}
     \gls{transmittance}
+    \gls{radiance}
     \section{Gaussian Splatting}
     \cite{kerbl3Dgaussians}
+    \lipsum[1]
+    \lipsum[2]
+    \lipsum[3]
+    \lipsum[4]
+    \lipsum[5]
+
     \chapter{Optimizations}
     \section{SIMD}
+    \subsection{Notation}
+    To properly rewrite the method as it is laid out in \cite{Rhodin:2015} it is
+    necessary to introduce some notation to work with SIMD vectors. This is
+    defined in Table~\ref{tab:notation}:
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|}
+            \hline
+            Notation & Definition \\
+            \hline
+            \rowcolor{lightgray}
+            $x^W$ & SIMD vector containing $W$ elements\\
+            $\langle x \rangle^W$ & $x$ broadcast to a SIMD vector of $W$ elements\\
+            \rowcolor{lightgray}
+            $\odot$ & elementwise multiplication\\
+            $f^W$ & function that produces a SIMD vector containing $W$ elements\\\hline
+        \end{tabular}
+        \caption{SIMD Notation}
+        \label{tab:notation}
+    \end{table}
+    \subsection{Approaches}
     \section{Tiling}
+    
     \chapter{Approximations}
+    \section{Exponential Function}
+    \subsection{Cubic Spline Interpolation}
+    \subsection{Bit Hack}
     \cite{fast_exp}
+    
+    \section{Error Function}
+    \subsection{Cubic Spline Interpolation}
+    \subsection{Polynomial Approximation}
     \cite{AbraSteg72}
+    
     \chapter{Implementation}
     \cite{own_moeller_16_2}
+    
     \chapter{Experiments}
+    \cite{hpc_toolkit}
+    \section{Approximations}
+    \section{Transmittance}
+    \section{Full Render}
+    
     \chapter{Results}
+    
     \chapter{Conclusion and Future Work}
 
     \backmatter

@@ -151,7 +151,7 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
+        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
         links { "fmt" }
 
     project "perf-test"
@@ -171,6 +171,7 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj",  "-fverbose-asm", "-ffast-math" }
+        defines { "WITH_SVML" }
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }

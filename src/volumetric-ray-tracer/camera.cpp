@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "volumetric-ray-tracer/rt.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <include/tsimd_sh.H>
 
@@ -32,6 +31,18 @@ camera_t::camera_t(const glm::vec3 position, const glm::vec3 up, const glm::vec3
     this->w = width;
     this->h = height;
     this->turn(yaw, pitch);
+}
+
+camera_t::camera_t(const camera_create_info_t &ci)
+{
+    this->position = ci.position;
+    this->up = ci.up;
+    this->world_up = ci.up;
+    this->front = ci.front;
+    this->focal_length = ci.focal_length;
+    this->w = ci.width;
+    this->h = ci.height;
+    this->turn(ci.yaw, ci.pitch);
 }
 
 void camera_t::update()

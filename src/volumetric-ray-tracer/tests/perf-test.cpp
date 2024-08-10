@@ -46,46 +46,30 @@ int main(i32 argc, char **argv)
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
-    //u32 *bg_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
 
-    //bool w = false, h = false;
-    //for (size_t x = 0; x < width; ++x)
-    //{
-    //    if (!(x % 16)) w = !w;
-    //    for (size_t y = 0; y < height; ++y)
-    //    {
-    //        if (!(y % 16)) h = !h;
-    //        bg_image[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
-    //    }
-    //}
-
-    f32 *xs, *ys;
-    GENERATE_PROJECTION_PLANE(xs, ys, width, height);
     const vec4f_t origin{0.f, 0.f, 0.f};
     tiles_t tiles = tile_gaussians(.5f, .5f, _gaussians, glm::mat4(1));
+    const camera_t cam(camera_create_info_t{});
 
     u32 v = -1;
     if (argc >= 2) v = atoi(argv[1]);
     switch (v)
     {
         case 0:
-                render_image(width, height, image, xs, ys, origin, gaussians);
+                render_image(width, height, image, cam, origin, gaussians);
             break;
         case 1:
-                render_image(width, height, image, xs, ys, origin, tiles, true, 32);
+                render_image(width, height, image, cam, origin, tiles, true, 32);
             break;
         case 2:
-                simd_render_image(width, height, image, xs, ys, origin, gaussians);
+                simd_render_image(width, height, image, cam, origin, gaussians);
             break;
         default:
-                simd_render_image(width, height, image, camera_t(origin.to_glm()), origin, tiles, true, 32);
+                simd_render_image(width, height, image, cam, origin, tiles, true, 32);
             break;
     }
 
     simd_aligned_free(image);
-    //simd_aligned_free(bg_image);
-    simd_aligned_free(xs);
-    simd_aligned_free(ys);
 
     return EXIT_SUCCESS;
 }
