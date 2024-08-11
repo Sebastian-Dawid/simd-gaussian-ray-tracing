@@ -1,7 +1,7 @@
 #include <include/definitions.h>
 #include <include/error_fmt.h>
 
-#include "../approx.h"
+#include <vrt/approx.h>
 
 #include <include/TimeMeasurement.H>
 #include <sched.h>

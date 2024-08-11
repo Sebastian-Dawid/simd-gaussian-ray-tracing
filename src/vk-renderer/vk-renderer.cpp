@@ -365,7 +365,7 @@ bool renderer_t::create_swapchain(u32 width, u32 height)
     this->swapchain.format = vk::Format::eB8G8R8A8Unorm;
 
     const vkb::Result<vkb::Swapchain> swapchain_or_error = swapchain_builder.set_desired_format((VkSurfaceFormatKHR)vk::SurfaceFormatKHR(this->swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
-        .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+        .set_desired_present_mode(VK_PRESENT_MODE_MAILBOX_KHR)
         .set_desired_extent(width, height)
         .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
         .build();
@@ -665,7 +665,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
         this->staging_buffers.buffer = staging_buffer.value();
         this->deletion_queue.push_function([this](){ this->destroy_buffer(this->staging_buffers.buffer); });
         this->staging_buffers.extent = vk::Extent3D(width, height, 1);
-        u32 pixels[width * height];
+        std::vector<u32> pixels(width * height);
         bool w = false, h = false;
         for (size_t x = 0; x < width; ++x)
         {
@@ -676,7 +676,7 @@ bool renderer_t::init(u32 width, u32 height, std::string name)
                 pixels[y * width + x] = (w ^ h) ? 0xFFAAAAAA : 0xFF555555;
             }
         }
-        std::memcpy(this->staging_buffers.buffer.info.pMappedData, pixels, width * height * 4);
+        std::memcpy(this->staging_buffers.buffer.info.pMappedData, pixels.data(), width * height * 4);
     }
 
     return true;

@@ -1,5 +1,5 @@
 #include <include/error_fmt.h>
-#include "../approx.h"
+#include <vrt/approx.h>
 #include "include/definitions.h"
 #include <sched.h>
 
@@ -29,7 +29,7 @@ int main()
     f32 v_fast[160] = {0};
     f32 v_fast_simd[160] = {0};
     u64 idx = 0;
-    for (f32 x = -16.f; x <= 0.f; x += SIMD_FLOATS * 0.1)
+    for (f32 x = -16.f; x <= 0.f; x += SIMD_FLOATS * 0.1f)
     {
         for (u8 i = 0; i < SIMD_FLOATS; ++i)
         {

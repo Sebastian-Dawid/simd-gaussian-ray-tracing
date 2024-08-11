@@ -5,7 +5,8 @@
 #include <vector>
 #include "types.h"
 #include "thread-pool.h"
-#include "volumetric-ray-tracer/camera.h"
+#include "camera.h"
+#include "approx.h"
 #include <include/tsimd_sh.H>
 #include <glm/glm.hpp>
 
@@ -103,22 +104,15 @@ simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd
         const simd_gaussian_t G_q = simd_gaussian_t::from_gaussian_t(gaussians.gaussians[i]);
         const simd_vec4f_t origin_to_center = G_q.mu - o;
         const simd::Vec<simd::Float> mu_bar = (origin_to_center).dot(n);
-        const simd::Vec<simd::Float> c_bar = G_q.magnitude * _exp( -(((origin_to_center).sqnorm() - (mu_bar * mu_bar))/(simd::set1(2.f) * G_q.sigma * G_q.sigma)) );
+        const simd::Vec<simd::Float> c_bar = G_q.magnitude * _exp( -(((origin_to_center).sqnorm() - (mu_bar * mu_bar)) * simd::rcp(simd::set1(2.f) * G_q.sigma * G_q.sigma)) );
 
         const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * G_q.sigma;
 
-        // NOTE: First call to erf always takes up the most runtime ~40%-50%.
-        //       Regardless of which call that is.
-        //       This might be a cache effect, since the first call always has
-        //       to prime the instruction cache but a runtime difference of almost 30%
-        //       seems too much for this. It is also strange that the first call takes
-        //       up about 50% of all instructions used while the second one only
-        //       uses 25% or less.
-        const simd::Vec<simd::Float> mu_bar_sqrt_2_sig = mu_bar/sqrt_2_sig;
-        const simd::Vec<simd::Float> s_sqrt_2_sig = s/sqrt_2_sig;
+        const simd::Vec<simd::Float> mu_bar_sqrt_2_sig = mu_bar * simd::rcp(sqrt_2_sig);;
+        const simd::Vec<simd::Float> s_sqrt_2_sig = s * simd::rcp(sqrt_2_sig);
         const simd::Vec<simd::Float> erf1 = _erf(-mu_bar_sqrt_2_sig);
         const simd::Vec<simd::Float> erf2 = _erf(s_sqrt_2_sig - mu_bar_sqrt_2_sig);
-        T += ((G_q.sigma * c_bar)/simd::set1(SQRT_2_PI)) * (erf1 - erf2);
+        T += ((G_q.sigma * c_bar) * simd::rcp(simd::set1(SQRT_2_PI))) * (erf1 - erf2);
     }
     return _exp(T);
 }
@@ -390,7 +384,8 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const came
                         .z = simd::load(cam.projection_plane.zs + i)
                     } - simd_origin;
                     dir.normalize();
-                    const simd_vec4f_t color = simd_l_hat<decltype(_exp), decltype(_erf)>(simd_origin, dir, g, _exp, _erf);
+                    simd_vec4f_t color = simd_l_hat<decltype(_exp), decltype(_erf)>(simd_origin, dir, g, _exp, _erf);
+                    //color = dir * simd::set1(0.5f) + simd_vec4f_t{ simd::set1(0.5f), simd::set1(0.5f), simd::set1(0.5f) };
                     //simd::Vec<simd::Int> bg = simd::load(bg_image + i);
                     simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
                     simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.x) * simd::set1(255.f));

@@ -20,7 +20,7 @@ typedef double f64;
 #else
 #define SIMD_BYTES 32
 #endif
-#define SIMD_FLOATS (SIMD_BYTES/sizeof(f32))
+constexpr u64 SIMD_FLOATS = (SIMD_BYTES/sizeof(f32));
 
 #define ASSERT(expr)        \
 {                           \

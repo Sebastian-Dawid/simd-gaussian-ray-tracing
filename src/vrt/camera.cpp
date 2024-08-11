@@ -52,9 +52,9 @@ void camera_t::update()
     //if (this->projection_plane.xs != nullptr) simd_aligned_free(this->projection_plane.xs);
     //if (this->projection_plane.ys != nullptr) simd_aligned_free(this->projection_plane.ys);
     //if (this->projection_plane.zs != nullptr) simd_aligned_free(this->projection_plane.zs);
-    this->projection_plane.xs = (f32 *)simd_aligned_malloc(32, sizeof(f32) * this->w * this->h);
-    this->projection_plane.ys = (f32 *)simd_aligned_malloc(32, sizeof(f32) * this->w * this->h);
-    this->projection_plane.zs = (f32 *)simd_aligned_malloc(32, sizeof(f32) * this->w * this->h);
+    this->projection_plane.xs = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);
+    this->projection_plane.ys = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);
+    this->projection_plane.zs = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);
     for (u64 i = 0; i < this->h; ++i)
     {
         for (u64 j = 0; j < this->w; ++j)

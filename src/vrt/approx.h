@@ -70,13 +70,13 @@ namespace simd {
     {
 #ifndef __AVX512F__
 #ifndef WITH_SVML
-        return (__m256)vcl::exp(static_cast<__m256>(x));
+        return (__m256)vcl::exp(vcl::Vec8f(static_cast<__m256>(x)));
 #else
         return approx::__svml_expf8(x);
 #endif
 #else
 #ifndef WITH_SVML
-        return (__m512)vcl::exp(static_cast<__m512>(x));
+        return (__m512)vcl::exp(vcl::Vec16f(static_cast<__m512>(x)));
 #else
         return approx::__svml_expf16(x);
 #endif

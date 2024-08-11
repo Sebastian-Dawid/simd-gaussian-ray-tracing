@@ -68,6 +68,16 @@ workspace "ba-thesis"
         includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
         files { "./src/vk-renderer/**.cpp" }
 
+    project "vrt"
+        kind "StaticLib"
+        language "C++"
+        targetdir "build/lib/%{cfg.buildcfg}"
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        defines { "INCLUDE_IMGUI" }
+
+        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
+        files { "./src/vrt/*.cpp" }
+
     project "volumetric-ray-tracer"
         kind "ConsoleApp"
         language "C++"
@@ -79,10 +89,9 @@ workspace "ba-thesis"
             libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
             links { "svml" }
         filter {}
-        libdirs { "./build/fmt" }
         includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
-        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui" }
+        links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "vrt" }
 
     project "hip-volumetric-ray-tracer"
         kind "None"
@@ -111,8 +120,8 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src", "./src/jevents" }
-        files { "./src/volumetric-ray-tracer/tests/approx_cycles.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt", "jevents" }
+        files { "./src/volumetric-ray-tracer/tests/approx_cycles.cpp" }
+        links { "fmt", "jevents", "vrt" }
 
     project "accuracy-test"
         kind "ConsoleApp"
@@ -121,8 +130,8 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/accuracy.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt" }
+        files { "./src/volumetric-ray-tracer/tests/accuracy.cpp" }
+        links { "fmt", "vrt" }
 
     project "transmittance-test"
         kind "ConsoleApp"
@@ -131,8 +140,8 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/transmittance.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt" }
+        files { "./src/volumetric-ray-tracer/tests/transmittance.cpp" }
+        links { "fmt", "vrt" }
 
     project "timing-test"
         kind "ConsoleApp"
@@ -141,8 +150,8 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt" }
+        files { "./src/volumetric-ray-tracer/tests/timing.cpp" }
+        links { "fmt", "vrt" }
 
     project "image-timing-test"
         kind "ConsoleApp"
@@ -151,8 +160,8 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
-        links { "fmt" }
+        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp" }
+        links { "fmt", "vrt" }
 
     project "perf-test"
         kind "ConsoleApp"
@@ -162,8 +171,8 @@ workspace "ba-thesis"
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
-        links { "fmt", "svml" }
+        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp" }
+        links { "fmt", "svml", "vrt" }
 
     project "svml-test"
         kind "ConsoleApp"
@@ -175,8 +184,8 @@ workspace "ba-thesis"
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/svml-test.cpp", "./src/volumetric-ray-tracer/approx.cpp" }
-        links { "fmt", "svml" }
+        files { "./src/volumetric-ray-tracer/tests/svml-test.cpp" }
+        links { "fmt", "svml", "vrt" }
 
     project "img-error-test"
         kind "ConsoleApp"
@@ -187,16 +196,5 @@ workspace "ba-thesis"
 
         libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/img-error.cpp", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp", "./src/volumetric-ray-tracer/camera.cpp" }
-        links { "fmt", "svml" }
-
-    project "vrt-unit-tests"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-ffast-math" }
-
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/unit-tests/**", "./src/volumetric-ray-tracer/approx.cpp", "./src/volumetric-ray-tracer/rt.cpp" }
-        links { "fmt", "svml", "gtest" }
+        files { "./src/volumetric-ray-tracer/tests/img-error.cpp" }
+        links { "fmt", "svml", "vrt" }

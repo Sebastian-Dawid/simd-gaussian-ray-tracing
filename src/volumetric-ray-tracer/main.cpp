@@ -23,11 +23,7 @@
 
 #pragma GCC diagnostic pop
 
-#include "types.h"
-#include "rt.h"
-#include "gaussians-from-file.h"
-#include "camera.h"
-
+#include <vrt/vrt.h>
 #include <glm/ext.hpp>
 
 struct cmd_args_t
@@ -44,6 +40,7 @@ struct cmd_args_t
     bool use_tiling = true;
     bool use_simd_transmittance = false;
     bool use_simd_pixels = true;
+    f32 rot = 360.f;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -56,12 +53,13 @@ struct cmd_args_t
             { "quiet", no_argument, NULL, 'q' },
             { "tiles", required_argument, NULL, 'l' },
             { "mode", required_argument, NULL, 'm' },
-            { "frames", required_argument, NULL, 'r' }
+            { "frames", required_argument, NULL, 's' },
+            {"rotation", required_argument, NULL, 'r' }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "r:m:qw:o:f:g:h:t:", opts, &lidx);
+            char c = getopt_long(argc, argv, "r:s:m:qw:o:f:g:h:t:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -97,8 +95,11 @@ struct cmd_args_t
                 case 'l':
                     this->tiles = strtoul(optarg, NULL, 10);
                     break;
-                case 'r':
+                case 's':
                     this->nr_frames = strtoul(optarg, NULL, 10);
+                    break;
+                case 'r':
+                    this->rot = strtof(optarg, NULL);
                     break;
                 case 'm':
                     u64 mode = strtoul(optarg, NULL, 10);
@@ -173,6 +174,11 @@ i32 main(i32 argc, char **argv)
 
     u64 width = cmd.w, height = cmd.h;
     bool running = true;
+
+    f32 angle_change = 0.f;
+    f32 last_frame = 1000.f * glfwGetTime();
+    f32 current_frame = 0.f;
+
     if (renderer != nullptr)
     {
         if (!renderer->init(width, height, "SIMD VRT")) return EXIT_FAILURE;
@@ -183,13 +189,8 @@ i32 main(i32 argc, char **argv)
             ImGui::Begin("Debug");
             ImGui::Text("Tiling Time: %f ms", tiling_time);
             ImGui::Text("Draw Time: %f ms", draw_time);
-            ImGui::Text("Frame Time: %f ms", draw_time + tiling_time);
-            ImGui::Text("FPS: %f", 1000.f / (draw_time + tiling_time));
-            //ImGui::Checkbox("erf spline", &use_spline_approx);
-            //ImGui::Checkbox("erf mirror", &use_mirror_approx);
-            //ImGui::Checkbox("erf taylor", &use_taylor_approx);
-            //ImGui::Checkbox("erf abramowitz", &use_abramowitz_approx);
-            //ImGui::Checkbox("exp fast", &use_fast_exp);
+            ImGui::Text("Frame Time: %f", current_frame);
+            ImGui::Text("FPS: %f", 1000.f / current_frame);
             ImGui::Checkbox("use tiling", &use_tiling);
             ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
             ImGui::Checkbox("use simd pixels", &use_simd_pixels);
@@ -200,7 +201,7 @@ i32 main(i32 argc, char **argv)
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
     struct timespec start, end;
 
-    vec4f_t origin{ 0.f, 0.f, -3.f };
+    vec4f_t origin{ 0.f, 0.f, -4.f };
     camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
     f32 angle = -90.f;
     u64 frames = 0;
@@ -214,15 +215,6 @@ i32 main(i32 argc, char **argv)
         tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
-        //if (use_spline_approx) _erf = approx::spline_erf;
-        //else if (use_mirror_approx) _erf = approx::spline_erf_mirror;
-        //else if (use_taylor_approx) _erf = approx::taylor_erf;
-        //else if (use_abramowitz_approx) _erf = approx::abramowitz_stegun_erf;
-        //else _erf = std::erf;
-        //if (use_fast_exp) _exp = approx::fast_exp;
-        //else _exp = std::exp;
-        //if (use_simd_transmittance) _transmittance = simd_transmittance;
-        //else { _transmittance = transmittance; }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         bool res = false;
@@ -248,6 +240,8 @@ i32 main(i32 argc, char **argv)
             fmt::println("{}", outfile);
             if (cmd.nr_frames > 1)
                 outfile = fmt::format("{}_{}.{}", outfile, frames, cmd.outfile + outfile.length() + 1);
+            else
+                outfile = fmt::format("{}.{}", outfile, cmd.outfile + outfile.length() + 1);
             fmt::println("{}", outfile);
             stbi_write_png(outfile.c_str(), width, height, 4, image, width * 4);
         }
@@ -261,8 +255,14 @@ i32 main(i32 argc, char **argv)
             renderer->stage_image(image, width, height);
         }
 
-        f32 angle_change = (draw_time + tiling_time)/(1000.f/60) * 10.f;
-        cam.position = glm::vec3(glm::rotate_slow(glm::mat4(1.f), glm::radians(angle_change), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
+        if (!cmd.quiet)
+        {
+            current_frame = 1000.f * glfwGetTime() - last_frame;
+            last_frame += current_frame;
+        }
+
+        angle_change = (!cmd.quiet) ? ((current_frame)/1000.f) * 90.f : cmd.rot / cmd.nr_frames;
+        cam.position = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(angle_change), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
         origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
         angle -= angle_change;
         cam.turn(angle, 0.f);

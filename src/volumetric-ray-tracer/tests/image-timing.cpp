@@ -1,5 +1,4 @@
-#include "../rt.h"
-#include "../approx.h"
+#include <vrt/vrt.h>
 #include <include/definitions.h>
 #include <include/error_fmt.h>
 #include <time.h>

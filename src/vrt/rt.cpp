@@ -29,13 +29,17 @@ tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t>
     std::vector<gaussians_t> tiles;
     std::vector<glm::vec2> projected_mu;
     std::vector<f32> projected_sigma;
-    for (const gaussian_t &g : gaussians)
+    std::vector<u64> idxs;
+    for (u64 i = 0; i < gaussians.size(); ++i)
     {
-        const glm::vec4 proj = view * glm::vec4(glm::vec3(g.mu.to_glm()), 1.f);
+        const glm::vec4 proj = view * glm::vec4(glm::vec3(gaussians[i].mu.to_glm()), 1.f);
+        if (proj.z < 1.f) continue;
         const glm::vec2 mu(proj.x/proj.z, proj.y/proj.z);
-        const f32 sigma = g.sigma / proj.z;
+        const f32 sigma = gaussians[i].sigma / proj.z;
+        if (sigma < 1e-5f) continue;
         projected_mu.push_back(mu);
         projected_sigma.push_back(sigma);
+        idxs.push_back(i);
     }
 
     for (f32 y = -1.f + th/2; y < 1.f; y += th)
@@ -44,15 +48,15 @@ tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t>
         {
             tiles.push_back(gaussians_t());
             gaussians_t &gs = tiles.back();
-            for (u64 i = 0; i < gaussians.size(); ++i)
+            for (u64 i = 0; i < idxs.size(); ++i)
             {
                 const glm::vec2 &mu = projected_mu[i];
                 const f32 &sigma = projected_sigma[i];
                 const glm::vec2 p = glm::abs(glm::vec2(x, y) - mu);
-                if ((p.x <= tw/2 + 3.f * sigma
-                            && p.y <= th/2 + 3.f * sigma))
+                if ((p.x <= std::abs(x)/2 + tw/2 + 4.f * sigma
+                            && p.y <= std::abs(y)/2 + th/2 + 4.f * sigma))
                 {
-                    gs.gaussians.push_back(gaussians[i]);
+                    gs.gaussians.push_back(gaussians[idxs[i]]);
                 }
             }
             gs.gaussians_broadcast = gaussian_vec_t::from_gaussians(gs.gaussians);

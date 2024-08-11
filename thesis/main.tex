@@ -6,7 +6,7 @@
 \usepackage[english]{babel}
 
 \usepackage{lipsum}
-\usepackage{color, colortbl}
+\usepackage[table]{xcolor}
 
 \input{smart-thesis/style}
 \input{smart-thesis/common-packages}
@@ -24,6 +24,14 @@
 \institution{Bielefeld University,Technical Faculty,Visual AI for Extended Reality Group}
 \supervisors{Prof.\@~Dr.\@~Helge Rhodin,Prof.\@~Dr.-Ing.\@~Ralf M\"oller}
 
+\newcommand*{\erf}{\text{erf}}
+
+\makepagestyle{abs}
+
+% Display the page number in the footer.
+\makeevenfoot{abs}{\thepage}{}{}
+\makeoddfoot{abs}{}{}{\thepage}
+
 \begin{document}
     \frontmatter
     \smarttitle
@@ -31,7 +39,7 @@
     \tableofcontents*
 
     \clearpage
-    \thispagestyle{plain}
+    \thispagestyle{abs}
     \abstractintoc
     \begin{abstract}
         \lipsum[1]
@@ -39,34 +47,93 @@
 
     \mainmatter
     \chapter{Introduction}
+
     \section{Gaussian Ray Tracing}
-    \cite{Rhodin:2015}
-    \gls{transmittance}
-    \gls{radiance}
+    In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal propose a volumetric image formation
+    model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic Guassians
+    $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as:
+    \begin{align}
+        D(\mathbf{x}) = \sum_{G_q \in \mathcal{G}} G_q(\mathbf{x})
+        \label{eq:density}\\
+        G_q(\mathbf{x}) = c_q \cdot \exp{\left( - \frac{\Vert\mathbf{x} - \mu_q\Vert_2^2}{2\sigma_q^2} \right)}
+        \label{eq:gaussian}
+    \end{align}
+    where $c_q$ describes the magnitude, $\mu_q$ the center and $\sigma_q$ the standard deviation of the Gaussian $G_q$.
+    Additionally an \gls{albedo} attribute $\mathbf{a}_q$ is defined for each Gaussian to denote its color. This leads
+    to the scene representation $\gamma = \{ c_q, \mu_q, \sigma_q, \mathbf{a}_q \}$. The $\gamma$ will be omitted from
+    $G_q(\mathbf{x})$ for readability and since the parameters are given implicitly via $q$.
+
+    To get the final color of a pixel we need to determine the amount of light that reaches the camera from each point
+    along a ray. For this purpose we determine the \gls{transmittance} $T$ of a point at distance $s$ along a ray from
+    a camera position $\mathbf{o}$ in direction $\mathbf{n}$ as:
+    \begin{equation}
+        T(\mathbf{o}, \mathbf{n}, s, \gamma) = \exp{\left( - \int_0^s D(\mathbf{o} + t\mathbf{n}) dt \right)}
+        \label{eq:transmittance}
+    \end{equation}
+
+    For the Gaussian density representation the density along a ray $\mathbf{x} = \mathbf{o} + s\mathbf{n}$ through a
+    sum of 3D Gaussians is a sum of 1D Gaussians, where the 1D Gaussians are given by inserting the ray into the
+    3D Gaussians $G_q$ (\refeq{eq:gaussian}). This gives us the form
+    $\bar{c} \exp{\left( - \frac{(x - \bar{\mu})^2}{2\bar{\sigma}^2} \right)}$ for the 1D scaled Gaussians, with
+    $\bar{\mu} = (\mu - \mathbf{o})^T\mathbf{n}$, $\bar{\sigma} = \sigma$ and
+    $\bar{c} = c \cdot \exp{\left( - \frac{(\mu - \mathbf{o})^T(\mu - \mathbf{o}) - \bar{\mu}^2}{2\bar{\sigma}^2} \right)}$.
+
+    The \gls{transmittance} can be expressed analytically using the error function
+    $\erf{(x)} = \frac{2}{\sqrt{\pi}}\int_0^s \exp{(-t^2)} dt$ and gaussian form of the density, as follows:
+    \begin{equation}
+        \begin{aligned}
+            T(\mathbf{o}, \mathbf{n}, s, \gamma) &= \exp{\left( -\int_0^s
+                \sum_q G_q(\mathbf{o} + t\mathbf{n} ) dt \right)}\\
+            &= \exp{\left( \sum_q \frac{\bar{\sigma}_q \bar{c}_q}{\sqrt{\frac{2}{\pi}}}
+            \left( \erf{\left( \frac{-\bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)}
+            - \erf{\left( \frac{s - \bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)} \right) \right)}\\
+        \end{aligned}
+        \label{eq:transmittance_approx}
+    \end{equation}
+
+    
+    Assuming the elements in the scene emit an equal amount of \gls{radiance}, a ray is shot through each pixel of a virtual
+    \gls{pinhole_camera}. The \gls{radiance} can be computed as the product of \gls{transmittance} $T$ (\refeq{eq:transmittance}),
+    density $D$ (\refeq{eq:density}), \gls{albedo} $\mathbf{a}$ and the ambient \gls{radiance} $L_e$ integrated along a ray
+    $\mathbf{x} = \mathbf{o} + s\mathbf{n}$. We assume the ambient \gls{radiance} to be fixed as $L_e = 1$. As such we
+    may disregard it in the following equation:
+    \begin{equation}
+        L(\mathbf{o}, \mathbf{n}, \gamma) = \int_0^\infty T(\mathbf{o}, \mathbf{n}, s, \gamma)
+            \sum_q G_q(\mathbf{o} + s\mathbf{n})\mathbf{a}_q ds
+    \end{equation}
+    
+    This integral may be approximated with sufficient accuracy by sampling around the mean of each Gaussian $G_q$
+    a compact interval $S_q = \{ \bar{\mu}_q + k\lambda_q | k \in K \subset \Z \}$. For our purposes it is sufficient
+    to choose $\lambda_q \sim \bar{\sigma}_q$ as the step length:
+    \begin{equation}
+        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_q \mathbf{a}_q \sum_{s \in S_q}
+            \lambda_q T(\mathbf{o}, \mathbf{n}, s, \gamma)G_q(\mathbf{o} + s\mathbf{n})
+        \label{eq:radiance}
+    \end{equation}
+
+    Rhodin \etal describe that local sampling with $\lambda_q = \bar{\sigma}_q$ and
+    $K = \{ -4, -3, \dots, 0 \}$ delivers a good enough approximation.
+
     \section{Gaussian Splatting}
     \cite{kerbl3Dgaussians}
-    \lipsum[1]
-    \lipsum[2]
-    \lipsum[3]
-    \lipsum[4]
-    \lipsum[5]
+    \cite{volume_splatting}
 
     \chapter{Optimizations}
     \section{SIMD}
     \subsection{Notation}
+
     To properly rewrite the method as it is laid out in \cite{Rhodin:2015} it is
     necessary to introduce some notation to work with SIMD vectors. This is
     defined in Table~\ref{tab:notation}:
     \begin{table}[h]
         \centering
+        \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|}
             \hline
             Notation & Definition \\
             \hline
-            \rowcolor{lightgray}
             $x^W$ & SIMD vector containing $W$ elements\\
             $\langle x \rangle^W$ & $x$ broadcast to a SIMD vector of $W$ elements\\
-            \rowcolor{lightgray}
             $\odot$ & elementwise multiplication\\
             $f^W$ & function that produces a SIMD vector containing $W$ elements\\\hline
         \end{tabular}
@@ -96,8 +163,8 @@
     \section{Transmittance}
     \section{Full Render}
     
-    \chapter{Results}
-    
+    \chapter{Results and Discussion}
+
     \chapter{Conclusion and Future Work}
 
     \backmatter

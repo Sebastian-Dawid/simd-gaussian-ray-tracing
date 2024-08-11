@@ -24,7 +24,7 @@ build:	## Compile and link
 run: build ## Build then run
 	@build/bin/$(CONFIG)/volumetric-ray-tracer $(ARGS)
 
-thesis: ## 
+thesis: ## Compile the thesis
 	@pushd thesis > /dev/null; \
 	$(MAKE) all; \
 	popd > /dev/null

@@ -32,7 +32,7 @@ std::vector<gaussian_t> read_from_obj(const char *const filename)
                 .albedo = c * 0.5f + vec4f_t{ 0.5f, 0.5f, 0.5f, 1.0f },
                 .mu = pt,
                 .sigma = (attrib.vertices.size() < 1000) ? 0.2f : 0.05f,
-                .magnitude = 1.0f
+                .magnitude = 2.0f
                 });
     }
     return gaussians;

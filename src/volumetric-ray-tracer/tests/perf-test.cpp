@@ -18,8 +18,7 @@
 
 #pragma GCC diagnostic pop
 
-#include "../types.h"
-#include "../rt.h"
+#include <vrt/vrt.h>
 
 int main(i32 argc, char **argv)
 {
