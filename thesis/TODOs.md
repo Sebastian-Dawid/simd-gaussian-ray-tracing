@@ -10,3 +10,5 @@
 - [ ] • details TBD [See in file](main.tex#L205)
 - [ ] • Short recap + what can still be done: anisotropic gaussians, loading models learned via gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results) [See in file](main.tex#L235)
 <!---@TODO-List-End--->
+
+Generated using [todo-manager](https://github.com/dwd31415/todo-manager).

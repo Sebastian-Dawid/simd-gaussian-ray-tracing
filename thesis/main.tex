@@ -153,7 +153,24 @@
 
     \subsection{Approaches}
     \paragraph{Parallel \gls{transmittance}:}
+    \begin{equation}
+        \begin{aligned}
+            T^W(\mathbf{o}, \mathbf{n}, s, \gamma) &= \exp^W{\left( \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1}
+            \begin{pmatrix}
+                \frac{\bar{\sigma}_{mW}\bar{c}_{mW}}{\sqrt{\frac{2}{\pi}}} \\ \vdots \\\frac{\bar{\sigma}_{(m+1)W-1}\bar{c}_{(m+1)W-1}}{\sqrt{\frac{2}{\pi}}} 
+            \end{pmatrix} \right.\\&\left.\odot \begin{pmatrix}
+                \erf{\left( \frac{- \bar{\mu}_{mW}}{\sqrt{2}\bar{\sigma}_{mW}} \right) - \erf{\left( \frac{s - \bar{\mu}_{mW}}{\sqrt{2}\bar{\sigma}_{mW}} \right)}} \\
+                \vdots \\
+               \erf{\left( \frac{- \bar{\mu}_{(m+1)W - 1}}{\sqrt{2}\bar{\sigma}_{(m+1)W - 1}} \right) - \erf{\left( \frac{s - \bar{\mu}_{(m+1)W - 1}}{\sqrt{2}\bar{\sigma}_{(m+1)W - 1}} \right)}} 
+            \end{pmatrix}\right)}
+        \end{aligned}
+    \end{equation}
+    \begin{equation}
+        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o} + s\mathbf{n})\sum_{i = 0}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma)
+    \end{equation}
+
     \paragraph{Parallel \gls{radiance}:}
+
     \paragraph{Parallel Pixels:}
     The analytical solution to the \gls{transmittance} integral from Eq.~\refeq{eq:transmittance_analytical} can be broadcast
     to operate on \gls{simd} vectors of points on rays parameterized by origins $\mathbf{o}^W$, directions $\mathbf{n}^W$
@@ -203,7 +220,9 @@
     
     \chapter{Implementation}
     %@TODO: details TBD
-    \cite{own_moeller_16_2}
+    The source code of the implementation is available at: \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
+
+    To enable cross compilation for different \gls{simd} extentions, here AVX2 and AVX512, I use the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
     
     \chapter{Experiments}
     \section{Approximations}
