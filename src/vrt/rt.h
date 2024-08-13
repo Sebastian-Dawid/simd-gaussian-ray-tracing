@@ -11,19 +11,6 @@
 #include <glm/glm.hpp>
 
 #define PRINT_MAT(V) fmt::println("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}", V[0].x, V[1].x, V[2].x, V[3].x, V[0].y, V[1].y, V[2].y, V[3].y, V[0].z, V[1].z, V[2].z, V[3].z, V[0].w, V[1].w, V[2].w, V[3].w);
-#define GENERATE_PROJECTION_PLANE(XS, YS, W, H)                        \
-{                                                                      \
-    XS = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * W * H);   \
-    YS = (f32*)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * W * H);   \
-    for (u64 i = 0; i < H; ++i)                                        \
-    {                                                                  \
-        for (u64 j = 0; j < W; ++j)                                    \
-        {                                                              \
-            XS[i * W + j] = -1.f + j/(W/2.f);                          \
-            YS[i * W + j] = -1.f + i/(H/2.f);                          \
-        }                                                              \
-    }                                                                  \
-}
 
 constexpr f32 SQRT_2_PI = 0.7978845608028654f;
 constexpr f32 SQRT_2 = 1.4142135623730951f;
@@ -87,7 +74,7 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
 
 inline f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
 {
-    return simd_transmittance(_o, _n, s, gaussians, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    return simd_transmittance(_o, _n, s, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Version of `transmittance` that handles `SIMD_FLOATS` rays in parallel.
@@ -119,7 +106,7 @@ simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd
 
 inline simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd_vec4f_t &n, const simd::Vec<simd::Float> &s, const gaussians_t &gaussians)
 {
-    return broadcast_transmittance(o, n, s, gaussians, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    return broadcast_transmittance(o, n, s, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Numerical approximation of the transmittance.
@@ -164,7 +151,7 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians, co
 inline vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
 {
     return l_hat(o, n, gaussians, simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-            approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+            simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Version of `l_hat` that operates a set of `SIMD_FLOATS` rays.
@@ -194,7 +181,7 @@ simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussi
 
 inline simd_vec4f_t simd_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
 {
-    return simd_l_hat(o, n, gaussians, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    return simd_l_hat(o, n, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -231,7 +218,7 @@ bool render_image(const u32 width, const u32 height, u32 *image, const camera_t 
 inline bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
     return render_image(width,  height, image, cam, origin, gaussians, running,
-            simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+            simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -346,7 +333,7 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const came
 
 inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
-    return simd_render_image(width, height, image, cam, origin, gaussians, running, approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+    return simd_render_image(width, height, image, cam, origin, gaussians, running, simd::exp, approx::simd_abramowitz_stegun_erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.

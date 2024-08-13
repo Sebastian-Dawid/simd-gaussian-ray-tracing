@@ -5,12 +5,13 @@
 
 \usepackage[english]{babel}
 
-\usepackage{lipsum}
-\usepackage[table]{xcolor}
-
 \input{smart-thesis/style}
 \input{smart-thesis/common-packages}
 \input{smart-thesis/common-macros}
+
+\usepackage{lipsum}
+\usepackage[table]{xcolor}
+\usepackage{minted}
 
 \addbibresource{main.bib}
 
@@ -49,7 +50,8 @@
     \chapter{Introduction}
 
     \section{Gaussian Ray Tracing}
-    In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal propose a volumetric image formation
+    %@TODO: propose or describe?
+    In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
     model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic Guassians
     $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as:
     \begin{align}
@@ -63,8 +65,8 @@
     to the scene representation $\gamma = \{ c_q, \mu_q, \sigma_q, \mathbf{a}_q \}$. The $\gamma$ will be omitted from
     $G_q(\mathbf{x})$ for readability and since the parameters are given implicitly via $q$.
 
-    To get the final color of a pixel we need to determine the amount of light that reaches the camera from each point
-    along a ray. For this purpose we determine the \gls{transmittance} $T$ of a point at distance $s$ along a ray from
+    To get the final color of a pixel I need to determine the amount of light that reaches the camera from each point
+    along a ray. For this purpose I determine the \gls{transmittance} $T$ of a point at distance $s$ along a ray from
     a camera position $\mathbf{o}$ in direction $\mathbf{n}$ as:
     \begin{equation}
         T(\mathbf{o}, \mathbf{n}, s, \gamma) = \exp{\left( - \int_0^s D(\mathbf{o} + t\mathbf{n}) dt \right)}
@@ -88,14 +90,13 @@
             \left( \erf{\left( \frac{-\bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)}
             - \erf{\left( \frac{s - \bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)} \right) \right)}\\
         \end{aligned}
-        \label{eq:transmittance_approx}
+        \label{eq:transmittance_analytical}
     \end{equation}
 
-    
     Assuming the elements in the scene emit an equal amount of \gls{radiance}, a ray is shot through each pixel of a virtual
     \gls{pinhole_camera}. The \gls{radiance} can be computed as the product of \gls{transmittance} $T$ (\refeq{eq:transmittance}),
     density $D$ (\refeq{eq:density}), \gls{albedo} $\mathbf{a}$ and the ambient \gls{radiance} $L_e$ integrated along a ray
-    $\mathbf{x} = \mathbf{o} + s\mathbf{n}$. We assume the ambient \gls{radiance} to be fixed as $L_e = 1$. As such we
+    $\mathbf{x} = \mathbf{o} + s\mathbf{n}$. I assume the ambient \gls{radiance} is fixed as $L_e = 1$. As such I
     may disregard it in the following equation:
     \begin{equation}
         L(\mathbf{o}, \mathbf{n}, \gamma) = \int_0^\infty T(\mathbf{o}, \mathbf{n}, s, \gamma)
@@ -103,7 +104,7 @@
     \end{equation}
     
     This integral may be approximated with sufficient accuracy by sampling around the mean of each Gaussian $G_q$
-    a compact interval $S_q = \{ \bar{\mu}_q + k\lambda_q | k \in K \subset \Z \}$. For our purposes it is sufficient
+    a compact interval $S_q = \{ \bar{\mu}_q + k\lambda_q | k \in K \subset \Z \}$. For my purposes it is sufficient
     to choose $\lambda_q \sim \bar{\sigma}_q$ as the step length:
     \begin{equation}
         \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_q \mathbf{a}_q \sum_{s \in S_q}
@@ -115,15 +116,20 @@
     $K = \{ -4, -3, \dots, 0 \}$ delivers a good enough approximation.
 
     \section{Gaussian Splatting}
+    %@TODO: describe image formation model (splatting) as laid out in the following pagpers
     \cite{kerbl3Dgaussians}
     \cite{volume_splatting}
 
-    \chapter{Optimizations}
-    \section{SIMD}
-    \subsection{Notation}
+    \section{Ray Tracing vs. Splatting}
+    %@TODO: What differentiates the two methods? Advantages? Disadvantages?
 
+    \chapter{Optimizations}
+    %@TODO: Write introductory paragraph on optimizations
+    \section{SIMD}
+    %@TODO: Write short introduction on SIMD
+    \subsection{Notation}
     To properly rewrite the method as it is laid out in \cite{Rhodin:2015} it is
-    necessary to introduce some notation to work with SIMD vectors. This is
+    necessary to introduce some notation to work with \gls{simd} vectors. This is
     defined in Table~\ref{tab:notation}:
     \begin{table}[h]
         \centering
@@ -132,18 +138,59 @@
             \hline
             Notation & Definition \\
             \hline
-            $x^W$ & SIMD vector containing $W$ elements\\
-            $\langle x \rangle^W$ & $x$ broadcast to a SIMD vector of $W$ elements\\
+            $x^W$ & \gls{simd} vector containing $W$ elements\\
+            $x^W_i$ & $i$-th element of \gls{simd} vector $x$\\
+            $\mathbf{x}^W$ & \gls{simd} vectors containing $W$ vectors $\mathbf{x} \in \R^n$\\
+            $\langle \mathbf{x}^W, \mathbf{y}^W \rangle$ & elementwise inner product of the vectors in $\mathbf{x}$ and $\mathbf{y}$\\
+            $[ x ]^W$ & $x$ broadcast to a \gls{simd} vector of $W$ elements\\
             $\odot$ & elementwise multiplication\\
-            $f^W$ & function that produces a SIMD vector containing $W$ elements\\\hline
+            $\frac{x^W}{y^W}$ & elementwise division\\
+            $f^W$ & function that produces a \gls{simd} vector containing $W$ elements\\\hline
         \end{tabular}
-        \caption{SIMD Notation}
+        \caption{\gls{simd} Notation}
         \label{tab:notation}
     \end{table}
+
     \subsection{Approaches}
+    \paragraph{Parallel \gls{transmittance}:}
+    \paragraph{Parallel \gls{radiance}:}
+    \paragraph{Parallel Pixels:}
+    The analytical solution to the \gls{transmittance} integral from Eq.~\refeq{eq:transmittance_analytical} can be broadcast
+    to operate on \gls{simd} vectors of points on rays parameterized by origins $\mathbf{o}^W$, directions $\mathbf{n}^W$
+    and distances $s^W$, as follows:
+    \begin{equation}
+        \begin{aligned}
+            T^W(\mathbf{o}^W, \mathbf{n}^W, s^W, \gamma) = \exp^W{\Bigg(& \sum_q \frac{(\bar{\sigma}_q)^W
+            (\bar{c}_q)^W}{\left[ \sqrt{\frac{2}{\pi}} \right]^W} \\
+            \odot \Bigg(& \erf^W{\left( \frac{-(\bar{\mu}_q)^W}{[ \sqrt{2} ]^W \odot (\bar{\sigma}_q)^W} \right)}\\
+            &- \erf^W{\left( \frac{s^W - (\bar{\mu}_q)^W}{[ \sqrt{2} ]^W \odot (\bar{\sigma}_q)^W} \right)} \Bigg) \Bigg)} 
+        \end{aligned}
+    \end{equation}
+    with
+    \begin{align*}
+        \bar{\mu}^W &= \left\langle [ \mu ]^W - \mathbf{o}, \mathbf{n}^W \right\rangle, \bar{\sigma}^W = \left[ \sigma \right]^W\\
+        \bar{c}^W &= [c]^W \odot \exp^W{\left( - \frac{\left\langle [\mu]^W - \mathbf{o}^W, [\mu]^W - \mathbf{o}^W \right\rangle
+    - \left(\bar{\mu}^W\right)^2}{[2]^W \odot \left(\bar{\sigma}^W\right)^2} \right)}
+    \end{align*}
+
+    Given this broadcast version of the \gls{transmittance} equation I can broadcast the \gls{radiance} equation to
+    calculate the \gls{radiance} for multiple pixels at once:
+    \begin{equation}
+        \begin{aligned}
+            \hat{L}^W(\mathbf{o}^W, \mathbf{n}^W, \gamma) &= \sum_q [ \mathbf{a}_q ]^W \sum_{s \in S_q} \Big(
+            [ \lambda_q ]^W \odot T^W(\mathbf{o}^W, \mathbf{n}^W, [ s ]^W, \gamma)\\
+            &\odot G_q^W(\mathbf{o}^W + [ s ]^W \odot \mathbf{n}^W) \Big)
+        \end{aligned}
+    \end{equation}
+
+    Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the Gaussians one by one as the
+    sums still iterate over every Gaussian $G_q \in \mathcal{G}$ individually.
+
     \section{Tiling}
+    %@TODO: describe the tiling method used. note similarities to splatting.
     
     \chapter{Approximations}
+    %@TODO: Explain why it is necessary to approximate functions / implement own approximations
     \section{Exponential Function}
     \subsection{Cubic Spline Interpolation}
     \subsection{Bit Hack}
@@ -155,18 +202,41 @@
     \cite{AbraSteg72}
     
     \chapter{Implementation}
+    %@TODO: details TBD
     \cite{own_moeller_16_2}
     
     \chapter{Experiments}
-    \cite{hpc_toolkit}
     \section{Approximations}
     \section{Transmittance}
     \section{Full Render}
+    Aside from testing singular functions or sections of the program, I have also performed a number of end-to-end tests
+    to evaluate the performance improvements of the implemented optimizations in a, close to, real world scenario.
+    The tests will be performed on two separate models and evaluate different aspects of the implementation,
+    which I will describe in the following sections:
+    \subsection{Utah/Newell Teapot}
+    \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Model}\footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}
+    \subsection{Dense Cube}
     
     \chapter{Results and Discussion}
+    \cite{hpc_toolkit}
+    \section{HPCTOOLKIT}
+    The derived metrics used were vector instruction waste and vector instruction efficiency defined as:
+    \begin{align}
+        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions} \label{eq:vec_waste}\\
+        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}} \label{eq:vec_efficiency}
+    \end{align}
+    based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured for that scope
+    alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
+    \href{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}}
+    \mintinline{c}{PAPI_TOT_CYC} (total cycles) and \mintinline{c}{PAPI_VEC_INS}
+    (vector instructions) metrics for the given scopes.
 
     \chapter{Conclusion and Future Work}
+    %@TODO: Short recap + what can still be done: anisotropic gaussians, loading models learned via gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
 
+    \appendix
+    \chapter{Tables}
+    \chapter{Figures}
     \backmatter
     \printglossaries
     \printbibliography[heading=bibintoc]

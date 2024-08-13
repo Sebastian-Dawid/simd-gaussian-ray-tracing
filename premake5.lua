@@ -69,7 +69,7 @@ workspace "ba-thesis"
         files { "./src/vk-renderer/**.cpp" }
 
     project "vrt"
-        kind "StaticLib"
+        kind "SharedLib"
         language "C++"
         targetdir "build/lib/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
