@@ -42,20 +42,21 @@ int main()
         });
 
         GETTIME(start);
-        render_image(dim, dim, image, cam, origin, gaussians, true, transmittance<f32(f32), f32(f32)>, approx::fast_exp, approx::abramowitz_stegun_erf);
+        render_image(dim, dim, image, cam, origin, gaussians, true, l_hat<decltype(transmittance<f32(f32), f32(f32)>), f32(f32), f32(f32)>,
+                transmittance<f32(f32), f32(f32)>, approx::fast_exp, approx::abramowitz_stegun_erf);
         GETTIME(end);
         f32 t_seq = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         GETTIME(start);
-        render_image(dim, dim, image, cam, origin, gaussians, true,
-                simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-                approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+        render_image(dim, dim, image, cam, origin, gaussians, true, l_hat<decltype(simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                simd::exp, approx::simd_abramowitz_stegun_erf);
         GETTIME(end);
         f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
         GETTIME(start);
         simd_render_image(dim, dim, image, cam, origin, gaussians, true,
-                approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+                simd::exp, approx::simd_abramowitz_stegun_erf);
         GETTIME(end);
         f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 
@@ -92,15 +93,15 @@ int main()
             });
 
             GETTIME(start);
-            render_image(dim, dim, image, cam, origin, gaussians, true,
-                    simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-                    approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+            render_image(dim, dim, image, cam, origin, gaussians, true, l_hat<decltype(simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                    simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                    simd::exp, approx::simd_abramowitz_stegun_erf);
             GETTIME(end);
             f32 t_simd_inner = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
             simd_render_image(dim, dim, image, cam, origin, gaussians, true,
-                    approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf);
+                    simd::exp, approx::simd_abramowitz_stegun_erf);
             GETTIME(end);
             f32 t_simd_pixels = simd::timeSpecDiffNsec(end, start)/1000.f;
 

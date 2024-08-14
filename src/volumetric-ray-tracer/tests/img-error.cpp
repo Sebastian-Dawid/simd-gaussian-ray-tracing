@@ -44,7 +44,9 @@ i32 main()
 
     const vec4f_t origin{0.f, 0.f, 0.f};
     fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
-    render_image(256, 256, ref_image, cam, origin, tiles, true, 16, transmittance<decltype(expf), decltype(std::erff)>, expf, std::erff);
+    constexpr auto &tr1 = transmittance<decltype(expf), decltype(erff)>;
+    render_image(256, 256, ref_image, cam, origin, tiles, true, 16, l_hat<decltype(tr1), decltype(expf), decltype(erff)>,
+            tr1, expf, std::erff);
 
     fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);

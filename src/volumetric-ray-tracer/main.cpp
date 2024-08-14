@@ -39,6 +39,7 @@ struct cmd_args_t
     u64 tiles = 4;
     bool use_tiling = true;
     bool use_simd_transmittance = false;
+    bool use_simd_l_hat = false;
     bool use_simd_pixels = true;
     f32 rot = 360.f;
     cmd_args_t(i32 argc, char **argv)
@@ -107,19 +108,24 @@ struct cmd_args_t
                     this->use_simd_transmittance = false;
                     this->use_simd_pixels = false;
                     switch (mode) {
-                        case 4: // tiling sequential
+                        case 5: // tiling sequential
                             this->use_tiling = true;
                         case 1: // no tiling sequential
                             break;
-                        case 5: // tiling transmittance
+                        case 6: // tiling transmittance
                             this->use_tiling = true;
                         case 2: // no tiling transmittance
                             this->use_simd_transmittance = true;
                             break;
-                        default:
-                        case 6: // tiling pixels
+                        case 7: // tiling pixels
                             this->use_tiling = true;
                         case 3: // no tiling pixels
+                            this->use_simd_l_hat = true;
+                            break;
+                        default:
+                        case 8:
+                            this->use_tiling = true;
+                        case 4:
                             this->use_simd_pixels = true;
                             break;
                     }
@@ -169,6 +175,7 @@ i32 main(i32 argc, char **argv)
     //bool use_abramowitz_approx = false;
     //bool use_fast_exp = false;
     bool use_simd_transmittance = cmd.use_simd_transmittance;
+    bool use_simd_l_hat = cmd.use_simd_l_hat;
     bool use_simd_pixels = cmd.use_simd_pixels;
     bool use_tiling = cmd.use_tiling;
 
@@ -192,8 +199,9 @@ i32 main(i32 argc, char **argv)
             ImGui::Text("Frame Time: %f", current_frame);
             ImGui::Text("FPS: %f", 1000.f / current_frame);
             ImGui::Checkbox("use tiling", &use_tiling);
-            ImGui::Checkbox("use simd innermost", &use_simd_transmittance);
-            ImGui::Checkbox("use simd pixels", &use_simd_pixels);
+            ImGui::Checkbox("use parallel transmittance", &use_simd_transmittance);
+            ImGui::Checkbox("use parallel radiance", &use_simd_l_hat);
+            ImGui::Checkbox("use parallel pixels", &use_simd_pixels);
             ImGui::End();
         };
     }
@@ -221,14 +229,35 @@ i32 main(i32 argc, char **argv)
         if (use_tiling)
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
-            else if (use_simd_transmittance) res =render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
-            else res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            else if (use_simd_l_hat)
+            {
+                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>;
+                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                        tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+            }
+            else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
+            else
+            {
+                constexpr auto &tr = transmittance<decltype(expf), decltype(erff)>;
+                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, l_hat<decltype(tr), decltype(expf), decltype(erff)>,
+                        tr, expf, erff);
+            }
         }
         else
         {
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, gaussians, running);
+            else if (use_simd_l_hat)
+            {
+                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>;
+                res = render_image(width, height, image, cam, origin, gaussians, running, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
+                        tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+            }
             else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, gaussians, running);
-            else res = render_image(width, height, image, cam, origin, gaussians, running, transmittance<decltype(expf), decltype(erff)>, expf, erff);
+            else
+            {
+                constexpr auto &tr = transmittance<decltype(expf), decltype(erff)>;
+                res = render_image(width, height, image, cam, origin, gaussians, running, l_hat<decltype(tr), decltype(expf), decltype(erff)>, tr, expf, erff);
+            }
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;

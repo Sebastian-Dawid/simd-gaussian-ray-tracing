@@ -190,7 +190,7 @@
     - \left(\bar{\mu}^W\right)^2}{[2]^W \odot \left(\bar{\sigma}^W\right)^2} \right)}
     \end{align*}
 
-    This version of the \gls{transmittance} equation (\refeq{eq:transmittance_analytical}) allows us to rewrite the \gls{radiance} equation to operate on
+    This version of the \gls{transmittance} equation (\refeq{eq:transmittance_analytical}) allows me to rewrite the \gls{radiance} equation to operate on
     multiple gaussians at the same time as follows:
     \begin{equation}
         \begin{aligned}
@@ -246,7 +246,17 @@
     \section{Error Function}
     \subsection{Cubic Spline Interpolation}
     \subsection{Polynomial Approximation}
-    \cite{AbraSteg72}
+    \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as:
+    \begin{equation}
+        \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
+    \end{equation}
+    with
+    \begin{align*}
+        a &= 0.278393,\,
+        b = 0.230289\\
+        c &= 0.000972,\,
+        d = 0.078108
+    \end{align*}
     
     \chapter{Implementation}
     %@TODO: details TBD

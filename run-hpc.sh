@@ -11,7 +11,7 @@ touch runtime-log
 echo "GCC:" >> runtime-log
 make clean
 make build -j32
-for mode in $(seq 6); do
+for mode in $(seq 8); do
     rm -rf hpctoolkit-volumetric-ray-tracer-measurements
     echo -n "\tMODE $mode ST: " >> runtime-log
     HPCRUN_TRACE=1 hpcrun --event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPU-CYCLES --event CPUTIME --event INSTRUCTIONS -- ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -t1 --tiles 16 -m $mode >> runtime-log
@@ -19,7 +19,7 @@ for mode in $(seq 6); do
     hpcprof hpctoolkit-volumetric-ray-tracer-measurements
     mv hpctoolkit-volumetric-ray-tracer-database hpctoolkit/hpctoolkit-volumetric-ray-tracer-database-gcc-mode-$mode-st
 
-    if [[ $mode -gt 3 ]]; then
+    if [[ $mode -gt 4 ]]; then
         rm -rf hpctoolkit-volumetric-ray-tracer-measurements
         echo -n "\tMODE $mode MT(32): " >> runtime-log
         HPCRUN_TRACE=1 hpcrun --event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPU-CYCLES --event CPUTIME --event INSTRUCTIONS -- ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -t32 --tiles 16 -m $mode >> runtime-log
@@ -33,7 +33,7 @@ done
 echo "CLANG:" >> runtime-log
 make clean
 make build -j32 ARGS="--with-clang"
-for mode in $(seq 6); do
+for mode in $(seq 8); do
     rm -rf hpctoolkit-volumetric-ray-tracer-measurements
     echo -n "\tMODE $mode ST: " >> runtime-log
     HPCRUN_TRACE=1 hpcrun --event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPU-CYCLES --event CPUTIME --event INSTRUCTIONS -- ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -t1 --tiles 16 -m $mode >> runtime-log
@@ -41,7 +41,7 @@ for mode in $(seq 6); do
     hpcprof hpctoolkit-volumetric-ray-tracer-measurements
     mv hpctoolkit-volumetric-ray-tracer-database hpctoolkit/hpctoolkit-volumetric-ray-tracer-database-clang-mode-$mode-st
 
-    if [[ $mode -gt 3 ]]; then
+    if [[ $mode -gt 4 ]]; then
         rm -rf hpctoolkit-volumetric-ray-tracer-measurements
         echo -n "\tMODE $mode MT(32): " >> runtime-log
         HPCRUN_TRACE=1 hpcrun --event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPU-CYCLES --event CPUTIME --event INSTRUCTIONS -- ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -t32 --tiles 16 -m $mode >> runtime-log
