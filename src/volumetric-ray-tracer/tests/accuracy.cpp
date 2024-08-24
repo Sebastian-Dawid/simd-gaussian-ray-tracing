@@ -9,7 +9,7 @@ int main()
 {
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    CPU_SET(10, &mask);
+    CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
     
     FILE *CSV = std::fopen("csv/erf.csv", "wd");
@@ -23,11 +23,12 @@ int main()
 
     CSV = std::fopen("csv/exp.csv", "wd");
     if (!CSV) exit(EXIT_FAILURE);
-    fmt::println(CSV, "x, exp");
+    fmt::println(CSV, "x, exp, spline, fast, vcl");
     f32 t[160] = {0};
     f32 v_std[160] = {0};
+    f32 v_spline[160] = {0};
     f32 v_fast[160] = {0};
-    f32 v_fast_simd[160] = {0};
+    f32 v_vcl[160] = {0};
     u64 idx = 0;
     for (f32 x = -16.f; x <= 0.f; x += SIMD_FLOATS * 0.1f)
     {
@@ -35,14 +36,15 @@ int main()
         {
             t[idx + i] = x + 0.1f * i;
             v_std[idx + i] = std::exp(t[idx + i]);
+            v_spline[idx + i] = spline_exp(t[idx + i]);
             v_fast[idx + i] = fast_exp(t[idx + i]);
         }
-        simd::storeu(v_fast_simd + idx, simd_fast_exp(simd::loadu(t + idx)));
+        simd::storeu(v_vcl + idx, simd::exp(simd::loadu(t + idx)));
         idx += SIMD_FLOATS;
     }
     for (u8 i = 0; i < 160; ++i)
     {
-        fmt::println(CSV, "{}, {}, {}, {}", t[i], v_std[i], v_fast[i], v_fast_simd[i]); 
+        fmt::println(CSV, "{}, {}, {}, {}, {}", t[i], v_std[i], v_spline[i], v_fast[i], v_vcl[i]); 
     }
     fclose(CSV);
 

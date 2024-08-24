@@ -5,7 +5,7 @@ function load_data()
     data = CSV.File(data_path*"../csv/simd_erf.csv") |> DataFrame
     count = Vector(data[:, 1])
     t = Vector(data[:, 2])
-    plt_erf = plot(count, t, dpi=300, label="simd spline", xlabel=L"$n$", ylabel=L"cycles", title=L"Cycles to calculate $n$ values of $erf$.")
+    plt_erf = plot(count, t, dpi=300, label="simd spline", xlabel=L"$n$", ylabel=L"cycles", title=L"Cycles to calculate $n$ values of $erf$.", legend=:topleft)
     t = Vector(data[:, 3])
     plot!(count, t, label="simd spline mirror")
     t = Vector(data[:, 4])
@@ -22,7 +22,7 @@ function load_data()
     data = CSV.File(data_path*"../csv/simd_exp.csv") |> DataFrame
     count = Vector(data[:, 1])
     t = Vector(data[:, 2])
-    plt_exp = plot(count, t, dpi=300, label="simd spline", xlabel=L"$n$", ylabel=L"cycles", title=L"Cycles to calculate $n$ values of $\exp$.")
+    plt_exp = plot(count, t, dpi=300, label="simd spline", xlabel=L"$n$", ylabel=L"cycles", title=L"Cycles to calculate $n$ values of $\exp$.", legend=:topleft)
     t = Vector(data[:, 3])
     plot!(count, t, label="spline")
     t = Vector(data[:, 4])
@@ -35,12 +35,19 @@ function load_data()
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    ext = ".tex"
+    img_dir = "./"*dirname(relpath(@__FILE__))*"/../thesis/plots"
+    if "--as-image" in ARGS || "-i" in ARGS
+        ext = ".png"
+        img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    else
+        pgfplotsx()
+    end
     if !isdir(img_dir)
         mkdir(img_dir)
     end
     plt_erf, plt_exp = load_data()
-    savefig(plt_erf, img_dir*"/"*ENV["ARCH"]*"_simd_erf_timing.png")
-    savefig(plt_exp, img_dir*"/"*ENV["ARCH"]*"_simd_exp_timing.png")
+    savefig(plt_erf, img_dir*"/"*ENV["ARCH"]*"_simd_erf_timing"*ext)
+    savefig(plt_exp, img_dir*"/"*ENV["ARCH"]*"_simd_exp_timing"*ext)
 end
 

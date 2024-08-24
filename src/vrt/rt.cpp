@@ -53,8 +53,8 @@ tiles_t tile_gaussians(const f32 tw, const f32 th, const std::vector<gaussian_t>
                 const glm::vec2 &mu = projected_mu[i];
                 const f32 &sigma = projected_sigma[i];
                 const glm::vec2 p = glm::abs(glm::vec2(x, y) - mu);
-                if ((p.x <= std::abs(x)/2 + tw/2 + 2.f * sigma
-                            && p.y <= std::abs(y)/2 + th/2 + 2.f * sigma))
+                if ((p.x <= std::abs(x) + tw/2 + 2.f * sigma
+                            && p.y <= std::abs(y) + th/2 + 2.f * sigma))
                 {
                     gs.gaussians.push_back(gaussians[idxs[i]]);
                 }

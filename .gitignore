@@ -7,3 +7,8 @@ csv
 imgui.ini
 perf*
 *measurements
+hpctoolkit
+images
+*.bak*
+*.tgz
+runtime-log

@@ -34,12 +34,19 @@ function load_data()
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    ext = ".tex"
+    img_dir = "./"*dirname(relpath(@__FILE__))*"/../thesis/plots"
+    if "--as-image" in ARGS || "-i" in ARGS
+        ext = ".png"
+        img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    else
+        pgfplotsx()
+    end
     if !isdir(img_dir)
         mkdir(img_dir)
     end
     plt_erf, plt_exp, plt_trans = load_data()
-    savefig(plt_erf, img_dir*"/"*ENV["ARCH"]*"_timing_erf.png")
-    savefig(plt_exp, img_dir*"/"*ENV["ARCH"]*"_timing_exp.png")
-    savefig(plt_trans, img_dir*"/"*ENV["ARCH"]*"_timing_transmittance.png")
+    savefig(plt_erf, img_dir*"/"*ENV["ARCH"]*"_timing_erf"*ext)
+    savefig(plt_exp, img_dir*"/"*ENV["ARCH"]*"_timing_exp"*ext)
+    savefig(plt_trans, img_dir*"/"*ENV["ARCH"]*"_timing_transmittance"*ext)
 end

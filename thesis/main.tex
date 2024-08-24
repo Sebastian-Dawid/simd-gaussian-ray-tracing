@@ -13,6 +13,28 @@
 \usepackage[table]{xcolor}
 \usepackage{minted}
 
+% pgfplots preamble
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{backgrounds}
+\usepgfplotslibrary{patchplots}
+\usepgfplotslibrary{fillbetween}
+\pgfplotsset{%
+    layers/standard/.define layer set={%
+        background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+    }{
+        grid style={/pgfplots/on layer=axis grid},%
+        tick style={/pgfplots/on layer=axis ticks},%
+        axis line style={/pgfplots/on layer=axis lines},%
+        label style={/pgfplots/on layer=axis descriptions},%
+        legend style={/pgfplots/on layer=axis descriptions},%
+        title style={/pgfplots/on layer=axis descriptions},%
+        colorbar style={/pgfplots/on layer=axis descriptions},%
+        ticklabel style={/pgfplots/on layer=axis tick labels},%
+        axis background@ style={/pgfplots/on layer=axis background},%
+        3d box foreground style={/pgfplots/on layer=axis foreground},%
+    },
+}
+
 \addbibresource{main.bib}
 
 \makeglossaries
@@ -154,6 +176,7 @@
 
     \subsection{Approaches}
     \paragraph{Parallel \gls{transmittance}:}
+    \label{par:parallel_transmittance}
     \begin{equation}
         \begin{aligned}
             T^W(\mathbf{o}, \mathbf{n}, s, \gamma) &= \exp^W\left( \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1}
@@ -171,6 +194,7 @@
     \end{equation}
 
     \paragraph{Parallel \gls{radiance}:}
+    \label{par:parallel_radiance}
     The analytical solution to the \gls{transmittance} integral from Eq.~\refeq{eq:transmittance_analytical} can be broadcast
     to operate on \gls{simd} vectors of points on rays parameterized by origins $\mathbf{o}^W$, directions $\mathbf{n}^W$
     and distances $s^W$, as follows:
@@ -219,6 +243,7 @@
     \end{equation}
 
     \paragraph{Parallel Pixels:}
+    \label{par:parallel_pixels}
     Given the broadcast version of the \gls{transmittance} equation (\refeq{eq:transmittance_broadcast}) from before I can broadcast the \gls{radiance} equation to
     calculate the \gls{radiance} for multiple pixels at once:
     \begin{equation}
@@ -295,7 +320,132 @@
 
     \appendix
     \chapter{Tables}
+    \begin{table}[h]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|}
+            \hline
+            Mode & Features\\
+            1    & Sequential Baseline\\
+            2    & Parallel \gls{transmittance}\\
+            3    & Parallel \gls{radiance}\\
+            4    & Parallel Pixels\\
+            5    & Sequential + Tiling\\
+            6    & Parallel \gls{transmittance} + Tiling\\
+            7    & Parallel \gls{radiance} + Tiling\\
+            8    & Parallel Pixels + Tiling\\
+            st   & Single Threaded\\
+            mt   & Multi Threaded\\
+            \hline
+        \end{tabular}
+        \caption{Modes}
+        \label{tab:exec_modes}
+    \end{table}
+    \begin{table}[h]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c | c | c|}
+            \hline
+            Mode & GCC                               & Clang\\\hline
+            1 st & $\sim29$ min ($1734748.4$ ms)     & $\sim25.6$ min ($1537276.5$ ms)\\
+            2 st & $\sim111.32$ sec ($111318.36$ ms) & $\sim94.79$ sec ($95795.984$ ms)\\
+            3 st & $\sim78.3$ sec ($78304.445$ ms)   & $\sim66.08$ sec ($66084.97$ ms)\\
+            4 st & $\sim80.89$ sec ($80892.84$ ms)   & $\sim60.61$ sec ($60613.37$ ms)\\
+            5 st & $\sim15.31$ sec ($15312.966$ ms)  & $\sim12.44$ sec ($12438.755$ ms)\\
+            6 st & $\sim1.72$ sec ($1718.0503$ ms)   & $\sim1.21$ sec ($1208.4868$ ms)\\
+            7 st & $\sim0.84$ sec ($835.83826$ ms)   & $\sim0.72$ sec ($721.6306$ ms)\\
+            8 st & $\sim0.77$ sec ($768.4175$ ms)    & $\sim0.59$ sec ($594.68164$ ms)\\\hline\hline
+            5 mt & $\sim0.582$ sec ($582.271$ ms)   & $\sim0.502$ sec ($502.71063$ ms)\\
+            6 mt & $\sim0.085$ sec ($84.843185$ ms) & $\sim0.068$ sec ($67.78539$ ms)\\
+            7 mt & $\sim0.057$ sec ($57.257492$ ms) & $\sim0.051$ sec ($51.06643$ ms)\\
+            8 mt & $\sim0.052$ sec ($52.194233$ ms) & $\sim0.046$ sec ($45.902195$ ms)\\
+            \hline
+        \end{tabular}
+        \caption{Runtime of rendering the dense cube based on compiler and mode using AVX512.}
+        \label{tab:perf_dense_cube_avx512}
+    \end{table}
+
+    \begin{table}[!h]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            Mode & \gls{radiance}             & \gls{transmittance}          & $\erf$                      & $\exp$\\\hline
+            1 st & & & &\\
+            2 st & & & &\\
+            3 st & & & &\\
+            4 st & & & &\\
+            5 st & & & &\\
+            6 st & & & &\\
+            7 st & $3.8 \cdot 10^7$ ($0.9\%$) & $1.15 \cdot 10^9$ ($28.4\%$) & $1.14 \cdot 10^8$ ($2.8\%$) & $4.0 \cdot 10^6$ ($0.1\%$)\\
+            8 st & & & &\\\hline\hline
+            5 mt & & & &\\
+            6 mt & & & &\\
+            7 mt & & $3.96 \cdot 10^8$ ($4.4\%$) & &\\
+            8 mt & & & &\\
+            \hline
+        \end{tabular}
+        \caption{Clang: Vector Instruction Waste (\% of total) by Mode}
+        \label{tab:clang_vec_waste}
+    \end{table}
+    \begin{table}[!h]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            Mode & \gls{radiance} & \gls{transmittance} & $\erf$   & $\exp$\\\hline
+            1 st & & & &\\
+            2 st & & & &\\
+            3 st & & & &\\
+            4 st & & & &\\
+            5 st & & & &\\
+            6 st & & & &\\
+            7 st & $5.0\%$        & $53.78\%$           & $25.0\%$ & - \\
+            8 st & & & &\\\hline\hline
+            5 mt & & & &\\
+            6 mt & & & &\\
+            7 mt & & $31.25\%$ & &\\
+            8 mt & & & &\\
+            \hline
+        \end{tabular}
+        \caption{Clang: Vector Instruction Efficiency by Mode}
+        \label{tab:clang_vec_efficiency}
+    \end{table}
+
     \chapter{Figures}
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_simd_erf_timing}
+        \caption{Cycles to calculate $n$ values of $\erf$.}
+    \end{figure}
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_simd_exp_timing}
+        \caption{Cycles to calculate $n$ values of $\exp$.}
+    \end{figure}
+    
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_cmp_erf_approx}
+        \caption{$\erf$ Approximations}
+    \end{figure}
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_cmp_erf_err}
+        \caption{$\erf$ Errors}
+    \end{figure}
+    
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_cmp_exp_approx}
+        \caption{$\exp$ Approximations}
+    \end{figure}
+    \begin{figure}[!h]
+        \centering
+        \input{plots/znver4_cmp_exp_err}
+        \caption{$\exp$ Errors}
+    \end{figure}
+
     \backmatter
     \printglossaries
     \printbibliography[heading=bibintoc]

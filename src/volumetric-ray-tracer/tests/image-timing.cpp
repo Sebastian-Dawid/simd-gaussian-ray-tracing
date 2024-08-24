@@ -11,7 +11,7 @@ int main()
     cpu_set_t mask;
     CPU_ZERO(&mask);
 
-    // bind process to CPU4
+    // bind process to CPU2
     CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
 

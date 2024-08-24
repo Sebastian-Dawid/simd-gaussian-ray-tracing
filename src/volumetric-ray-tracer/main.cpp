@@ -42,6 +42,7 @@ struct cmd_args_t
     bool use_simd_l_hat = false;
     bool use_simd_pixels = true;
     f32 rot = 360.f;
+    f32 camera_offset = -4.f;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -55,12 +56,13 @@ struct cmd_args_t
             { "tiles", required_argument, NULL, 'l' },
             { "mode", required_argument, NULL, 'm' },
             { "frames", required_argument, NULL, 's' },
-            {"rotation", required_argument, NULL, 'r' }
+            {"rotation", required_argument, NULL, 'r' },
+            {"camera-offset", required_argument, NULL, 'c'}
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "r:s:m:qw:o:f:g:h:t:", opts, &lidx);
+            char c = getopt_long(argc, argv, "r:s:m:qw:o:f:g:h:t:c:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -101,6 +103,9 @@ struct cmd_args_t
                     break;
                 case 'r':
                     this->rot = strtof(optarg, NULL);
+                    break;
+                case 'c':
+                    this->camera_offset = strtof(optarg, NULL);
                     break;
                 case 'm':
                     u64 mode = strtoul(optarg, NULL, 10);
@@ -209,7 +214,7 @@ i32 main(i32 argc, char **argv)
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
     struct timespec start, end;
 
-    vec4f_t origin{ 0.f, 0.f, -4.f };
+    vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
     camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
     f32 angle = -90.f;
     u64 frames = 0;
@@ -266,12 +271,10 @@ i32 main(i32 argc, char **argv)
         if (cmd.outfile != nullptr)
         {
             std::string outfile = std::string(cmd.outfile).substr(0, std::string(cmd.outfile).find_last_of("."));
-            fmt::println("{}", outfile);
             if (cmd.nr_frames > 1)
                 outfile = fmt::format("{}_{}.{}", outfile, frames, cmd.outfile + outfile.length() + 1);
             else
                 outfile = fmt::format("{}.{}", outfile, cmd.outfile + outfile.length() + 1);
-            fmt::println("{}", outfile);
             stbi_write_png(outfile.c_str(), width, height, 4, image, width * 4);
         }
         if (cmd.quiet)

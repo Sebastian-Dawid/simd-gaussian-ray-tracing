@@ -1,5 +1,6 @@
 #include "approx.h"
 #include <fmt/core.h>
+#include <numbers>
 
 #define SIGN(x) ((x >= 0) - (x < 0))
 
@@ -124,7 +125,7 @@ namespace approx {
     /// generated using spline interpolation with supports [-10.0 -9.0 -8.0 -7.0 -6.0 -5.0 -4.5 -4.0 -3.5 -3.0 -2.5 -2.0 -1.75 -1.5 -1.25 -1.0 -0.75 -0.5 -0.25 0.0]
     f32 spline_exp(f32 x)
     {
-        if (x <= -9.0f) return -1.f;
+        if (x <= -9.0f) return 0.f;
         else if (-9.0f <= x && x <= -8.0f) { return 2.0944866e-5f * (x - -9.0f) * (x - -9.0f) * (x - -9.0f) + 6.2834595e-5f * (x - -9.0f) * (x - -9.0f) + 0.0001198996f * (x - -9.0f) + 0.0001234098f; }
         else if (-8.0f <= x && x <= -7.0f) { return 2.9318619e-5f * (x - -8.0f) * (x - -8.0f) * (x - -8.0f) + 0.00015079045f * (x - -8.0f) * (x - -8.0f) + 0.00033352466f * (x - -8.0f) + 0.00033546262f; }
         else if (-7.0f <= x && x <= -6.0f) { return 9.210422e-5f * (x - -7.0f) * (x - -7.0f) * (x - -7.0f) + 0.0004271031f * (x - -7.0f) * (x - -7.0f) + 0.00091141823f * (x - -7.0f) + 0.000911882f; }
@@ -150,7 +151,7 @@ namespace approx {
     simd::Vec<simd::Float> simd_spline_exp(simd::Vec<simd::Float> x)
     {
         simd::Vec<simd::Float> value = simd::set1(1.f);
-        simd::ifelse(x <= simd::set1(-9.0f), simd::set1(-1.f), value);
+        simd::ifelse(x <= simd::set1(-9.0f), simd::set1(0.f), value);
         value = simd::ifelse(simd::bit_and(simd::set1(-9.0f) <= x, x <= simd::set1(-8.0f)), simd::set1(2.0944866e-5f) * (x - simd::set1(-9.0f)) * (x - simd::set1(-9.0f)) * (x - simd::set1(-9.0f)) + simd::set1(6.2834595e-5f) * (x - simd::set1(-9.0f)) * (x - simd::set1(-9.0f)) + simd::set1(0.0001198996f) * (x - simd::set1(-9.0f)) + simd::set1(0.0001234098f), value);
         value = simd::ifelse(simd::bit_and(simd::set1(-8.0f) <= x, x <= simd::set1(-7.0f)), simd::set1(2.9318619e-5f) * (x - simd::set1(-8.0f)) * (x - simd::set1(-8.0f)) * (x - simd::set1(-8.0f)) + simd::set1(0.00015079045f) * (x - simd::set1(-8.0f)) * (x - simd::set1(-8.0f)) + simd::set1(0.00033352466f) * (x - simd::set1(-8.0f)) + simd::set1(0.00033546262f), value);
         value = simd::ifelse(simd::bit_and(simd::set1(-7.0f) <= x, x <= simd::set1(-6.0f)), simd::set1(9.210422e-5f) * (x - simd::set1(-7.0f)) * (x - simd::set1(-7.0f)) * (x - simd::set1(-7.0f)) + simd::set1(0.0004271031f) * (x - simd::set1(-7.0f)) * (x - simd::set1(-7.0f)) + simd::set1(0.00091141823f) * (x - simd::set1(-7.0f)) + simd::set1(0.000911882f), value);

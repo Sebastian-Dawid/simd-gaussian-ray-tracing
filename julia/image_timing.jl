@@ -43,14 +43,21 @@ function load_data()
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    ext = ".tex"
+    img_dir = "./"*dirname(relpath(@__FILE__))*"/../thesis/plots"
+    if "--as-image" in ARGS || "-i" in ARGS
+        ext = ".png"
+        img_dir = "./"*dirname(relpath(@__FILE__))*"/../images"
+    else
+        pgfplotsx()
+    end
     if !isdir(img_dir)
         mkdir(img_dir)
     end
     plt_dim, plt_64px, plt_128px, plt_256px, plt_512px = load_data()
-    savefig(plt_dim, img_dir*"/"*ENV["ARCH"]*"_image_timing_dim.png")
-    savefig(plt_64px, img_dir*"/"*ENV["ARCH"]*"_image_timing_64px.png")
-    savefig(plt_128px, img_dir*"/"*ENV["ARCH"]*"_image_timing_128px.png")
-    savefig(plt_256px, img_dir*"/"*ENV["ARCH"]*"_image_timing_256px.png")
-    savefig(plt_512px, img_dir*"/"*ENV["ARCH"]*"_image_timing_512px.png")
+    savefig(plt_dim, img_dir*"/"*ENV["ARCH"]*"_image_timing_dim"*ext)
+    savefig(plt_64px, img_dir*"/"*ENV["ARCH"]*"_image_timing_64px"*ext)
+    savefig(plt_128px, img_dir*"/"*ENV["ARCH"]*"_image_timing_128px"*ext)
+    savefig(plt_256px, img_dir*"/"*ENV["ARCH"]*"_image_timing_256px"*ext)
+    savefig(plt_512px, img_dir*"/"*ENV["ARCH"]*"_image_timing_512px"*ext)
 end
