@@ -32,10 +32,13 @@ hpc-run: ## Run for both clang and gcc through hpctoolkit
 
 hpc-archive: ## Archive the results of hpc-run in a *.tgz archive
 ifdef PV_AVAILABLE
-	@tar cf - runtime-log hpctoolkit | pv -s $$(du -sb ./hpctoolkit | awk '{print $$1}') | gzip > hpctoolkit-results.tgz
+	@tar cf - hpc-runtimes.log hpctoolkit | pv -s $$(du -sb ./hpctoolkit | awk '{print $$1}') | gzip > hpctoolkit-results.tgz
 else
-	@tar czf hpctoolkit-results.tgz runtime-log hpctoolkit
+	@tar czf hpctoolkit-results.tgz hpc-runtimes.log hpctoolkit
 endif
+
+gather-runtimes: ## Average Runtimes of SIMD execution modes
+	@./runtimes.sh
 
 thesis: ## Compile the thesis
 	@pushd thesis > /dev/null; \

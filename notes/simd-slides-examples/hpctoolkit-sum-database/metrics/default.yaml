@@ -1,0 +1,133 @@
+version: 0
+inputs:
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-execution
+    metric: CPUTIME (sec)
+    scope: execution
+    formula: $$
+    combine: sum
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-lex_aware
+    metric: CPUTIME (sec)
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-function
+    metric: CPUTIME (sec)
+    scope: function
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-execution
+    metric: PAPI_VEC_INS
+    scope: execution
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-lex_aware
+    metric: PAPI_VEC_INS
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &PAPI_VEC_INS-sum-x5b_0x0x5d_-function
+    metric: PAPI_VEC_INS
+    scope: function
+    formula: $$
+    combine: sum
+  - &PAPI_TOT_CYC-sum-x5b_0x0x5d_-execution
+    metric: PAPI_TOT_CYC
+    scope: execution
+    formula: $$
+    combine: sum
+  - &PAPI_TOT_CYC-sum-x5b_0x0x5d_-lex_aware
+    metric: PAPI_TOT_CYC
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &PAPI_TOT_CYC-sum-x5b_0x0x5d_-function
+    metric: PAPI_TOT_CYC
+    scope: function
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCM-sum-x5b_0x0x5d_-execution
+    metric: PAPI_L1_DCM
+    scope: execution
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCM-sum-x5b_0x0x5d_-lex_aware
+    metric: PAPI_L1_DCM
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCM-sum-x5b_0x0x5d_-function
+    metric: PAPI_L1_DCM
+    scope: function
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCA-sum-x5b_0x0x5d_-execution
+    metric: PAPI_L1_DCA
+    scope: execution
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCA-sum-x5b_0x0x5d_-lex_aware
+    metric: PAPI_L1_DCA
+    scope: lex_aware
+    formula: $$
+    combine: sum
+  - &PAPI_L1_DCA-sum-x5b_0x0x5d_-function
+    metric: PAPI_L1_DCA
+    scope: function
+    formula: $$
+    combine: sum
+roots:
+  - name: PAPI_L1_DCA
+    description: PAPI_L1_DCA
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *PAPI_L1_DCA-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *PAPI_L1_DCA-sum-x5b_0x0x5d_-lex_aware
+            standard: *PAPI_L1_DCA-sum-x5b_0x0x5d_-function
+  - name: PAPI_L1_DCM
+    description: PAPI_L1_DCM
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *PAPI_L1_DCM-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *PAPI_L1_DCM-sum-x5b_0x0x5d_-lex_aware
+            standard: *PAPI_L1_DCM-sum-x5b_0x0x5d_-function
+  - name: PAPI_TOT_CYC
+    description: PAPI_TOT_CYC
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *PAPI_TOT_CYC-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *PAPI_TOT_CYC-sum-x5b_0x0x5d_-lex_aware
+            standard: *PAPI_TOT_CYC-sum-x5b_0x0x5d_-function
+  - name: PAPI_VEC_INS
+    description: PAPI_VEC_INS
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *PAPI_VEC_INS-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *PAPI_VEC_INS-sum-x5b_0x0x5d_-lex_aware
+            standard: *PAPI_VEC_INS-sum-x5b_0x0x5d_-function
+  - name: CPUTIME (sec)
+    description: CPUTIME (sec)
+    variants:
+      Sum:
+        render: [number, percent]
+        formula:
+          inclusive:
+            standard: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-execution
+          exclusive:
+            custom: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-lex_aware
+            standard: *CPUTIMEx20_x28_secx29_-sum-x5b_0x0x5d_-function

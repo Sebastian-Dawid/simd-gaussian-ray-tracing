@@ -26,6 +26,30 @@
 #include <vrt/vrt.h>
 #include <glm/ext.hpp>
 
+#define HELP_MSG "Usage: volumetric-ray-tracer [options]\n"\
+    "\nOptions:\n"\
+    "\t--help:                                 Show this help message.\n"\
+    "\t--file <file>, -f <file>:               Load gaussians as verticies from <file> (.obj).\n"\
+    "\t--output <file>, -o <file>:             Write image to <file> as in PNG format.\n"\
+    "\t--grid <dim=4>, -g <dim=4>:             Render a grid of <dim>x<dim> gaussians. Overrides --file.\n"\
+    "\t--width <width>, -w <width>:            Set image width to <width>. Set height to <width> too if --height is not set.\n"\
+    "\t--height <height>, -h <height>:         Set image height to <height>. Set width to <height> too if --width is not set\n"\
+    "\t--with-threads <count>, -t <count>:     Use <count> threads for rendering.\n"\
+    "\t--quiet, -q:                            Quit after rendering without displaying the image to the screen.\n"\
+    "\t--frames <count>:                       Render <count> frames. Does nothing if --quiet is not set.\n"\
+    "\t--tiles <count>:                        Split the image into <count> tiles vertically and horizontally.\n"\
+    "\t--roation <rot>, -r <rot>:              Changes the viewing angle by <rot> every frame if --quiet is set.\n"\
+    "\t--camaera-offset <offset>, -c <offset>: Set the position of the camera along the Z-Axis to <offset>.\n"\
+    "\t--mode <mode>, -m <mode>:               Set the rendering mode to <mode>:\n"\
+        "\t\t1 - sequential execution without tiling\n"\
+        "\t\t2 - parallel transmittance calculation without tiling\n"\
+        "\t\t3 - parallel radiance calculation without tiling\n"\
+        "\t\t4 - parallel pixel calculation without tiling\n"\
+        "\t\t5 - sequential execution with tiling\n"\
+        "\t\t6 - parallel transmittance calculation with tiling\n"\
+        "\t\t7 - parallel radiance calculation with tiling\n"\
+        "\t\t8 - parallel pixel calculation with tiling"
+
 struct cmd_args_t
 {
     u64 w = -1, h = -1;
@@ -36,7 +60,7 @@ struct cmd_args_t
     bool quiet = false;
     u64 thread_count = 1;
     u64 nr_frames = 1;
-    u64 tiles = 4;
+    u64 tiles = 16;
     bool use_tiling = true;
     bool use_simd_transmittance = false;
     bool use_simd_l_hat = false;
@@ -56,13 +80,14 @@ struct cmd_args_t
             { "tiles", required_argument, NULL, 'l' },
             { "mode", required_argument, NULL, 'm' },
             { "frames", required_argument, NULL, 's' },
-            {"rotation", required_argument, NULL, 'r' },
-            {"camera-offset", required_argument, NULL, 'c'}
+            { "rotation", required_argument, NULL, 'r' },
+            { "camera-offset", required_argument, NULL, 'c' },
+            { "help", no_argument, NULL, 0xff }
         };
         i32 lidx;
         while (1)
         {
-            char c = getopt_long(argc, argv, "r:s:m:qw:o:f:g:h:t:c:", opts, &lidx);
+            i32 c = getopt_long(argc, argv, "r:m:qw:o:f:g:h:t:c:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -106,6 +131,10 @@ struct cmd_args_t
                     break;
                 case 'c':
                     this->camera_offset = strtof(optarg, NULL);
+                    break;
+                case 0xff:
+                    fmt::println(HELP_MSG);
+                    exit(EXIT_SUCCESS);
                     break;
                 case 'm':
                     u64 mode = strtoul(optarg, NULL, 10);
@@ -173,7 +202,7 @@ i32 main(i32 argc, char **argv)
     gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
-    f32 draw_time = 0.f, tiling_time = 0.f;
+    f32 draw_time = 0.f, tiling_time = 0.f, total_time = 0.f;
     //bool use_spline_approx = false;
     //bool use_mirror_approx = false;
     //bool use_taylor_approx = false;
@@ -236,9 +265,9 @@ i32 main(i32 argc, char **argv)
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             else if (use_simd_l_hat)
             {
-                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>;
-                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-                        tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(simd::erf)>;
+                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
+                        tr, simd::exp, simd::erf);
             }
             else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
             else
@@ -253,9 +282,9 @@ i32 main(i32 argc, char **argv)
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, gaussians, running);
             else if (use_simd_l_hat)
             {
-                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>;
-                res = render_image(width, height, image, cam, origin, gaussians, running, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-                        tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(simd::erf)>;
+                res = render_image(width, height, image, cam, origin, gaussians, running, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
+                        tr, simd::exp, simd::erf);
             }
             else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, gaussians, running);
             else
@@ -279,8 +308,14 @@ i32 main(i32 argc, char **argv)
         }
         if (cmd.quiet)
         {
-            fmt::println("TIME: {} ms", draw_time + tiling_time);
-            if (cmd.nr_frames == frames) break;
+            if (cmd.nr_frames == 1) fmt::println("TIME: {} ms", draw_time + tiling_time);
+            total_time += draw_time + tiling_time;
+            if (cmd.nr_frames == frames)
+            {
+                if (cmd.nr_frames > 1)
+                    fmt::println("AVG. TIME: {} ms ({} frames)", total_time/cmd.nr_frames, cmd.nr_frames);
+                break;
+            }
         }
         else
         {

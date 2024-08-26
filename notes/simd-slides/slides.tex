@@ -1,0 +1,106 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+\usepackage{minted}
+\usepackage{amsmath}
+\usepackage[table]{xcolor}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[short title]{Measureing Usage and Efficiency of SIMD Instructions} % The short title appears at the bottom of every slide, the full title is only on the title page
+\author[Sebastian] {Sebastian Dawid}
+\date{\today} % Date, can be changed to a custom date
+
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Metrics}
+%------------------------------------------------
+
+\begin{frame}{Vector Metrics}
+    \begin{itemize}
+        \item Waste: Number of instructions executed less than the theoretical maximum. Here I assume that the maximum number of vector instructions per cycle is 2\footnote{A lot of instructions have a throughput(CPI) of 0.5}.
+            \begin{equation*}
+                \text{waste}(c, v) = 2c - v
+            \end{equation*}
+        \item Efficiency: Ratio of executed vector instructions to the theoretical maximum.
+            \begin{equation*}
+                \text{efficiency}(c, v) = \frac{v}{2c}
+            \end{equation*}
+        \item VPC: Vecror instructions per cycle
+            \begin{equation*}
+                \text{vpc}(c, v) = \frac{v}{c}
+            \end{equation*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Cache Metric}
+    Through the ratio of cache misses to cache accesses we can ensure that we are not observing cache effects:
+    \begin{equation*}
+        \text{cmpca}(cm, ca) = \frac{cm}{ca}
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{Hardware Counters}
+    To calculate these metrics we need to monitor various hardware events\footnote{Events are captured via PAPI (Performance Application Programming Interface)}:
+    \begin{itemize}
+        \item \mintinline{c}{PAPI_VEC_INS} (vector instructions executed)
+        \item \mintinline{c}{PAPI_TOT_CYC} (total cycles executed)
+        \item \mintinline{c}{PAPI_L1_DCM} (L1 data cache misses)
+        \item \mintinline{c}{PAPI_L1_DCA} (L1 data cache accesses)
+    \end{itemize}
+\end{frame}
+
+\section{Example}
+
+\begin{frame}{Program}
+    \begin{itemize}
+        \item Summing up $\sim128$KiB (32 Pages of 4KiB each) of double precision floating point data repeated 1024 times.
+        \item Use one sum function with loop carry dependency and one without.
+        \item Store data in circular buffer to save physical RAM.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Measurements}
+    \begin{table}
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Metric              & With Dependency & Without Dependency\\\hline
+            $\text{vpc}$        & $0.332$ & $0.492$ \\
+            $\text{waste}$      & $1.52 \cdot 10^{10}$ ($62.2\%$) & $9.2 \cdot 10^9$ ($37.7\%$) \\
+            $\text{efficiency}$ & $16.62\%$ & $24.58\%$ \\
+            CPUTIME             & $1590$ ms ($55.8\%$) & $1040$ ms ($36.3\%$) \\\hline
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\end{document}

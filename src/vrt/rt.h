@@ -74,7 +74,7 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
 
 inline f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
 {
-    return simd_transmittance(_o, _n, s, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return simd_transmittance(_o, _n, s, gaussians, simd::exp, simd::erf);
 }
 
 /// Version of `transmittance` that handles `SIMD_FLOATS` rays in parallel.
@@ -106,7 +106,7 @@ simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd
 
 inline simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd_vec4f_t &n, const simd::Vec<simd::Float> &s, const gaussians_t &gaussians)
 {
-    return broadcast_transmittance(o, n, s, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return broadcast_transmittance(o, n, s, gaussians, simd::exp, simd::erf);
 }
 
 /// Numerical approximation of the transmittance.
@@ -150,8 +150,8 @@ vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians, co
 
 inline vec4f_t l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
 {
-    return l_hat(o, n, gaussians, simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-            simd::exp, approx::simd_abramowitz_stegun_erf);
+    return l_hat(o, n, gaussians, simd_transmittance<decltype(simd::erf), decltype(simd::erf)>,
+            simd::exp, simd::erf);
 }
 
 template<typename Tr, typename Exp, typename Erf>
@@ -191,7 +191,7 @@ vec4f_t simd_l_hat(const vec4f_t _o, const vec4f_t _n, const gaussians_t &gaussi
 
 inline vec4f_t simd_l_hat(const vec4f_t o, const vec4f_t n, const gaussians_t &gaussians)
 {
-    return simd_l_hat(o, n, gaussians, broadcast_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return simd_l_hat(o, n, gaussians, broadcast_transmittance<decltype(simd::exp), decltype(simd::erf)>, simd::exp, simd::erf);
 }
 
 /// Version of `l_hat` that operates a set of `SIMD_FLOATS` rays.
@@ -221,7 +221,7 @@ simd_vec4f_t broadcast_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const g
 
 inline simd_vec4f_t broadcast_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
 {
-    return broadcast_l_hat(o, n, gaussians, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return broadcast_l_hat(o, n, gaussians, simd::exp, simd::erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -257,9 +257,9 @@ bool render_image(const u32 width, const u32 height, u32 *image, const camera_t 
 
 inline bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
-    constexpr auto &tr = simd_transmittance<decltype(approx::simd_fast_exp), decltype(approx::simd_abramowitz_stegun_erf)>;
-    return render_image(width,  height, image, cam, origin, gaussians, running, l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-            tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+    constexpr auto &tr = simd_transmittance<decltype(simd::erf), decltype(simd::erf)>;
+    return render_image(width,  height, image, cam, origin, gaussians, running, l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
+            tr, simd::exp, simd::erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -306,6 +306,7 @@ bool render_image(const u32 width, const u32 height, u32 *image, const camera_t 
                     // else
                     //     simd::store(img + _i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
                 }
+                delete g.gaussians_broadcast;
             };
             if (tc == 1) {
                 task();
@@ -334,9 +335,9 @@ bool render_image(const u32 width, const u32 height, u32 *image, const camera_t 
 
 inline bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
 {
-    constexpr auto &tr = simd_transmittance<decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>;
-    return render_image(width,  height, image, cam, origin, tiles, running, tc, l_hat<decltype(tr), decltype(simd::exp), decltype(approx::simd_abramowitz_stegun_erf)>,
-            tr, simd::exp, approx::simd_abramowitz_stegun_erf);
+    constexpr auto &tr = simd_transmittance<decltype(simd::exp), decltype(simd::erf)>;
+    return render_image(width,  height, image, cam, origin, tiles, running, tc, l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
+            tr, simd::exp, simd::erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -375,7 +376,7 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const came
 
 inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
 {
-    return simd_render_image(width, height, image, cam, origin, gaussians, running, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return simd_render_image(width, height, image, cam, origin, gaussians, running, simd::exp, simd::erf);
 }
 
 /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
@@ -456,5 +457,5 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const came
 inline bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam,
         const vec4f_t &origin, const tiles_t &tiles, const bool &running = true, const u64 tc = std::thread::hardware_concurrency())
 {
-    return simd_render_image(width, height, image, cam, origin, tiles, running, tc, simd::exp, approx::simd_abramowitz_stegun_erf);
+    return simd_render_image(width, height, image, cam, origin, tiles, running, tc, simd::exp, simd::erf);
 }

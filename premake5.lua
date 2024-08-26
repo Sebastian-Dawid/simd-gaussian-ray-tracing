@@ -139,6 +139,10 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
+        filter { "options:with-svml" }
+            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+            links { "svml" }
+        filter {}
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/transmittance.cpp" }
         links { "fmt", "vrt" }
@@ -149,6 +153,10 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
+        filter { "options:with-svml" }
+            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+            links { "svml" }
+        filter {}
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/timing.cpp" }
         links { "fmt", "vrt" }
@@ -159,6 +167,10 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
+        filter { "options:with-svml" }
+            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
+            links { "svml" }
+        filter {}
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/image-timing.cpp" }
         links { "fmt", "vrt" }

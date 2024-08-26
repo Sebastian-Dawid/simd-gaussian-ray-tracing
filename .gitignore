@@ -11,4 +11,4 @@ hpctoolkit
 images
 *.bak*
 *.tgz
-runtime-log
+*.log
