@@ -12,6 +12,7 @@
 \usepackage{lipsum}
 \usepackage[table]{xcolor}
 \usepackage{minted}
+\usepackage{float}
 
 % pgfplots preamble
 \usetikzlibrary{arrows.meta}
@@ -73,7 +74,6 @@
 
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
-    %@TODO: propose or describe?
     In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
     model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic Guassians
     $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as:
@@ -139,7 +139,7 @@
     $K = \{ -4, -3, \dots, 0 \}$ delivers a good enough approximation.
 
     \section{Gaussian Splatting}
-    %@TODO: describe image formation model (splatting) as laid out in the following pagpers
+    %@TODO: describe image formation model (splatting) as laid out in the following papers
     \cite{kerbl3Dgaussians}
     \cite{volume_splatting}
 
@@ -154,7 +154,7 @@
     To properly rewrite the method as it is laid out in \cite{Rhodin:2015} it is
     necessary to introduce some notation to work with \gls{simd} vectors. This is
     defined in Table~\ref{tab:notation}:
-    \begin{table}[h]
+    \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|}
@@ -175,6 +175,30 @@
     \end{table}
 
     \subsection{Approaches}
+    There are multiple ways to parallelize gaussian ray tracing using \gls{simd}. To generate the final image it is necessary to iterate
+    over two quantities: (1) the gaussians in the scene and (2) the pixels of the image. Therefore these are the opportunities to parallelize.
+    Parallelism over the pixels is possible by expanding the rendering equations given in \cite{Rhodin:2015} to operate on multiple rays at the
+    same time. Parallelism over the gaussians is possible in two ways:
+    \begin{enumerate}
+        \item The summands of the sum in the \gls{transmittance} equation~\eqref{eq:transmittance_analytical} do not depend on each
+            other therefore it is possible to divide the summands into equal groups and process these in parallel
+            and add these results up in the end to get the final result.
+        \item The same principle can be applied to the outer sum in the \gls{radiance} equation~\eqref{eq:radiance}: the summands are
+            not dependant on each other therefore they can be divided into equal groups that can
+            be processed in parallel and added up in the end to get the final \gls{radiance}.
+    \end{enumerate}
+    The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting in terms of parallelism since the number
+    of summands it has is fixed and therefore potential runtime improvements would not scale with the number of gaussians in the scene or number
+    of pixels in the image.
+
+    To enable parallelization over the gaussians it is necessary to split the set of
+    gaussians $\mathcal{G}$ into $W$ disjoint subsets of equal magnitude. Since the magnitude of $\mathcal{G}$ is not guaranteed to be divisible by $W$
+    a number of subsets equal to the remainder $|\mathcal{G}| \mod W$ will be augmented with an additional zero element.
+
+    The most sensible division of $\mathcal{G}$ is to assign some order to its elements, such that $g_i, i=1,\dots,|\mathcal{G}|$ describes the $i$-th element of
+    $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets:
+    \[\mathcal{G}_j := \{ g_i \in \mathcal{G} | i \mod j \equiv 0 \}, j=1,\dots,W\]
+
     \paragraph{Parallel \gls{transmittance}:}
     \label{par:parallel_transmittance}
     \begin{equation}
@@ -215,7 +239,7 @@
     \end{align*}
 
     This version of the \gls{transmittance} equation (\refeq{eq:transmittance_analytical}) allows me to rewrite the \gls{radiance} equation to operate on
-    multiple gaussians at the same time as follows:
+    multiple gaussians at the same time in the same way as in \ref{par:parallel_transmittance}:
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}, \mathbf{n}, \gamma) &= \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1} \left( \begin{pmatrix}
@@ -288,6 +312,32 @@
     The source code of the implementation is available at: \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
 
     To enable cross compilation for different \gls{simd} extentions, here AVX2 and AVX512, I use the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+
+    The Implementation is split into two parts: (1) a library that implements the rendering functions and approximations and (2) a renderer that uses the library to generate images.
+    
+    \section{Library}
+    \section{Renderer}
+    \begin{table}[H]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|}
+            \hline
+            Mode & Features\\
+            1    & Sequential Baseline\\
+            2    & Parallel \gls{transmittance}\\
+            3    & Parallel \gls{radiance}\\
+            4    & Parallel Pixels\\
+            5    & Sequential + Tiling\\
+            6    & Parallel \gls{transmittance} + Tiling\\
+            7    & Parallel \gls{radiance} + Tiling\\
+            8    & Parallel Pixels + Tiling\\
+            st   & Single Threaded\\
+            mt   & Multi Threaded\\
+            \hline
+        \end{tabular}
+        \caption{Modes}
+        \label{tab:exec_modes}
+    \end{table}
     
     \chapter{Experiments}
     \section{Approximations}
@@ -324,28 +374,7 @@
 
     \appendix
     \chapter{Tables}
-    \begin{table}[h]
-        \centering
-        \rowcolors{1}{white}{lightgray}
-        \begin{tabular}{|c|c|}
-            \hline
-            Mode & Features\\
-            1    & Sequential Baseline\\
-            2    & Parallel \gls{transmittance}\\
-            3    & Parallel \gls{radiance}\\
-            4    & Parallel Pixels\\
-            5    & Sequential + Tiling\\
-            6    & Parallel \gls{transmittance} + Tiling\\
-            7    & Parallel \gls{radiance} + Tiling\\
-            8    & Parallel Pixels + Tiling\\
-            st   & Single Threaded\\
-            mt   & Multi Threaded\\
-            \hline
-        \end{tabular}
-        \caption{Modes}
-        \label{tab:exec_modes}
-    \end{table}
-    \begin{table}[h]
+    \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c | c | c|}
@@ -369,7 +398,7 @@
         \label{tab:perf_dense_cube_avx512_gcc}
     \end{table}
 
-    \begin{table}[h]
+    \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|c|c|c|}
@@ -392,7 +421,7 @@
         \caption{Clang: Vector Instruction Waste (\% of total) by Mode}
         \label{tab:clang_vec_waste}
     \end{table}
-    \begin{table}[h]
+    \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|c|c|c|}
@@ -417,34 +446,34 @@
     \end{table}
 
     \chapter{Figures}
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_simd_erf_timing}
         \caption{Cycles to calculate $n$ values of $\erf$.}
     \end{figure}
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_simd_exp_timing}
         \caption{Cycles to calculate $n$ values of $\exp$.}
     \end{figure}
     
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_cmp_erf_approx}
         \caption{$\erf$ Approximations}
     \end{figure}
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_cmp_erf_err}
         \caption{$\erf$ Errors}
     \end{figure}
     
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_cmp_exp_approx}
         \caption{$\exp$ Approximations}
     \end{figure}
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \input{plots/znver4_cmp_exp_err}
         \caption{$\exp$ Errors}

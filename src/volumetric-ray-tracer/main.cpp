@@ -265,16 +265,12 @@ i32 main(i32 argc, char **argv)
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             else if (use_simd_l_hat)
             {
-                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(simd::erf)>;
-                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
-                        tr, simd::exp, simd::erf);
+                res = render_image<simd_l_hat>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             }
             else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
             else
             {
-                constexpr auto &tr = transmittance<decltype(expf), decltype(erff)>;
-                res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count, l_hat<decltype(tr), decltype(expf), decltype(erff)>,
-                        tr, expf, erff);
+                res = render_image<l_hat<transmittance>>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             }
         }
         else
@@ -282,15 +278,12 @@ i32 main(i32 argc, char **argv)
             if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, gaussians, running);
             else if (use_simd_l_hat)
             {
-                constexpr auto &tr = broadcast_transmittance<decltype(simd::exp), decltype(simd::erf)>;
-                res = render_image(width, height, image, cam, origin, gaussians, running, simd_l_hat<decltype(tr), decltype(simd::exp), decltype(simd::erf)>,
-                        tr, simd::exp, simd::erf);
+                res = render_image<simd_l_hat>(width, height, image, cam, origin, gaussians, running);
             }
             else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, gaussians, running);
             else
             {
-                constexpr auto &tr = transmittance<decltype(expf), decltype(erff)>;
-                res = render_image(width, height, image, cam, origin, gaussians, running, l_hat<decltype(tr), decltype(expf), decltype(erff)>, tr, expf, erff);
+                res = render_image<l_hat<transmittance>>(width, height, image, cam, origin, gaussians, running);
             }
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);

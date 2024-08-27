@@ -55,13 +55,13 @@ int main(i32 argc, char **argv)
     switch (v)
     {
         case 0:
-                render_image(width, height, image, cam, origin, gaussians);
+                render_image(width, height, image, cam, origin, gaussians, true);
             break;
         case 1:
                 render_image(width, height, image, cam, origin, tiles, true, 32);
             break;
         case 2:
-                simd_render_image(width, height, image, cam, origin, gaussians);
+                simd_render_image(width, height, image, cam, origin, gaussians, true);
             break;
         default:
                 simd_render_image(width, height, image, cam, origin, tiles, true, 32);

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-touch runtimes.log
+rm runtimes.log
 
 run_test () {
     make clean
@@ -17,12 +17,15 @@ run_test () {
     fi
     make build -j32 ARGS="${clang} ${svml}"
     for mode in $(seq 2 8); do
+        if [ "${mode}" -eq 5 ]; then
+            continue
+        fi
         printf "\tMODE %s ST: " "${mode}" >> runtimes.log
-        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 10 -t1 --tiles 16 -m "${mode}" >> runtimes.log
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 5 -t1 --tiles 16 -m "${mode}" >> runtimes.log
 
         if [ "${mode}" -gt 4 ]; then
             printf "\tMODE %s MT(32): " "${mode}" >> runtimes.log
-            ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 10 -t32 --tiles 16 -m "${mode}" >> runtimes.log
+            ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 5 -t32 --tiles 16 -m "${mode}" >> runtimes.log
         fi
     done
 }

@@ -72,7 +72,6 @@ int main()
     if (!CSV) exit(EXIT_FAILURE);
     fmt::println(CSV, "count, t_spline, t_fast, t_std");
     growing.gaussians.clear();
-    _erf = std::erf;
     for (u8 i = 0; i < 16; ++i)
     {
         for (u8 j = 0; j < 16; ++j)
@@ -83,21 +82,18 @@ int main()
                     .sigma = 1.f/8.f,
                     .magnitude = 1.f
                     });
-            _exp = spline_exp;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<spline_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
-            _exp = fast_exp;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<fast_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 
-            _exp = std::exp;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 
@@ -111,7 +107,6 @@ int main()
     fmt::println(CSV, "count, t_std, t_simd");
     growing.gaussians_broadcast = gaussian_vec_t::from_gaussians(growing.gaussians);
     growing.gaussians.clear();
-    _erf = std::erf;
     for (u8 i = 0; i < 16; ++i)
     {
         for (u8 j = 0; j < 16; ++j)
@@ -123,19 +118,13 @@ int main()
                     .magnitude = 1.f
                     });
             growing.gaussians_broadcast->load_gaussians(growing.gaussians);
-            _simd_erf = simd_abramowitz_stegun_erf;
-            _simd_exp = simd_fast_exp;
-            _transmittance = simd_transmittance;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<simd_transmittance<simd_fast_exp, simd_abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
-            _erf = abramowitz_stegun_erf;
-            _exp = fast_exp;
-            _transmittance = transmittance;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<fast_exp, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 
