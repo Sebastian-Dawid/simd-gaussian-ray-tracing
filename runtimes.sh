@@ -17,15 +17,16 @@ run_test () {
     fi
     make build -j32 ARGS="${clang} ${svml}"
     for mode in $(seq 2 8); do
+        frames=10
         if [ "${mode}" -eq 5 ]; then
-            continue
+            frames=1
         fi
         printf "\tMODE %s ST: " "${mode}" >> runtimes.log
-        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 5 -t1 --tiles 16 -m "${mode}" >> runtimes.log
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t1 --tiles 16 -m "${mode}" >> runtimes.log
 
         if [ "${mode}" -gt 4 ]; then
             printf "\tMODE %s MT(32): " "${mode}" >> runtimes.log
-            ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames 5 -t32 --tiles 16 -m "${mode}" >> runtimes.log
+            ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t32 --tiles 16 -m "${mode}" >> runtimes.log
         fi
     done
 }

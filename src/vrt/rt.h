@@ -15,12 +15,15 @@
 constexpr f32 SQRT_2_PI = 0.7978845608028654f;
 constexpr f32 SQRT_2 = 1.4142135623730951f;
 
+typedef f32(*f32_func_t)(f32);
+typedef simd::Vec<simd::Float>(*simd_func_t)(simd::Vec<simd::Float>);
+
 /// Calculates the transmittance at point s*n + o for the given gaussians.
 /// \param o the origin of the ray.
 /// \param n the direction of the ray. This should be a unit vector.
 /// \param s point along the ray to sample.
 /// \param gaussians the set of gaussians to compute the transmittance for.
-template<decltype(approx::fast_exp) Exp = expf, decltype(approx::abramowitz_stegun_erf) Erf = erff>
+template<f32_func_t Exp = expf, f32_func_t Erf = erff>
 f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians_t &gaussians)
 {
     f32 T = 0.f;
@@ -40,7 +43,7 @@ f32 transmittance(const vec4f_t o, const vec4f_t n, const f32 s, const gaussians
 /// \param n the direction of the ray. This should be a unit vector.
 /// \param s point along the ray to sample.
 /// \param gaussians the set of gaussians to compute the transmittance for.
-template<decltype(simd::exp) Exp = simd::exp, decltype(simd::erf) Erf = simd::erf>
+template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf, f32_func_t Expf = expf>
 f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
 {
     simd::Vec<simd::Float> T = simd::set1(0.f);
@@ -63,7 +66,7 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
         const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * g_q.sigma;
         T += ((g_q.sigma * c_bar)/simd::set1(SQRT_2_PI)) * (Erf(-mu_bar/sqrt_2_sig) - Erf((simd::set1(s) - mu_bar)/sqrt_2_sig));
     }
-    return expf(simd::hadds(T));
+    return Expf(simd::hadds(T));
 }
 
 /// Version of `transmittance` that handles `SIMD_FLOATS` rays in parallel.
@@ -71,7 +74,7 @@ f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const ga
 /// \param n directions of the rays. These should be unit vectors.
 /// \param s points along the rays.
 /// \param gaussinas the set of gaussians to compute the transmittance for.
-template<decltype(simd::exp) Exp = simd::exp, decltype(simd::erf) Erf = simd::erf>
+template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
 simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd_vec4f_t &n, const simd::Vec<simd::Float> &s, const gaussians_t &gaussians)
 {
     simd::Vec<simd::Float> T = simd::set1(0.f);
@@ -171,7 +174,7 @@ vec4f_t simd_l_hat(const vec4f_t _o, const vec4f_t _n, const gaussians_t &gaussi
 /// \param o the origins of the rays.
 /// \param n the directions of the rays. These should be unit vectors.
 /// \param gaussians the gaussians to take into account for the computation.
-template<decltype(simd::exp) Exp = simd::exp, decltype(simd::erf) Erf = simd::erf>
+template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
 simd_vec4f_t broadcast_l_hat(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
 {
     simd_vec4f_t L_hat{ .x = simd::set1(0.f), .y = simd::set1(0.f), .z = simd::set1(0.f), .w = simd::set1(0.f) };
@@ -331,7 +334,7 @@ bool simd_render_image(const u32 width, const u32 height, u32 *image, const came
 /// Requires `image` to be aligned to `SIMD_BYTES`.
 /// This version of the function takes a tiled set of gaussians.
 /// The width of the tiles needs to be a multiple of `SIMD_FLOATS`.
-template<decltype(simd::exp) Exp = simd::exp, decltype(simd::erf) Erf = simd::erf>
+template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
 bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t origin, const tiles_t &tiles,
         const bool &running, const u64 tc)
 {

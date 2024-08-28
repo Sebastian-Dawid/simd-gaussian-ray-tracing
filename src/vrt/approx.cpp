@@ -111,8 +111,8 @@ namespace approx {
             x = (x < c) ? 0.f : d;
 
         u32 n = static_cast<u32>(x);
-        std::memcpy(&x, &n, 4);
-        return x;
+        //std::memcpy(&x, &n, 4);
+        return std::bit_cast<f32>(n);
     }
 
     simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x)
