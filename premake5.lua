@@ -129,9 +129,10 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
+        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/accuracy.cpp" }
-        links { "fmt", "vrt" }
+        links { "fmt", "vrt", "svml" }
 
     project "transmittance-test"
         kind "ConsoleApp"

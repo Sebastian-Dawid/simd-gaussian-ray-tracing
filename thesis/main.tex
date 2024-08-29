@@ -209,7 +209,9 @@
 
     The most sensible division of $\mathcal{G}$ is to assign some order to its elements, such that $g_i, i=1,\dots,|\mathcal{G}|$ describes the $i$-th element of
     $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets:
-    \[\mathcal{G}_j := \{ g_i \in \mathcal{G} | i \mod j \equiv 0 \}, j=1,\dots,W\]
+    \begin{equation}
+        \mathcal{G}_j := \{ g_i \in \mathcal{G} \,|\, i \mod W \equiv j \}, j=0,\dots,W-1
+    \end{equation}
 
     \paragraph{Parallel \gls{transmittance}:}
     \label{par:parallel_transmittance}
@@ -310,6 +312,23 @@
 
     \begin{figure}[H]
         \centering
+        \resizebox{\textwidth}{!}{
+            \begin{tikzpicture}
+                \draw[gray, thin] (0, 0) grid[xstep=4, ystep=2.25] (16, 9);
+
+                \fill[purple] (12, 5.5) circle (0.1);
+                \draw[purple, thick] (12, 5.5) circle (3);
+
+                \fill[red] (2.7, 1.8) circle (0.1);
+                \draw[red, thick] (2.7, 1.8) circle (1.7);
+                
+                \fill[green] (4, 3) circle (0.1);
+                \draw[green, thick] (4, 3) circle (1.5);
+                
+                \fill[blue] (5, 2) circle (0.1);
+                \draw[blue, thick] (5, 2) circle (1);
+            \end{tikzpicture}
+        }
         \caption{Image of four gaussians split into 16 tiles.}
         \label{fig:tiling}
     \end{figure}
@@ -319,10 +338,32 @@
     going to end up before generating the image it is necessary to estimate location and size of the gaussians before
     generating the final image through ray tracing.
 
-    \begin{itemize}
-        \item explain projection
-        \item how is it determined which gaussians are relevant to which tiles
-    \end{itemize}
+    To estimate size and position of the gaussians in the final image the guassians are projected to the image plane using
+    scaled orthographic projection. Let $V \in \R^{4 \times 4}$ be the view matrix of the camera. Then the projected guassian
+    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a gaussian $g = (\mu, \sigma)$ is calculated as:
+
+    \begin{align}
+        \mu_p &= V \cdot (\mu, 1)^T\\
+        \bar{\mu} &= \frac{1}{\mu_{p3}} \cdot (\mu_{p1}, \mu_{p2})^T\\
+        \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}
+    \end{align}
+
+    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic gaussians.
+    Gaussians with $\bar{\sigma} < 10^{-5}$ are discared since they are unlikely to contribute to the final image significantly. Also note that after the projection
+    the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
+
+    Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile. The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$
+    describes the absolute distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected gaussian $\bar{\mu}$.
+    A gaussian counts as relevant to a tile if
+    \begin{equation}
+        \mathbf{p}_1 < |\mathbf{c}_1| + \frac{tw}{2} + 2\bar{\sigma}
+    \end{equation}
+    and 
+    \begin{equation}
+        \mathbf{p}_2 < |\mathbf{c}_2| + \frac{th}{2} + 2\bar{\sigma}
+    \end{equation}
+    meaning that the gaussian has to be in a $2\bar{\sigma}$ range from the borders of the tile to be considered relevant.
+    The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion towards the edges of the image.
 
     \chapter{Approximations}
     %@TODO: Explain why it is necessary to approximate functions / implement own approximations
@@ -408,6 +449,30 @@
     \subsection{Dense Cube}
     
     \chapter{Results and Discussion}
+    \section{Runtime}
+ 
+    %@TODO: Redo runtime plots to include mode 1 (rerun tests)
+    \begin{figure}[H]
+        \centering
+        \input{plots/runtimes}
+        \caption{Single Threaded Runtimes using GCC and Clang}
+        \label{fig:runtimes_st_gcc_v_clang}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \input{plots/runtimes_svml}
+        \caption{Single Threaded Runtimes using SVML and no SVML with Clang}
+        \label{fig:runtimes_st_svml_v_no}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \input{plots/speedup}
+        \caption{Speedup of Modes 6-8 relative to Mode 5}
+        \label{fig:runtimes_st_v_mt}
+    \end{figure}
+
     \section{HPCTOOLKIT}
     \cite{hpc_toolkit}
 

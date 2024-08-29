@@ -35,6 +35,15 @@ namespace approx {
     extern "C" __m256 __svml_erff8(__m256);
     extern "C" __m512 __svml_erff16(__m512);
 
+    inline simd::Vec<simd::Float> svml_erf(simd::Vec<simd::Float> x)
+    {
+#ifndef __AVX512F__
+        return __svml_erff8(x);
+#else
+        return __svml_erff16(x);
+#endif
+    }
+
     /// Fast implementation of the exponential function based on:
     /// https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d.
     /// PAPER: https://nic.schraudolph.org/pubs/Schraudolph99.pdf
@@ -51,6 +60,24 @@ namespace approx {
     /// Requires linking SVML which is distributed through intels icx compiler.
     extern "C" __m256 __svml_expf8(__m256);
     extern "C" __m512 __svml_expf16(__m512);
+
+    inline simd::Vec<simd::Float> svml_exp(simd::Vec<simd::Float> x)
+    {
+#ifndef __AVX512F__
+        return __svml_expf8(x);
+#else
+        return __svml_expf16(x);
+#endif
+    }
+
+    inline simd::Vec<simd::Float> vcl_exp(simd::Vec<simd::Float> x)
+    {
+#ifndef __AVX512F__
+        return static_cast<__m256>(vcl::exp(vcl::Vec8f(static_cast<__m256>(x))));
+#else
+        return static_cast<__m512>(vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
+#endif
+    }
 }
 
 namespace simd {
@@ -59,35 +86,15 @@ namespace simd {
 #ifndef WITH_SVML
         return approx::simd_abramowitz_stegun_erf(x);
 #else
-#ifndef __AVX512F__
-        return approx::__svml_erff8(x);
-#else
-        return approx::__svml_erff16(x);
-#endif
+        return approx::svml_erf(x);
 #endif
     }
     inline simd::Vec<simd::Float> exp(simd::Vec<simd::Float> x)
     {
-#ifndef __AVX512F__
-#ifndef _WITH_SVML
-        return (__m256)vcl::exp(vcl::Vec8f(static_cast<__m256>(x)));
+#ifndef WITH_SVML
+        return approx::vcl_exp(x);
 #else
-        return approx::__svml_expf8(x);
-#endif
-#else
-#ifndef _WITH_SVML
-        return (__m512)vcl::exp(vcl::Vec16f(static_cast<__m512>(x)));
-#else
-        return approx::__svml_expf16(x);
-#endif
+        return approx::svml_exp(x);
 #endif
     }
 }
-
-// TODO: replace occurrences with templates. Test impact!
-// NOTE: Won't this require everything that that uses these to be templated?
-//       It would seem so...
-inline f32 (*_erf)(f32) = std::erf;
-inline f32 (*_exp)(f32) = std::exp;
-inline simd::Vec<simd::Float> (*_simd_erf)(simd::Vec<simd::Float>) = approx::simd_abramowitz_stegun_erf;
-inline simd::Vec<simd::Float> (*_simd_exp)(simd::Vec<simd::Float>) = approx::simd_fast_exp;

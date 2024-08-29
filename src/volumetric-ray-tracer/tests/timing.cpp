@@ -33,33 +33,28 @@ int main()
                     .sigma = 1.f/8.f,
                     .magnitude = 1.f
                     });
-            _erf = spline_erf;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<expf, spline_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
 
-            _erf = spline_erf_mirror;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<expf, spline_erf_mirror>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_mirror = simd::timeSpecDiffNsec(end, start)/1000.f;
 
-            _erf = taylor_erf;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<expf, taylor_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_taylor = simd::timeSpecDiffNsec(end, start)/1000.f;
             
-            _erf = abramowitz_stegun_erf;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance<expf, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_abramowitz = simd::timeSpecDiffNsec(end, start)/1000.f;
 
-            _erf = std::erf;
             GETTIME(start);
-            l_hat(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            l_hat<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 

@@ -16,9 +16,9 @@ run_test () {
         clang="--with-clang"
     fi
     make build -j32 ARGS="${clang} ${svml}"
-    for mode in $(seq 2 8); do
+    for mode in $(seq 1 8); do
         frames=10
-        if [ "${mode}" -eq 5 ]; then
+        if [ "${mode}" -eq 5 ] || [ "${mode}" -eq 1 ]; then
             frames=1
         fi
         printf "\tMODE %s ST: " "${mode}" >> runtimes.log
