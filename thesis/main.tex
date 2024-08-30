@@ -73,6 +73,7 @@
     \chapter{Introduction}
 
     \chapter{Background}
+    \label{ch:background}
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
     In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
@@ -141,18 +142,42 @@
 
     \section{Gaussian Splatting}
     %@TODO: describe image formation model (splatting) as laid out in the following papers
-    \cite{kerbl3Dgaussians}
-    \cite{volume_splatting}
+    Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
+    (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
+    gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision and graphics
+    contexts, since its fully differentiable and its applicability in real time contexts.
+
+    One of these derived methods is called 3D gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in their
+    \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting} define their gaussians
+    as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the gaussian, $\Sigma \in \R^{3\times 3}$
+    its 3D covariance Matrix, $\mathbf{a} \in [0, 1]^3$ its albedo and $\alpha \in [0, 1]$ its opacity. The camera is defined as a tuple
+    $(W, P)$, where $W$ is the viewing transformation and $P$ is the affine projective transformation.
+
+    To project the 3D covariance matrix to a 2D covariance matrix they employ a method described by \citeauthor{volume_splatting}
+    in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix $\Sigma'$ in camera coordinates can be computed
+    from the viewing transformation $W$ as:
+    \begin{equation}
+        \Sigma' = JW\Sigma W^TJ^T
+    \end{equation}
+    with $J$ as the jacobian of $P$ at $\mu$. \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting} also show that discarding the third row and column yields
+    a 2D covariance matrix $\Sigma_{2D}$.
+
+    \begin{itemize}
+        \item back to front projection
+        \item alpha blending
+    \end{itemize}
 
     \section{Ray Tracing vs. Splatting}
     %@TODO: What differentiates the two methods? Advantages? Disadvantages?
 
     \chapter{Optimizations}
+    \label{ch:optimizations}
     %@TODO: Write introductory paragraph on optimizations
     \begin{itemize}
         \item CPU ray tracing is slow
         \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
     \end{itemize}
+
     \section{Vectorization}
     \label{sec:vectorization}
     %@TODO: rename to vectorization -> SIMD in Chpter 4
@@ -451,11 +476,13 @@
     \chapter{Results and Discussion}
     \section{Runtime}
  
-    %@TODO: Redo runtime plots to include mode 1 (rerun tests)
+    On average the runtime is reduced by $19\%$ when compiling with clang instead of GCC.
+    Rendering finishes about $9.4$ times faster when using tiling.
+
     \begin{figure}[H]
         \centering
-        \input{plots/runtimes}
-        \caption{Single Threaded Runtimes using GCC and Clang}
+        \input{plots/simd_speedup}
+        \caption{Single Threaded Speedups from using SIMD}
         \label{fig:runtimes_st_gcc_v_clang}
     \end{figure}
 
@@ -510,6 +537,7 @@ f32 func(f32 in)
     the inclusive derived metrics of the functions I want to disregard. For the example in Listing~\ref{lst:scopes_example}
     this would be:
     \[ \text{metric}_e = \text{metric}_i - \text{metric}_{\text{simd::exp}} \]
+    where $\text{metric}_i$ is the inclusive metric and $\text{matric}_{\text{simd::exp}}$ is the metric for the \mintinline{c++}{simd::exp} call.
 
     %Therefore the derived metrics are calculated using the inclusive metrics. To obtain the final value for the derived metrics the
     %value of the derived metrics of the scopes of non T-SIMD functions are subtracted from the value calculated using the inclusive metrics.

@@ -1,5 +1,5 @@
-#include "../../src/include/definitions.h"
-#include "../../src/include/tsimd_sh.H"
+#include "../../../src/include/definitions.h"
+#include "../../../src/include/tsimd_sh.H"
 #include <cstdlib>
 #include <sys/mman.h>
 #include <sys/stat.h>

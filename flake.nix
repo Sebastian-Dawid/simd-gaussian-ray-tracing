@@ -33,6 +33,9 @@
                 rocmPackages.hip-common
                 glm
                 gtest
+                rubber
+                python311Packages.pygments
+                inotify-tools
             ];
 
             shellHook = ''
