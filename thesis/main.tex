@@ -71,6 +71,12 @@
 
     \mainmatter
     \chapter{Introduction}
+    \begin{itemize}
+        \item gaussian image representations are widely used in CG/CV
+        \item ray tracing is more accurate than e.g. splatting -> accurate intersections
+        \item CPU ray tracing is slow
+        \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
+    \end{itemize}
 
     \chapter{Background}
     \label{ch:background}
@@ -173,20 +179,28 @@
     \chapter{Optimizations}
     \label{ch:optimizations}
     %@TODO: Write introductory paragraph on optimizations
-    \begin{itemize}
-        \item CPU ray tracing is slow
-        \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
-    \end{itemize}
+    I propose two optimizations to make execution of the method proposed by \citeauthor{Rhodin:2015}
+    in \cite{Rhodin:2015} on the CPU possible with greatly reduced runtimes.
+    The first first optimization is vectorization (\ref{sec:vectorization}) of the method
+    parallelizing part of its calculations.
+    The second optimization is tiling (\ref{sec:tiling}) which reduces the number of gaussians
+    that have to be processed per pixel.
 
     \section{Vectorization}
     \label{sec:vectorization}
-    %@TODO: rename to vectorization -> SIMD in Chpter 4
-    One method of optimizing a problem is vectorization, which describes the process of
-    solving a problem on a vector of data instead of processing the pieces of data in the
-    vector sequentially.
+    Vectorization, describes applying some function or operation usually applied to a scalar value
+    to multiple values - a vector - in parallel.
+    It is usually applied to reduce the number of operations necessary to finish some task that
+    requires the application of some function on a large list of values.
+
+    Take summing up a list $L$ of $N$ values as an example. Usually this requires $N - 1$ additions.
+    Applying vectorization with a vector length of $W$ I can divide $L$ into $\lceil \frac{L}{W} \rceil$
+    batches of $W$ values each, padding the last one with zeros in case $|L| \mod W \not\equiv 0$. Now I
+    can get the same sum by first adding up the batches and then summing up the values in the resulting
+    vector. This requires $\lceil \frac{N}{W} \rceil + W - 2 \leq N - 1$ additions.
 
     \subsection{Notation}
-    To properly rewrite the method as it is laid out in \cite{Rhodin:2015} it is
+    Since the method as it is laid out in \cite{Rhodin:2015} makes use of conventional vectors it is
     necessary to introduce some notation to work with vectorization and ensure it is
     cleanly separated from conventional vector spaces. Vectors used for parallelization
     will be referred to as p-vectors (parallel vectors) from here on. This notation is
@@ -254,6 +268,8 @@
         \end{aligned}
         \label{eq:transmittance_parallel}
     \end{equation}
+
+    Note that the separation of the gaussians into the subsets $\mathcal{G}_j$ is done implicitly through the index $m$ of the sum.
 
     Now I replace the call to the \gls{transmittance} function in the \gls{radiance} equation~\eqref{eq:radiance} with the sum
     over the results of the parallel \gls{transmittance} equation~\eqref{eq:transmittance_parallel}:
@@ -329,6 +345,7 @@
     sums iterate over every Gaussian $G_q \in \mathcal{G}$ individually.
 
     \section{Tiling}
+    \label{sec:tiling}
     %@TODO: describe the tiling method used. note similarities to splatting.
     In most scenes most pixels will be unaffected by most gaussians, therefore it is not sensible to perform
     the per pixel calculations for all gaussians instead of just the gaussians that could affect the pixel.
@@ -373,8 +390,9 @@
         \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}
     \end{align}
 
-    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic gaussians.
-    Gaussians with $\bar{\sigma} < 10^{-5}$ are discared since they are unlikely to contribute to the final image significantly. Also note that after the projection
+    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic gaussians which removes
+    the complexity of projecting the covariance matrix while retaining its properties.
+    Gaussians with $\bar{\sigma} < 10^{-5}$ are discarded since they are unlikely to contribute to the final image significantly. Also note that after the projection
     the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
 
     Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile. The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$
