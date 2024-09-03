@@ -1,13 +1,19 @@
-# TODOs
-* test rcp instead of divs - done
-* test Agner Fogs simd lib - done
-* measure errors for entire images - done
-* Start writing: approximations, general algorithm
-* maybe use lokal compies of libraries? - no
-* Test with more complex scene. teapot? monkey? -> load verticies from .obj - done
-* new CLI - done
-* unit tests for transmittance etc. - no
-* add threads - done
+# Compiling
+## Prerequisites
+* GLFW
+* FMT
+* Vulkan
+* Clang or GCC with >=C++20 support
+* Make
+* SVML (optional)
+* Premake (optional, fallback Makefile that does not compile tests exitsts)
+
+## Compiling
+```sh
+make build  # ARGS=[additional args] (only when using premake)
+            #   --use-gcc   use gcc instead of clang
+            #   --with-svml use SVML routines as defaults
+```
 
 # Used Libraries
 * [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)

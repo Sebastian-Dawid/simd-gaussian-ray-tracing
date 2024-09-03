@@ -30,6 +30,19 @@ namespace approx {
     /// Version of `abramowitz_stegun_erf` operating on `simd::Vec<simd::Float>`s instead of single floats.
     simd::Vec<simd::Float> simd_abramowitz_stegun_erf(simd::Vec<simd::Float> x);
 
+    /// Fast implementation of the exponential function based on:
+    /// https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d.
+    /// PAPER: https://nic.schraudolph.org/pubs/Schraudolph99.pdf
+    f32 fast_exp(f32 x);
+    /// Version of `fast_exp` operating on `simd::Vec<simd::Float>`s instead of single floats.
+    simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x);
+
+    /// Approximation of the exponential function using cubic spline interpolation
+    f32 spline_exp(f32 x);
+    /// Version of `spline_erf` operating on `simd::Vec<simd::Float>`s instead of single floats
+    simd::Vec<simd::Float> simd_spline_exp(simd::Vec<simd::Float> x);
+
+#ifdef WITH_SVML
     /// SIMD implementation of the error function from intels SVML library.
     /// Requires linking SVML which is distributed through intels icx compiler.
     extern "C" __m256 __svml_erff8(__m256);
@@ -44,18 +57,6 @@ namespace approx {
 #endif
     }
 
-    /// Fast implementation of the exponential function based on:
-    /// https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d.
-    /// PAPER: https://nic.schraudolph.org/pubs/Schraudolph99.pdf
-    f32 fast_exp(f32 x);
-    /// Version of `fast_exp` operating on `simd::Vec<simd::Float>`s instead of single floats.
-    simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x);
-
-    /// Approximation of the exponential function using cubic spline interpolation
-    f32 spline_exp(f32 x);
-    /// Version of `spline_erf` operating on `simd::Vec<simd::Float>`s instead of single floats
-    simd::Vec<simd::Float> simd_spline_exp(simd::Vec<simd::Float> x);
-
     /// SIMD implementation of the exponential function from intels SVML library.
     /// Requires linking SVML which is distributed through intels icx compiler.
     extern "C" __m256 __svml_expf8(__m256);
@@ -69,6 +70,7 @@ namespace approx {
         return __svml_expf16(x);
 #endif
     }
+#endif
 
     inline simd::Vec<simd::Float> vcl_exp(simd::Vec<simd::Float> x)
     {

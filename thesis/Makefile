@@ -4,6 +4,7 @@ SHELL := zsh
 .DEFAULT_GOAL := help
 .PHONY: help
 
+FILES=main.tex plots/** main.bib glossary.tex
 PAPER=main.tex
 NAME=sdawid_ba
 LATEX=latexmk -pdf -jobname=./target/$(NAME)
@@ -19,7 +20,7 @@ clean:	## Clean LaTeX output
 
 watch:	## Recompile when source changes
 	@while [ 1 ]; do;				 \
-		inotifywait $(PAPER);		 \
+		inotifywait $(FILES);		 \
 		sleep 0.01;					 \
 		make all;					 \
 		echo "\n================\n"; \

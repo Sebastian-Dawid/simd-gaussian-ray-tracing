@@ -392,8 +392,8 @@
 
     Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic gaussians which removes
     the complexity of projecting the covariance matrix while retaining its properties.
-    Gaussians with $\bar{\sigma} < 10^{-5}$ are discarded since they are unlikely to contribute to the final image significantly. Also note that after the projection
-    the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
+    As in \cite{Rhodin:2015} gaussians with $\bar{\sigma} < 10^{-5}$ are discarded, since they are unlikely to contribute to the final image significantly.
+    Also note that after the projection the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
 
     Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile. The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$
     describes the absolute distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected gaussian $\bar{\mu}$.
@@ -435,6 +435,7 @@
     \end{align*}
     
     \chapter{Implementation}
+    \label{ch:implementation}
     %@TODO: details TBD
     The source code of the implementation is available at: \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
 
@@ -457,6 +458,7 @@
     The approximation is based on the IEEE-754 single precision floating point format and the taylor series of the exponential function.
     \subsection{Rendering Functions}
     \section{Renderer}
+    \label{sec:renderer}
     \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
@@ -480,6 +482,7 @@
     \end{table}
     
     \chapter{Experiments}
+    \label{ch:experiments}
     \section{Approximations}
     \section{Transmittance}
     \section{Full Render}
@@ -488,22 +491,48 @@
     The tests will be performed on two separate models and evaluate different aspects of the implementation,
     which I will describe in the following sections:
     \subsection{Utah/Newell Teapot}
+    %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
     \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Model}\footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}
+    Measure vector instruction waste, efficiency and cache effects
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=.2]{images/teapot.png}
+        \caption{Teapot rendered using renderer from Section~\ref{sec:renderer}}
+        \label{fig:teapot_render}
+    \end{figure}
+
     \subsection{Dense Cube}
+    Runtime averaged over 10 frames
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=.2]{images/cube.png}
+        \caption{Dense cube rendered using renderer from Section~\ref{sec:renderer}}
+        \label{fig:cube_render}
+    \end{figure}
     
     \chapter{Results and Discussion}
+
+    The results of the experiments discussed in Chapter~\ref{ch:experiments} show
+
     \section{Runtime}
- 
+
     On average the runtime is reduced by $19\%$ when compiling with clang instead of GCC.
     Rendering finishes about $9.4$ times faster when using tiling.
 
+    Figure~\ref{fig:runtimes_st_simd_speedup} shows
+    the speedups gained from employing the \gls{simd} routines described in Chapter~\ref{ch:optimizations}
+    and Chapter~\ref{ch:implementation}. Showing a speedup of up to $25$ times when
+    parallelization over the images pixels.
     \begin{figure}[H]
         \centering
         \input{plots/simd_speedup}
         \caption{Single Threaded Speedups from using SIMD}
-        \label{fig:runtimes_st_gcc_v_clang}
+        \label{fig:runtimes_st_simd_speedup}
     \end{figure}
 
+    While the SVML routines provide much higher accuracy using them is not worth the
+    performance trade-off as seen in Figure~\ref{fig:runtimes_st_svml_v_no}.
     \begin{figure}[H]
         \centering
         \input{plots/runtimes_svml}
@@ -579,27 +608,29 @@ f32 func(f32 in)
 
     \appendix
     \chapter{Tables}
+    \label{ch:tables}
     \begin{table}[H]
         \centering
         \rowcolors{1}{white}{lightgray}
-        \begin{tabular}{|c | c | c|}
+        \begin{tabular}{|c | c | c | c|}
             \hline
-            Mode & GCC              & Clang\\\hline
-            1 st & $\sim1656.4$ sec & $\sim1459.4$ sec\\
-            2 st & $\sim102.09$ sec & $\sim87.09$ sec\\
-            3 st & $\sim67.63$ sec  & $\sim68.19$ sec\\
-            4 st & $\sim71.46$ sec  & $\sim55.33$ sec\\
-            5 st & $\sim168.76$ sec & $\sim143.95$ sec\\
-            6 st & $\sim1.72$ sec   & $\sim1.21$ sec\\
-            7 st & $\sim0.84$ sec   & $\sim0.72$ sec\\
-            8 st & $\sim0.77$ sec   & $\sim0.59$ sec\\\hline\hline
-            5 mt & $\sim0.582$ sec  & $\sim0.502$ sec\\
-            6 mt & $\sim0.085$ sec  & $\sim0.068$ sec\\
-            7 mt & $\sim0.057$ sec  & $\sim0.051$ sec\\
-            8 mt & $\sim0.052$ sec  & $\sim0.046$ sec\\
+            Mode & GCC               & Clang & SVML\\\hline
+            1 st & $\sim1648.17$ sec & $\sim1373.29$ sec & - \\
+            2 st & $\sim96.47$ sec   & $\sim82.86$ sec   & $\sim150.08$ sec\\
+            3 st & $\sim69.44$ sec   & $\sim56.78$ sec   & $\sim134.33$ sec\\
+            4 st & $\sim67.19$ sec   & $\sim52.62$ sec   & $\sim136.42$ sec\\
+            5 st & $\sim170.74$ sec  & $\sim136.84$ sec  & - \\
+            6 st & $\sim11.95$ sec   & $\sim9.69$ sec    & $\sim17.80$ sec\\
+            7 st & $\sim7.46$ sec    & $\sim5.83$ sec    & $\sim14.82$ sec\\
+            8 st & $\sim7.08$ sec    & $\sim5.61$ sec    & $\sim15.02$ sec\\\hline\hline
+
+            5 mt & $\sim6.60$ sec    & $\sim5.93$ sec    & $\sim5.94$ sec\\
+            6 mt & $\sim0.62$ sec    & $\sim0.53$ sec    & $\sim0.95$ sec\\
+            7 mt & $\sim0.47$ sec    & $\sim0.40$ sec    & $\sim0.80$ sec\\
+            8 mt & $\sim0.45$ sec    & $\sim0.39$ sec    & $\sim0.78$ sec\\
             \hline
         \end{tabular}
-        \caption{Runtime of rendering the dense cube based on compiler and mode using AVX512.}
+        \caption{Runtime of rendering the dense cube based on compiler, SVML usage, and mode using AVX512. Averaged over 10 Frames.}
         \label{tab:perf_dense_cube_avx512}
     \end{table}
 

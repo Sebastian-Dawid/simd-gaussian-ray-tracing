@@ -39,6 +39,7 @@
     "\t--frames <count>:                       Render <count> frames. Does nothing if --quiet is not set.\n"\
     "\t--tiles <count>:                        Split the image into <count> tiles vertically and horizontally.\n"\
     "\t--roation <rot>, -r <rot>:              Changes the viewing angle by <rot> every frame if --quiet is set.\n"\
+    "\t--initial-rotation <rot>, -i <rot>:     Sets the initial rotation to <rot>.\n"\
     "\t--camaera-offset <offset>, -c <offset>: Set the position of the camera along the Z-Axis to <offset>.\n"\
     "\t--mode <mode>, -m <mode>:               Set the rendering mode to <mode>:\n"\
         "\t\t1 - sequential execution without tiling\n"\
@@ -66,6 +67,7 @@ struct cmd_args_t
     bool use_simd_l_hat = false;
     bool use_simd_pixels = true;
     f32 rot = 360.f;
+    f32 inital_rot = 0.f;
     f32 camera_offset = -4.f;
     cmd_args_t(i32 argc, char **argv)
     {
@@ -81,13 +83,14 @@ struct cmd_args_t
             { "mode", required_argument, NULL, 'm' },
             { "frames", required_argument, NULL, 's' },
             { "rotation", required_argument, NULL, 'r' },
+            { "initial-rotation", required_argument, NULL, 'i'},
             { "camera-offset", required_argument, NULL, 'c' },
             { "help", no_argument, NULL, 0xff }
         };
         i32 lidx;
         while (1)
         {
-            i32 c = getopt_long(argc, argv, "r:m:qw:o:f:g:h:t:c:", opts, &lidx);
+            i32 c = getopt_long(argc, argv, "r:m:qw:o:f:g:h:t:c:i:", opts, &lidx);
             if (c == -1)
                 break;
             switch(c)
@@ -128,6 +131,9 @@ struct cmd_args_t
                     break;
                 case 'r':
                     this->rot = strtof(optarg, NULL);
+                    break;
+                case 'i':
+                    this->inital_rot = strtof(optarg, NULL);
                     break;
                 case 'c':
                     this->camera_offset = strtof(optarg, NULL);
@@ -247,6 +253,10 @@ i32 main(i32 argc, char **argv)
     camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
     f32 angle = -90.f;
     u64 frames = 0;
+    cam.position = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(cmd.inital_rot), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
+    origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
+    angle -= cmd.inital_rot;
+    cam.turn(angle, 0.f);
 
     while (running)
     {

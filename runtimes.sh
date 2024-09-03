@@ -12,8 +12,8 @@ run_test () {
     else
         echo "$1:" >> runtimes.log
     fi
-    if [ "$1" = "clang" ]; then
-        clang="--with-clang"
+    if [ "$1" = "gcc" ]; then
+        clang="--use-gcc"
     fi
     make build -j32 ARGS="${clang} ${svml}"
     for mode in $(seq 1 8); do
@@ -32,6 +32,6 @@ run_test () {
 }
 
 run_test gcc false
-run_test gcc true
+# run_test gcc true
 run_test clang false
 run_test clang true

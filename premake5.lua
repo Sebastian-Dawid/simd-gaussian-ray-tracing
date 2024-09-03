@@ -3,11 +3,13 @@ if ARCH == nil then
     ARCH = "native"
 end
 NVIDIA = os.getenv("NVIDIA")
+local svml_path = os.findlib("vcl")
+SVML_AVAILABLE = svml_path~=nil
 
 workspace "ba-thesis"
     newoption {
-        trigger = "with-clang",
-        description = "compile using the clang toolset"
+        trigger = "use-gcc",
+        description = "compile using the gcc toolset"
     }
     newoption {
         trigger = "with-rocm",
@@ -17,9 +19,12 @@ workspace "ba-thesis"
         trigger = "with-svml",
         description = "link intels svml library"
     }
-    filter { "options:with-clang" }
+    filter { "options:with-gcc" }
+        toolset "gcc"
+    filter { "not options:with-gcc" }
         toolset "clang"
     filter {}
+
     cppdialect "c++20"
     configurations { "debug", "release" }
     location "build"
@@ -28,8 +33,10 @@ workspace "ba-thesis"
         defines { "NVIDIA" }
     end
 
-    filter "options:with-svml"
-        defines { "WITH_SVML" }
+    if SVML_AVAILABLE then
+        filter "options:with-svml"
+            defines { "WITH_SVML" }
+    end
 
     filter "configurations:debug"
         defines { "DEBUG" }
@@ -85,10 +92,12 @@ workspace "ba-thesis"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
-        filter { "options:with-svml" }
-            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-            links { "svml" }
-        filter {}
+        if SVML_AVAILABLE then
+            filter { "options:with-svml" }
+                libdirs { svml_path }
+                links { "svml" }
+            filter {}
+        end
         includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "vrt" }
@@ -113,26 +122,31 @@ workspace "ba-thesis"
 
         files { "./src/volumetric-ray-tracer/rocm-rt.hip" }
 
-    project "cycles-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+    if SVML_AVAILABLE then
+        project "cycles-test"
+            kind "ConsoleApp"
+            language "C++"
+            targetdir "build/bin/%{cfg.buildcfg}"
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            defines { "WITH_SVML" }
 
-        includedirs { "./src", "./src/jevents" }
-        files { "./src/volumetric-ray-tracer/tests/approx_cycles.cpp" }
-        links { "fmt", "jevents", "vrt" }
+            libdirs { svml_path }
+            includedirs { "./src", "./src/jevents" }
+            files { "./src/volumetric-ray-tracer/tests/approx_cycles.cpp" }
+            links { "fmt", "jevents", "vrt", "svml" }
 
-    project "accuracy-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        project "accuracy-test"
+            kind "ConsoleApp"
+            language "C++"
+            targetdir "build/bin/%{cfg.buildcfg}"
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            defines { "WITH_SVML" }
 
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/accuracy.cpp" }
-        links { "fmt", "vrt", "svml" }
+            libdirs { svml_path }
+            includedirs { "./src" }
+            files { "./src/volumetric-ray-tracer/tests/accuracy.cpp" }
+            links { "fmt", "vrt", "svml" }
+    end
 
     project "transmittance-test"
         kind "ConsoleApp"
@@ -140,10 +154,12 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
-        filter { "options:with-svml" }
-            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-            links { "svml" }
-        filter {}
+        if SVML_AVAILABLE then
+            filter { "options:with-svml" }
+                libdirs { svml_path }
+                links { "svml" }
+            filter {}
+        end
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/transmittance.cpp" }
         links { "fmt", "vrt" }
@@ -154,10 +170,12 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
-        filter { "options:with-svml" }
-            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-            links { "svml" }
-        filter {}
+        if SVML_AVAILABLE then
+            filter { "options:with-svml" }
+                libdirs { svml_path }
+                links { "svml" }
+            filter {}
+        end
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/timing.cpp" }
         links { "fmt", "vrt" }
@@ -168,46 +186,52 @@ workspace "ba-thesis"
         targetdir "build/bin/%{cfg.buildcfg}"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
 
-        filter { "options:with-svml" }
-            libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-            links { "svml" }
-        filter {}
+        if SVML_AVAILABLE then
+            filter { "options:with-svml" }
+                libdirs { svml_path }
+                links { "svml" }
+            filter {}
+        end
         includedirs { "./src" }
         files { "./src/volumetric-ray-tracer/tests/image-timing.cpp" }
         links { "fmt", "vrt" }
 
-    project "perf-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+    if SVML_AVAILABLE then
+        project "perf-test"
+            kind "ConsoleApp"
+            language "C++"
+            targetdir "build/bin/%{cfg.buildcfg}"
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            defines { "WITH_SVML" }
 
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/perf-test.cpp" }
-        links { "fmt", "svml", "vrt" }
+            libdirs { svml_path }
+            includedirs { "./src" }
+            files { "./src/volumetric-ray-tracer/tests/perf-test.cpp" }
+            links { "fmt", "svml", "vrt" }
 
-    project "svml-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj",  "-fverbose-asm", "-ffast-math" }
-        defines { "WITH_SVML" }
+        project "svml-test"
+            kind "ConsoleApp"
+            language "C++"
+            targetdir "build/bin/%{cfg.buildcfg}"
+            -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj",  "-fverbose-asm", "-ffast-math" }
+            defines { "WITH_SVML" }
 
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/svml-test.cpp" }
-        links { "fmt", "svml", "vrt" }
+            libdirs { svml_path }
+            includedirs { "./src" }
+            files { "./src/volumetric-ray-tracer/tests/svml-test.cpp" }
+            links { "fmt", "svml", "vrt" }
 
-    project "img-error-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        -- see svml-test on why -masm=intel is missing
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        project "img-error-test"
+            kind "ConsoleApp"
+            language "C++"
+            targetdir "build/bin/%{cfg.buildcfg}"
+            -- see svml-test on why -masm=intel is missing
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            defines { "WITH_SVML" }
 
-        libdirs { "/opt/intel/oneapi/compiler/latest/lib" }
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/img-error.cpp" }
-        links { "fmt", "svml", "vrt" }
+            libdirs { svml_path }
+            includedirs { "./src" }
+            files { "./src/volumetric-ray-tracer/tests/img-error.cpp" }
+            links { "fmt", "svml", "vrt" }
+    end

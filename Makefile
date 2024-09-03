@@ -6,6 +6,7 @@ SHELL := sh
 BUILD_DIR = build
 
 PV_AVAILABLE := $(shell command -v pv 2> /dev/null)
+PREMAKE_AVAILABLE := $(shell command -v premake5 2> /dev/null)
 
 ifndef CONFIG
 CONFIG=release
@@ -18,10 +19,14 @@ clean: ## Remove build artifacts
 	popd > /dev/null
 
 build:	## Compile and link
+ifdef PREMAKE_AVAILABLE
 	@premake5 $(ARGS) gmake2;		\
 	pushd $(BUILD_DIR) > /dev/null;		\
 	$(MAKE) config=$(CONFIG);	\
 	popd > /dev/null
+else
+	$(MAKE) -f fallback.mak
+endif
 
 run: build ## Build then run
 	@build/bin/$(CONFIG)/volumetric-ray-tracer $(ARGS)

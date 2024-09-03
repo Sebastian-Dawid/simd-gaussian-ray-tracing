@@ -11,6 +11,7 @@
 #endif
 #include <string>
 #include <glm/glm.hpp>
+#include "approx.h"
 
 struct vec4f_t
 {
@@ -96,10 +97,10 @@ struct gaussian_t
 
     /// Returns the density of the gaussian at point `x`. Templated to allow for substitution
     /// of the used approximation of the exponential function.
-    template<typename Fn>
-    f32 pdf(vec4f_t x, Fn &&_exp = expf) const
+    template<f32 (*Exp)(f32) = expf>
+    f32 pdf(vec4f_t x) const
     {
-        return this->magnitude * _exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
+        return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
     }
 #ifdef INCLUDE_IMGUI
     /// Creates controls for this `gaussian_t` instance. Uniqueness is ensured by using the address of the instance
@@ -193,10 +194,10 @@ struct simd_gaussian_t
 
     /// Returns the vector of the densities at the points in `x` of the corresponding gaussians. Templated to allow for
     /// substitution of the used exponential function.
-    template <typename Fn>
-    simd::Vec<simd::Float> pdf(const simd_vec4f_t x, const Fn &&_exp) const
+    template <simd::Vec<simd::Float> (*Exp)(simd::Vec<simd::Float>) = simd::exp>
+    simd::Vec<simd::Float> pdf(const simd_vec4f_t x) const
     {
-        return this->magnitude * _exp(-((x - this->mu).dot(x - this->mu))/(simd::set1(2.f) * this->sigma * this->sigma));
+        return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu))/(simd::set1(2.f) * this->sigma * this->sigma));
     }
 
     /// Broadcasts a single `gaussian_t` to a set of `SIMD_FLOATS` gaussians.
