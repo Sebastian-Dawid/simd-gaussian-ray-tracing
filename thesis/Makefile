@@ -4,12 +4,12 @@ SHELL := zsh
 .DEFAULT_GOAL := help
 .PHONY: help
 
-FILES=main.tex plots/** main.bib glossary.tex
 PAPER=main.tex
 NAME=sdawid_ba
 LATEX=latexmk -pdf -jobname=./target/$(NAME)
 
-FIGURES=
+FIGURES=$(shell find plots -name '*.tex')
+FILES=main.tex main.bib glossary.tex $(FIGURES)
 
 all: $(FIGURES) ## Build full thesis
 	mkdir -p target

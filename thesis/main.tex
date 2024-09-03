@@ -73,7 +73,7 @@
     \chapter{Introduction}
     \begin{itemize}
         \item gaussian image representations are widely used in CG/CV
-        \item ray tracing is more accurate than e.g. splatting -> accurate intersections
+        \item ray tracing is more accurate than e.g. splatting →  accurate intersections
         \item CPU ray tracing is slow
         \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
     \end{itemize}
@@ -83,7 +83,7 @@
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
     In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
-    model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic Guassians
+    model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic guassians
     $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as:
     \begin{align}
         D(\mathbf{x}) = \sum_{G_q \in \mathcal{G}} G_q(\mathbf{x})
@@ -92,7 +92,7 @@
         \label{eq:gaussian}
     \end{align}
     where $c_q$ describes the magnitude, $\mu_q$ the center and $\sigma_q$ the standard deviation of the Gaussian $G_q$.
-    Additionally an \gls{albedo} attribute $\mathbf{a}_q$ is defined for each Gaussian to denote its color. This leads
+    Additionally, an \gls{albedo} attribute $\mathbf{a}_q$ is defined for each Gaussian to denote its color. This leads
     to the scene representation $\gamma = \{ c_q, \mu_q, \sigma_q, \mathbf{a}_q \}$. The $\gamma$ is omitted from
     $G_q(\mathbf{x})$ for readability and since the parameters are given implicitly via $q$.
 
@@ -105,9 +105,9 @@
     \end{equation}
 
     For the Gaussian density representation the density along a ray $\mathbf{x} = \mathbf{o} + s\mathbf{n}$ through a
-    sum of 3D Gaussians is a sum of 1D Gaussians, where the 1D Gaussians are given by inserting the ray into the
-    3D Gaussians $G_q$ \eqref{eq:gaussian}. This results in the form
-    $\bar{c} \exp{\left( - \frac{(x - \bar{\mu})^2}{2\bar{\sigma}^2} \right)}$ for the 1D scaled Gaussians, with
+    sum of 3D gaussians is a sum of 1D gaussians, where the 1D gaussians are given by inserting the ray into the
+    3D gaussians $G_q$ \eqref{eq:gaussian}. This results in the form
+    $\bar{c} \exp{\left( - \frac{(x - \bar{\mu})^2}{2\bar{\sigma}^2} \right)}$ for the 1D scaled gaussians, with
     $\bar{\mu} = (\mu - \mathbf{o})^T\mathbf{n}$, $\bar{\sigma} = \sigma$ and
     $\bar{c} = c \cdot \exp{\left( - \frac{(\mu - \mathbf{o})^T(\mu - \mathbf{o}) - \bar{\mu}^2}{2\bar{\sigma}^2} \right)}$.
 
@@ -181,7 +181,7 @@
     %@TODO: Write introductory paragraph on optimizations
     I propose two optimizations to make execution of the method proposed by \citeauthor{Rhodin:2015}
     in \cite{Rhodin:2015} on the CPU possible with greatly reduced runtimes.
-    The first first optimization is vectorization (\ref{sec:vectorization}) of the method
+    The first optimization is vectorization (\ref{sec:vectorization}) of the method
     parallelizing part of its calculations.
     The second optimization is tiling (\ref{sec:tiling}) which reduces the number of gaussians
     that have to be processed per pixel.
@@ -227,7 +227,7 @@
 
     \subsection{Approaches}
     There are multiple ways to parallelize gaussian ray tracing using vectorization. To generate the final image it is necessary to iterate
-    over two quantities: (1) the gaussians in the scene and (2) the pixels of the image. Therefore these are the opportunities to parallelize.
+    over two quantities: (1) the gaussians in the scene and (2) the pixels of the image. Therefore, these are the opportunities to parallelize.
     Parallelism over the pixels is possible by expanding the rendering equations given in \cite{Rhodin:2015} to operate on multiple rays at the
     same time. Parallelism over the gaussians is possible in two ways:
     \begin{enumerate}
@@ -238,7 +238,7 @@
             not dependent on each other therefore they can be divided into equal groups that can
             be processed in parallel and added up in the end to get the final \gls{radiance}.
     \end{enumerate}
-    The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting in terms of parallelism since the number
+    The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting, in terms of parallelism, since the number
     of summands it has is fixed and therefore potential runtime improvements would not scale with the number of gaussians in the scene or number
     of pixels in the image.
 
@@ -322,7 +322,7 @@
     \end{pmatrix} \,\right|\, k \in K \subset \Z \right\} \]
     and $\bar{\mu}$, $\bar{\sigma}$ and $\bar{c}$ defined the same as in Section~\ref{sec:int_grt}.
 
-    Finally we can collect these results into the final \gls{radiance}:
+    Finally, we can collect these results into the \gls{radiance}:
     \begin{equation}
         \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{i = 1}^W \hat{L}^W_i(\mathbf{o}, \mathbf{n}, \gamma)
         \label{eq:radiance_parallel_final}
@@ -341,7 +341,7 @@
         \label{eq:radiance_parallel_pixels}
     \end{equation}
 
-    Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the Gaussians one by one as the
+    Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the gaussians one by one as the
     sums iterate over every Gaussian $G_q \in \mathcal{G}$ individually.
 
     \section{Tiling}
@@ -421,6 +421,10 @@
     
     \section{Polynomial Approximations of the Error Function}
     \subsection{Taylor Series}
+    The Taylor series of the error function is given as:
+    \begin{equation}
+        \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
+    \end{equation}
     \subsection{Abramowitz and Stegun}
     \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as:
     \begin{equation}
@@ -437,26 +441,97 @@
     \chapter{Implementation}
     \label{ch:implementation}
     %@TODO: details TBD
+    I implemented gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd}
+    instructions provided by modern x64 CPUs (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool (\ref{sec:thread_pool}) to further increase
+    the performance gained from the tiling (\ref{sec:tiling}).
+
+    The Implementation is split into two parts: (1) a library that implements the rendering functions, tiling and approximations and (2) a renderer that uses the library to generate images.
+
     The source code of the implementation is available at: \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
 
-    The Implementation is split into two parts: (1) a library that implements the rendering functions and approximations and (2) a renderer that uses the library to generate images.
-
     \section{SIMD}
+    \label{sec:simd}
+    \gls{simd} (Single Instruction Multiple Data) is a type of parallelism available in most modern x64 and ARM CPUs. This form of parallelism is made available in the form of CPU instructions
+    that operate on special vector registers that are characterized by their width. For example a x64 CPU might provide registers that are 256 bits wide instead of the usual
+    register width of 64 bits on x64 CPUs.
+    
+    Which instructions and which register width a CPU supports depend on which extensions to the instruction set are available on that CPU.
+
+    \gls{simd} instructions are usable from C/C++ code through intrinsics. Which intrinsics are available based on the available instruction set extensions
+    can be referenced in the \href{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}{Intel Intrinsics Guide}\footnote{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}.
+    Using instrinsics directly has the disadvantage that the code is tied to the extension that makes those intrinsics available. Therefore, I opted to use a wrapper library (\ref{sec:tsimd})
+    to avoid direct usage of intrinsics.
+
     \subsection{Math to SIMD}
     \begin{itemize}
         \item most conversion are 1 to 1
         \item p-vectors of vectors are implemented as vectors of p-vectors
     \end{itemize}
     \subsection{T-SIMD}
-    A simple way to enable cross compilation for different \gls{simd} extentions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+    \label{sec:tsimd}
+    A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
 
     \section{Library}
     \subsection{Approximations}
     \subsubsection{SVML}
-    Intels SVML Library provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
+    Intel's SVML Library provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
     \subsubsection{VCL}
-    The approximation is based on the IEEE-754 single precision floating point format and the taylor series of the exponential function.
+    The approximation is based on the IEEE-754 single precision floating point format and the Taylor series of the exponential function.
+    \subsection{Thread Pool}
+    \label{sec:thread_pool}
+    As part of the library I implemented a simple thread pool to provide multithreaded versions of the rendering functions (\ref{sec:rendering_functions}).
+    The pool provides a queue into which tasks are submitted. When a new task is submitted a waiting thread of the pool, if available, is notified.
+    All interactions with the queue are protected through a scoped \mintinline{c++}{std::unique_lock<std::mutex>}.
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+struct thread_pool_t
+{
+    std::contion_variable cond;
+    std::mutex queue_mutex;
+    std::queue<std::function<void()>> tasks;
+    std::vector<std::thread> threads;
+    bool stopped = false;
+
+    thread_pool_t(size_t thread_count);
+    void enqueue(std::function<void()> task);
+    ~thread_pool_t();
+};
+        \end{minted}
+        \caption{Interface of the thread pool}
+        \label{lst:thread_pool_interface}
+    \end{listing}
+
+    The pool implements the interface shown in Listing~\ref{lst:thread_pool_interface}.
+    The pool is initialized with \mintinline{c++}{thread_cont} threads. The threads are joined when the pool's destructor is called either through the end of the scope when
+    used as a stack object or smart pointer or the \mintinline{c++}{delete} operator in case of a heap object.
+
+    The threads execute the following steps: (1) claim the pool's mutex, (2) wait for the condition variable to be signaled if no tasks are available and the pool
+    has not been stopped, (3) exit if the pool has been stopped and there are no more tasks in the queue, (4) dequeue a task from the queue, (5) release the mutex, (6) execute
+    the task and return to (1).
+
+%     \begin{listing}[H]
+%         \begin{minted}[linenos, frame=lines]{c++}
+% while (true)
+% {
+%     std::function<void()> task;
+%     {
+%         std::unique_lock<std::mutex> lock(queue_mutex);
+%         cond.wait(lock, [this](){
+%             return !tasks.empty() || stopped; });
+%         if (stopped && tasks.empty()) return;
+%         task = std::move(tasks.front());
+%         tasks.pop();
+%     }
+%     task();
+% }
+%         \end{minted}
+%         \caption{Code executed by threads in pool}
+%         \label{lst:thread_code}
+%     \end{listing}
+
     \subsection{Rendering Functions}
+    \label{sec:rendering_functions}
     \section{Renderer}
     \label{sec:renderer}
     \begin{table}[H]
