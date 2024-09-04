@@ -11,3 +11,4 @@ hpctoolkit
 *.bak*
 *.tgz
 *.log
+extensions.h

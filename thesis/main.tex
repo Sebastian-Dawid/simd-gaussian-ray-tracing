@@ -409,6 +409,7 @@
     The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion towards the edges of the image.
 
     \chapter{Approximations}
+    \label{ch:approximations}
     %@TODO: Explain why it is necessary to approximate functions / implement own approximations
     \section{Cubic Spline Interpolation}
     %@TODO: Describe cubic spline interpolation
@@ -473,10 +474,47 @@
 
     \section{Library}
     \subsection{Approximations}
-    \subsubsection{SVML}
-    Intel's SVML Library provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
-    \subsubsection{VCL}
-    The approximation is based on the IEEE-754 single precision floating point format and the Taylor series of the exponential function.
+    I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for approximations from Intel's Short Vector
+    Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library (\ref{sec:vcl}).
+    \subsubsection{Short Vector Math Library (SVML)}
+    \label{sec:svml}
+    Intel's SVML provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
+    I export the symbols for the AVX2 (\mintinline{c}{__svml_expf8}) and AVX512 (\mintinline{c}{__svml_expf16}) versions of the implementations as part of the \mintinline{c++}{approx}
+    namespace along with a template wrapper function that is instantiated for the vector widths available (see Listing~\ref{lst:template_svml_exp}).
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+template<size_t SIMD_WIDTH>
+inline simd::Vec<simd::Float, SIMD_WIDTH>
+svml_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
+
+#ifdef __AVX2__
+template<>
+inline simd::Vec<simd::Float, 32>
+svml_exp(simd::Vec<simd::Float, 32> x);
+{
+    return __svml_expf8(x);
+}
+#endif
+
+#ifdef __AVX512F__
+template<>
+inline simd::Vec<simd::Float, 64>
+svml_exp(simd::Vec<simd::Float, 64> x);
+{
+    return __svml_expf16(x);
+}
+#endif
+        \end{minted}
+        \caption{Template wrapper for SVML's exponential function.}
+        \label{lst:template_svml_exp}
+    \end{listing}
+
+    \subsubsection{Vector Class Library (VCL)}
+    \label{sec:vcl}
+    The approximation of the exponential function provided by VCL is based on the IEEE-754 single precision floating point format and the Taylor series of the exponential function.
+    I provide wrapped versions of the approximation in the same way shown in Listing~\ref{lst:template_svml_exp} to deal with the conversion between the T-SIMD and VCL vector types.
+
     \subsection{Thread Pool}
     \label{sec:thread_pool}
     As part of the library I implemented a simple thread pool to provide multithreaded versions of the rendering functions (\ref{sec:rendering_functions}).

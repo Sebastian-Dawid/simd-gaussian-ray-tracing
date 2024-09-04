@@ -48,38 +48,60 @@ namespace approx {
     extern "C" __m256 __svml_erff8(__m256);
     extern "C" __m512 __svml_erff16(__m512);
 
-    inline simd::Vec<simd::Float> svml_erf(simd::Vec<simd::Float> x)
-    {
-#ifndef __AVX512F__
-        return __svml_erff8(x);
-#else
-        return __svml_erff16(x);
-#endif
-    }
+    template<size_t SIMD_WIDTH>
+    inline simd::Vec<simd::Float, SIMD_WIDTH> svml_erf(simd::Vec<simd::Float, SIMD_WIDTH> x);
 
     /// SIMD implementation of the exponential function from intels SVML library.
     /// Requires linking SVML which is distributed through intels icx compiler.
     extern "C" __m256 __svml_expf8(__m256);
     extern "C" __m512 __svml_expf16(__m512);
 
-    inline simd::Vec<simd::Float> svml_exp(simd::Vec<simd::Float> x)
+    template<size_t SIMD_WIDTH>
+    inline simd::Vec<simd::Float, SIMD_WIDTH> svml_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
+
+    template<>
+    inline simd::Vec<simd::Float, 32> svml_erf(simd::Vec<simd::Float, 32> x);
     {
-#ifndef __AVX512F__
-        return __svml_expf8(x);
-#else
-        return __svml_expf16(x);
-#endif
+        return __svml_erff8(x);
     }
+    
+    template<>
+    inline simd::Vec<simd::Float, 32> svml_exp(simd::Vec<simd::Float, 32> x);
+    {
+        return __svml_expf8(x);
+    }
+
+#ifdef __AVX512F__
+    template<>
+    inline simd::Vec<simd::Float, 32> svml_erf(simd::Vec<simd::Float, 32> x);
+    {
+        return __svml_erff16(x);
+    }
+
+    template<>
+    inline simd::Vec<simd::Float, 64> svml_exp(simd::Vec<simd::Float, 64> x);
+    {
+        return __svml_expf16(x);
+    }
+#endif
 #endif
 
-    inline simd::Vec<simd::Float> vcl_exp(simd::Vec<simd::Float> x)
+    template<size_t SIMD_WIDTH>
+    inline simd::Vec<simd::Float, SIMD_WIDTH> vcl_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
+
+    template<>
+    inline simd::Vec<simd::Float, 32> vcl_exp(simd::Vec<simd::Float, 32> x)
     {
-#ifndef __AVX512F__
         return static_cast<__m256>(vcl::exp(vcl::Vec8f(static_cast<__m256>(x))));
-#else
-        return static_cast<__m512>(vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
-#endif
     }
+
+#ifdef __AVX512F__
+    template<>
+    inline simd::Vec<simd::Float, 64> vcl_exp(simd::Vec<simd::Float, 64> x)
+    {
+        return static_cast<__m512>(vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
+    }
+#endif
 }
 
 namespace simd {
