@@ -72,7 +72,7 @@
     \mainmatter
     \chapter{Introduction}
     \begin{itemize}
-        \item gaussian image representations are widely used in CG/CV
+        \item Gaussian image representations are widely used in CG/CV
         \item ray tracing is more accurate than e.g. splatting →  accurate intersections
         \item CPU ray tracing is slow
         \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
@@ -83,12 +83,13 @@
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
     In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
-    model based on a parametric density representation $D(\mathbf{x})$ given as the sum of scaled isotropic guassians
-    $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as:
+    model based on a parametric density representation $D(\mathbf{x})$ defined by a sum of scaled isotropic guassians
+    $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as
     \begin{align}
-        D(\mathbf{x}) = \sum_{G_q \in \mathcal{G}} G_q(\mathbf{x})
+        D(\mathbf{x}) &= \sum_{G_q \in \mathcal{G}} G_q(\mathbf{x})
         \label{eq:density}\\
-        G_q(\mathbf{x}) = c_q \cdot \exp{\left( - \frac{\Vert\mathbf{x} - \mu_q\Vert_2^2}{2\sigma_q^2} \right)}
+        \text{with} \nonumber\\
+        G_q(\mathbf{x}) &= c_q \cdot \exp{\left( - \frac{\Vert\mathbf{x} - \mu_q\Vert_2^2}{2\sigma_q^2} \right)}
         \label{eq:gaussian}
     \end{align}
     where $c_q$ describes the magnitude, $\mu_q$ the center and $\sigma_q$ the standard deviation of the Gaussian $G_q$.
@@ -98,28 +99,28 @@
 
     To get the final color of a pixel they determine the amount of light that reaches the camera from each point
     along a ray. For this purpose they determine the \gls{transmittance} $T$ of a point at distance $s$ along a ray from
-    a camera position $\mathbf{o}$ in direction $\mathbf{n}$ as:
+    a camera position $\mathbf{o}$ in direction $\mathbf{n}$ as
     \begin{equation}
-        T(\mathbf{o}, \mathbf{n}, s, \gamma) = \exp{\left( - \int_0^s D(\mathbf{o} + t\mathbf{n}) dt \right)}
+        T(\mathbf{o}, \mathbf{n}, s, \gamma) = \exp{\left( - \int_0^s D(\mathbf{o} + t\mathbf{n}) dt \right)}.
         \label{eq:transmittance}
     \end{equation}
 
     For the Gaussian density representation the density along a ray $\mathbf{x} = \mathbf{o} + s\mathbf{n}$ through a
-    sum of 3D gaussians is a sum of 1D gaussians, where the 1D gaussians are given by inserting the ray into the
-    3D gaussians $G_q$ \eqref{eq:gaussian}. This results in the form
-    $\bar{c} \exp{\left( - \frac{(x - \bar{\mu})^2}{2\bar{\sigma}^2} \right)}$ for the 1D scaled gaussians, with
+    sum of 3D Gaussians is a sum of 1D Gaussians, where the 1D Gaussians are given by inserting the ray into the
+    3D Gaussians $G_q$ \eqref{eq:gaussian}. This results in the form
+    $\bar{c} \exp{\left( - \frac{(x - \bar{\mu})^2}{2\bar{\sigma}^2} \right)}$ for the 1D scaled Gaussians, with
     $\bar{\mu} = (\mu - \mathbf{o})^T\mathbf{n}$, $\bar{\sigma} = \sigma$ and
     $\bar{c} = c \cdot \exp{\left( - \frac{(\mu - \mathbf{o})^T(\mu - \mathbf{o}) - \bar{\mu}^2}{2\bar{\sigma}^2} \right)}$.
 
     The \gls{transmittance} can be expressed analytically using the error function
-    $\erf{(x)} = \frac{2}{\sqrt{\pi}}\int_0^s \exp{(-t^2)} dt$ and gaussian form of the density, as follows:
+    $\erf{(x)} = \frac{2}{\sqrt{\pi}}\int_0^s \exp{(-t^2)} dt$ and Gaussian form of the density, as
     \begin{equation}
         \begin{aligned}
             T(\mathbf{o}, \mathbf{n}, s, \gamma) &= \exp{\left( -\int_0^s
                 \sum_q G_q(\mathbf{o} + t\mathbf{n} ) dt \right)}\\
             &= \exp{\left( \sum_q \frac{\bar{\sigma}_q \bar{c}_q}{\sqrt{\frac{2}{\pi}}}
             \left( \erf{\left( \frac{-\bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)}
-            - \erf{\left( \frac{s - \bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)} \right) \right)}\\
+            - \erf{\left( \frac{s - \bar{\mu}_q}{\sqrt{2}\bar{\sigma}_q} \right)} \right) \right)}.\\
         \end{aligned}
         \label{eq:transmittance_analytical}
     \end{equation}
@@ -128,18 +129,18 @@
     \gls{pinhole_camera}. The \gls{radiance} can be computed as the product of \gls{transmittance} $T$ \eqref{eq:transmittance},
     density $D$ \eqref{eq:density}, \gls{albedo} $\mathbf{a}$ and the ambient \gls{radiance} $L_e$ integrated along a ray
     $\mathbf{x} = \mathbf{o} + s\mathbf{n}$. They assume the ambient \gls{radiance} is fixed as $L_e = 1$. As such they
-    disregard it in the following equation:
+    disregard it in
     \begin{equation}
         L(\mathbf{o}, \mathbf{n}, \gamma) = \int_0^\infty T(\mathbf{o}, \mathbf{n}, s, \gamma)
-            \sum_q G_q(\mathbf{o} + s\mathbf{n})\mathbf{a}_q ds
+            \sum_q G_q(\mathbf{o} + s\mathbf{n})\mathbf{a}_q ds.
     \end{equation}
     
     This integral may be approximated with sufficient accuracy by sampling around the mean of each Gaussian $G_q$
     a compact interval $S_q = \{ \bar{\mu}_q + k\lambda_q | k \in K \subset \Z \}$. For their purposes it was sufficient
-    to choose $\lambda_q \sim \bar{\sigma}_q$ as the step length:
+    to choose $\lambda_q \sim \bar{\sigma}_q$ as the step length, which yields
     \begin{equation}
         \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_q \mathbf{a}_q \sum_{s \in S_q}
-            \lambda_q T(\mathbf{o}, \mathbf{n}, s, \gamma)G_q(\mathbf{o} + s\mathbf{n})
+            \lambda_q T(\mathbf{o}, \mathbf{n}, s, \gamma)G_q(\mathbf{o} + s\mathbf{n}).
         \label{eq:radiance}
     \end{equation}
 
@@ -150,12 +151,12 @@
     %@TODO: describe image formation model (splatting) as laid out in the following papers
     Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
     (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
-    gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision and graphics
+    Gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision and graphics
     contexts, since its fully differentiable and its applicability in real time contexts.
 
-    One of these derived methods is called 3D gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in their
-    \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting} define their gaussians
-    as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the gaussian, $\Sigma \in \R^{3\times 3}$
+    One of these derived methods is called 3D Gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in their
+    \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting} define their Gaussians
+    as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the Gaussian, $\Sigma \in \R^{3\times 3}$
     its 3D covariance Matrix, $\mathbf{a} \in [0, 1]^3$ its albedo and $\alpha \in [0, 1]$ its opacity. The camera is defined as a tuple
     $(W, P)$, where $W$ is the viewing transformation and $P$ is the affine projective transformation.
 
@@ -183,7 +184,7 @@
     in \cite{Rhodin:2015} on the CPU possible with greatly reduced runtimes.
     The first optimization is vectorization (\ref{sec:vectorization}) of the method
     parallelizing part of its calculations.
-    The second optimization is tiling (\ref{sec:tiling}) which reduces the number of gaussians
+    The second optimization is tiling (\ref{sec:tiling}) which reduces the number of Gaussians
     that have to be processed per pixel.
 
     \section{Vectorization}
@@ -204,8 +205,8 @@
     necessary to introduce some notation to work with vectorization and ensure it is
     cleanly separated from conventional vector spaces. Vectors used for parallelization
     will be referred to as p-vectors (parallel vectors) from here on. This notation is
-    defined in Table~\ref{tab:notation}:
-    \begin{table}[H]
+    defined in Table~\ref{tab:notation}.
+    \begin{table}[b]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|}
@@ -226,10 +227,10 @@
     \end{table}
 
     \subsection{Approaches}
-    There are multiple ways to parallelize gaussian ray tracing using vectorization. To generate the final image it is necessary to iterate
-    over two quantities: (1) the gaussians in the scene and (2) the pixels of the image. Therefore, these are the opportunities to parallelize.
+    There are multiple ways to parallelize Gaussian ray tracing using vectorization. To generate the final image it is necessary to iterate
+    over two quantities: (1) the Gaussians in the scene and (2) the pixels of the image. Therefore, these are the opportunities to parallelize.
     Parallelism over the pixels is possible by expanding the rendering equations given in \cite{Rhodin:2015} to operate on multiple rays at the
-    same time. Parallelism over the gaussians is possible in two ways:
+    same time. Parallelism over the Gaussians is possible in two ways:
     \begin{enumerate}
         \item The summands of the sum in the \gls{transmittance} equation~\eqref{eq:transmittance_analytical} do not depend on each
             other therefore it is possible to divide the summands into equal groups and process these in parallel
@@ -239,22 +240,22 @@
             be processed in parallel and added up in the end to get the final \gls{radiance}.
     \end{enumerate}
     The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting, in terms of parallelism, since the number
-    of summands it has is fixed and therefore potential runtime improvements would not scale with the number of gaussians in the scene or number
-    of pixels in the image.
+    of summands it has is fixed and therefore potential runtime improvements would not scale with the width of the p-vectors used, and
+    it is fair to assume that most methods of vectorization will allow for p-vectors wider than five elements.
 
-    To enable parallelization over the gaussians it is necessary to split the set of
-    gaussians $\mathcal{G}$ into $W$ disjoint subsets of equal magnitude. Since the magnitude of $\mathcal{G}$ is not guaranteed to be divisible by $W$
+    To enable parallelization over the Gaussians it is necessary to split the set of
+    Gaussians $\mathcal{G}$ into $W$ disjoint subsets of equal magnitude. Since the magnitude of $\mathcal{G}$ is not guaranteed to be divisible by $W$
     a number of subsets equal to the remainder $|\mathcal{G}| \mod W$ will be augmented with an additional zero element.
 
     The most sensible division of $\mathcal{G}$ is to assign some order to its elements, such that $g_i, i=1,\dots,|\mathcal{G}|$ describes the $i$-th element of
-    $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets:
+    $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets $\mathcal{G}_j$ with
     \begin{equation}
-        \mathcal{G}_j := \{ g_i \in \mathcal{G} \,|\, i \mod W \equiv j \}, j=0,\dots,W-1
+        \mathcal{G}_j := \{ g_i \in \mathcal{G} \,|\, i \mod W \equiv j \} \text{ for } j=0,\dots,W-1.
     \end{equation}
 
     \paragraph{Parallel \gls{transmittance}:}
     \label{par:parallel_transmittance}
-    Given this division I can define a \gls{transmittance} function that operates on the elements of the subsets $\mathcal{G}_j$ in parallel.
+    Given this division I can define a \gls{transmittance} function
     \begin{equation}
         \begin{aligned}
             T^W(\mathbf{o}, \mathbf{n}, s, \gamma) &= \exp^W\left( \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1}
@@ -268,13 +269,14 @@
         \end{aligned}
         \label{eq:transmittance_parallel}
     \end{equation}
+    that operates on the elements of the subsets $\mathcal{G}_j$ in parallel.
 
-    Note that the separation of the gaussians into the subsets $\mathcal{G}_j$ is done implicitly through the index $m$ of the sum.
+    Note that the separation of the Gaussians into the subsets $\mathcal{G}_j$ is done implicitly through the index $m$ of the sum.
 
     Now I replace the call to the \gls{transmittance} function in the \gls{radiance} equation~\eqref{eq:radiance} with the sum
-    over the results of the parallel \gls{transmittance} equation~\eqref{eq:transmittance_parallel}:
+    over the results of the parallel \gls{transmittance} equation~\eqref{eq:transmittance_parallel} yielding
     \begin{equation}
-        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o} + s\mathbf{n})\sum_{i = 1}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma)
+        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o} + s\mathbf{n})\sum_{i = 1}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma).
     \end{equation}
 
     Since the subsets $\mathcal{G}_j$ are disjoint by definition this version of the \gls{radiance} equation yields the same results as the original (Eq.~\eqref{eq:radiance})
@@ -282,26 +284,26 @@
     \paragraph{Parallel \gls{radiance}:}
     \label{par:parallel_radiance}
     The analytical solution to the \gls{transmittance} integral from Eq.~\eqref{eq:transmittance_analytical} can be broadcast
-    to operate on p-vectors of points on rays parameterized by origins $\mathbf{o}^W$, directions $\mathbf{n}^W$
-    and distances $s^W$, as follows:
+    to
     \begin{equation}
         \begin{aligned}
             T^W(\mathbf{o}^W, \mathbf{n}^W, s^W, \gamma) = \exp^W\Bigg(& \sum_q \frac{(\bar{\sigma}_q)^W
             (\bar{c}_q)^W}{\left[ \sqrt{\frac{2}{\pi}} \right]^W} \\
             \odot \Bigg(& \erf^W{\left( \frac{-(\bar{\mu}_q)^W}{[ \sqrt{2} ]^W \odot (\bar{\sigma}_q)^W} \right)}\\
-            &- \erf^W{\left( \frac{s^W - (\bar{\mu}_q)^W}{[ \sqrt{2} ]^W \odot (\bar{\sigma}_q)^W} \right)} \Bigg) \Bigg) 
+            &- \erf^W{\left( \frac{s^W - (\bar{\mu}_q)^W}{[ \sqrt{2} ]^W \odot (\bar{\sigma}_q)^W} \right)} \Bigg) \Bigg)
         \end{aligned}
         \label{eq:transmittance_broadcast}
     \end{equation}
-    with
+    operating on p-vectors of points on rays parameterized by origins $\mathbf{o}^W$, directions $\mathbf{n}^W$
+    and distances $s^W$ with
     \begin{align*}
         \bar{\mu}^W &= \left\langle [ \mu ]^W - \mathbf{o}, \mathbf{n}^W \right\rangle, \bar{\sigma}^W = \left[ \sigma \right]^W\\
         \bar{c}^W &= [c]^W \odot \exp^W{\left( - \frac{\left\langle [\mu]^W - \mathbf{o}^W, [\mu]^W - \mathbf{o}^W \right\rangle
-    - \left(\bar{\mu}^W\right)^2}{[2]^W \odot \left(\bar{\sigma}^W\right)^2} \right)}
+    - \left(\bar{\mu}^W\right)^2}{[2]^W \odot \left(\bar{\sigma}^W\right)^2} \right)}.
     \end{align*}
 
-    This version of the \gls{transmittance} equation \eqref{eq:transmittance_analytical} allows me to rewrite the \gls{radiance} equation to operate on
-    multiple gaussians at the same time in the same way as in \ref{par:parallel_transmittance}:
+    This version of the \gls{transmittance} equation \eqref{eq:transmittance_analytical} allows me to rewrite the \gls{radiance} equation
+    \eqref{eq:radiance} to operate on multiple Gaussians at the same time in the same way as in \ref{par:parallel_transmittance}
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}, \mathbf{n}, \gamma) &= \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1} \left( \begin{pmatrix}
@@ -322,9 +324,9 @@
     \end{pmatrix} \,\right|\, k \in K \subset \Z \right\} \]
     and $\bar{\mu}$, $\bar{\sigma}$ and $\bar{c}$ defined the same as in Section~\ref{sec:int_grt}.
 
-    Finally, we can collect these results into the \gls{radiance}:
+    Finally, we can collect these results into the \gls{radiance}
     \begin{equation}
-        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{i = 1}^W \hat{L}^W_i(\mathbf{o}, \mathbf{n}, \gamma)
+        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{i = 1}^W \hat{L}^W_i(\mathbf{o}, \mathbf{n}, \gamma).
         \label{eq:radiance_parallel_final}
     \end{equation}
 
@@ -341,18 +343,18 @@
         \label{eq:radiance_parallel_pixels}
     \end{equation}
 
-    Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the gaussians one by one as the
+    Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the Gaussians one by one as the
     sums iterate over every Gaussian $G_q \in \mathcal{G}$ individually.
 
     \section{Tiling}
     \label{sec:tiling}
     %@TODO: describe the tiling method used. note similarities to splatting.
-    In most scenes most pixels will be unaffected by most gaussians, therefore it is not sensible to perform
-    the per pixel calculations for all gaussians instead of just the gaussians that could affect the pixel.
-    Reducing the number of gaussians considered when dealing with any individual pixel is a good way to reduce
+    In most scenes most pixels will be unaffected by most Gaussians, therefore it is not sensible to perform
+    the per pixel calculations for all Gaussians instead of just the Gaussians that could affect the pixel.
+    Reducing the number of Gaussians considered when dealing with any individual pixel is a good way to reduce
     time wasted performing unnecessary computations.
 
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \resizebox{\textwidth}{!}{
             \begin{tikzpicture}
@@ -371,18 +373,18 @@
                 \draw[blue, thick] (5, 2) circle (1);
             \end{tikzpicture}
         }
-        \caption{Image of four gaussians split into 16 tiles.}
+        \caption{Image of four Gaussians split into 16 tiles.}
         \label{fig:tiling}
     \end{figure}
 
-    One way of achieving this goal is to split the final image into $N \times N$ tiles (\eg Figure~\ref{fig:tiling}) and determining which gaussians
-    are relevant to which tiles through spacial proximity. Since it is not clear where in the image any one gaussian is
-    going to end up before generating the image it is necessary to estimate location and size of the gaussians before
+    One way of achieving this goal is to split the final image into $N \times N$ tiles (\eg Figure~\ref{fig:tiling}) and determining which Gaussians
+    are relevant to which tiles through spacial proximity. Since it is not clear where in the image any one Gaussian is
+    going to end up before generating the image it is necessary to estimate location and size of the Gaussians before
     generating the final image through ray tracing.
 
-    To estimate size and position of the gaussians in the final image the guassians are projected to the image plane using
+    To estimate size and position of the Gaussians in the final image the guassians are projected to the image plane using
     scaled orthographic projection. Let $V \in \R^{4 \times 4}$ be the view matrix of the camera. Then the projected guassian
-    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a gaussian $g = (\mu, \sigma)$ is calculated as:
+    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a Gaussian $g = (\mu, \sigma)$ is calculated as:
 
     \begin{align}
         \mu_p &= V \cdot (\mu, 1)^T\\
@@ -390,14 +392,14 @@
         \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}
     \end{align}
 
-    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic gaussians which removes
+    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic Gaussians which removes
     the complexity of projecting the covariance matrix while retaining its properties.
-    As in \cite{Rhodin:2015} gaussians with $\bar{\sigma} < 10^{-5}$ are discarded, since they are unlikely to contribute to the final image significantly.
+    As in \cite{Rhodin:2015} Gaussians with $\bar{\sigma} < 10^{-5}$ are discarded, since they are unlikely to contribute to the final image significantly.
     Also note that after the projection the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
 
     Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile. The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$
-    describes the absolute distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected gaussian $\bar{\mu}$.
-    A gaussian counts as relevant to a tile if
+    describes the absolute distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected Gaussian $\bar{\mu}$.
+    A Gaussian counts as relevant to a tile if
     \begin{equation}
         \mathbf{p}_1 < |\mathbf{c}_1| + \frac{tw}{2} + 2\bar{\sigma}
     \end{equation}
@@ -405,7 +407,7 @@
     \begin{equation}
         \mathbf{p}_2 < |\mathbf{c}_2| + \frac{th}{2} + 2\bar{\sigma}
     \end{equation}
-    meaning that the gaussian has to be in a $2\bar{\sigma}$ range from the borders of the tile to be considered relevant.
+    meaning that the Gaussian has to be in a $2\bar{\sigma}$ range from the borders of the tile to be considered relevant.
     The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion towards the edges of the image.
 
     \chapter{Approximations}
@@ -442,7 +444,7 @@
     \chapter{Implementation}
     \label{ch:implementation}
     %@TODO: details TBD
-    I implemented gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd}
+    I implemented Gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd}
     instructions provided by modern x64 CPUs (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool (\ref{sec:thread_pool}) to further increase
     the performance gained from the tiling (\ref{sec:tiling}).
 
@@ -703,7 +705,7 @@ f32 func(f32 in)
     %value of the derived metrics of the scopes of non T-SIMD functions are subtracted from the value calculated using the inclusive metrics.
 
     \chapter{Conclusion and Future Work}
-    %@TODO: Short recap + what can still be done: anisotropic gaussians, loading models learned via gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
+    %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
     \section{Conclusion}
     \begin{itemize}
         \item SIMD + Tiling lead to massive performance improvements
@@ -713,7 +715,7 @@ f32 func(f32 in)
     \begin{itemize}
         \item Memory/Cache Bottleneck?
         \item Anisotropic Gaussians
-        \item Loading Scenes learned via gaussians splatting
+        \item Loading Scenes learned via Gaussian splatting
         \item More efficient tiling (SIMD, Threads)
         \item Combining Splatting and Ray Tracing
         \item GPU Implementation
