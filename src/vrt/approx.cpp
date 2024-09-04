@@ -102,23 +102,29 @@ namespace approx {
 
     static constexpr f32 a = (1 << 23)/std::numbers::ln2_v<f32>;
     static constexpr f32 b = (1 << 23) * (127 - 0.043677448f);
+#ifndef NDEBUG
     static constexpr f32 c = (1 << 23);
     static constexpr f32 d = (1 << 23) * 255;
+#endif
+
     f32 fast_exp(f32 x)
     {
         x = a *x + b;
+#ifndef NDEBUG
         if (x < c || x > d)
             x = (x < c) ? 0.f : d;
+#endif
 
         u32 n = static_cast<u32>(x);
-        //std::memcpy(&x, &n, 4);
         return std::bit_cast<f32>(n);
     }
 
     simd::Vec<simd::Float> simd_fast_exp(simd::Vec<simd::Float> x)
     {
         x = simd::set1(a) *x + simd::set1(b);
+#ifndef NDEBUG
         x = simd::ifelse(simd::bit_or(x < simd::set1(c), x > simd::set1(d)), simd::ifelse(x < simd::set1(c), simd::set1(0.f), simd::set1(d)), x);
+#endif
         return simd::reinterpret<simd::Float>(simd::cvts<simd::Int>(x));
     }
 

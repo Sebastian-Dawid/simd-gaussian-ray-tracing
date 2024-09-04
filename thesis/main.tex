@@ -45,7 +45,7 @@
 \discipline{Computer Science}
 \title{Parallel Gaussian Ray Tracing on the CPU}
 \author{Sebastian Dawid}
-\institution{Bielefeld University,Technical Faculty,Visual AI for Extended Reality Group}
+\institution{Bielefeld University,Faculty of Technology,Visual AI for Extended Reality Group}
 \supervisors{Prof.\@~Dr.\@~Helge Rhodin,Prof.\@~Dr.-Ing.\@~Ralf M\"oller}
 
 \newcommand*{\erf}{\text{erf}}
@@ -333,7 +333,6 @@
     \paragraph{Parallel Pixels:}
     \label{par:parallel_pixels}
     Given the broadcast version of the \gls{transmittance} equation \eqref{eq:transmittance_broadcast} from before I can broadcast the \gls{radiance} equation to
-    calculate the \gls{radiance} for multiple pixels at once:
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}^W, \mathbf{n}^W, \gamma) &= \sum_q [ \mathbf{a}_q ]^W \sum_{s \in S_q} \Big(
@@ -342,6 +341,7 @@
         \end{aligned}
         \label{eq:radiance_parallel_pixels}
     \end{equation}
+    calculating the \gls{radiance} for multiple pixels at once.
 
     Note that both the \gls{transmittance} and \gls{radiance} equations still operate on the Gaussians one by one as the
     sums iterate over every Gaussian $G_q \in \mathcal{G}$ individually.
@@ -382,14 +382,18 @@
     going to end up before generating the image it is necessary to estimate location and size of the Gaussians before
     generating the final image through ray tracing.
 
+    Tiling is technique that is not unique to ray tracing and has been used in various other rendering methods such as the rasterizer
+    used by \citeauthor{kerbl3Dgaussians} in \cite{kerbl3Dgaussians}.
+
     To estimate size and position of the Gaussians in the final image the guassians are projected to the image plane using
     scaled orthographic projection. Let $V \in \R^{4 \times 4}$ be the view matrix of the camera. Then the projected guassian
-    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a Gaussian $g = (\mu, \sigma)$ is calculated as:
+    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a Gaussian $g = (\mu, \sigma)$ is calculated as
 
     \begin{align}
         \mu_p &= V \cdot (\mu, 1)^T\\
         \bar{\mu} &= \frac{1}{\mu_{p3}} \cdot (\mu_{p1}, \mu_{p2})^T\\
-        \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}
+        \text{and}\nonumber\\
+        \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}.
     \end{align}
 
     Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic Gaussians which removes
@@ -407,9 +411,26 @@
     \begin{equation}
         \mathbf{p}_2 < |\mathbf{c}_2| + \frac{th}{2} + 2\bar{\sigma}
     \end{equation}
-    meaning that the Gaussian has to be in a $2\bar{\sigma}$ range from the borders of the tile to be considered relevant.
+    meaning that the Gaussian has to be in a $3.3 \cdot \bar{\sigma}$ range from the borders of the tile to be considered relevant.
     The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion towards the edges of the image.
 
+    %@TODO: Note mathematical justification for using 3.3 sigma as limit
+    % Visible tiling artifacts when using 2 sigma
+
+    The $3.3 \cdot \sigma$ can be derived from
+    \begin{align}
+        G(\mu + k \cdot \sigma) &= c \cdot \exp{\left(-\frac{|k \sigma|^2}{2\sigma^2}\right)}\\
+        &= c \cdot \exp{\left(-\frac{k^2}{2}\right)}\\
+        \overset{\ln}{\iff} \ln{\left( G(\mu + k\cdot\sigma) \right)} &= \ln{(c)} - \frac{k^2}{2}\\
+        \iff k &= \sqrt{2\left(\ln{(c)} - \ln{\left( G(\mu + k\cdot\sigma) \right)}\right)}
+    \end{align}
+    yielding
+    \begin{equation}
+        k(c) &= \sqrt{2(\ln{(c)} - \ln{(\varepsilon)})}
+        \label{eq:sig_lim}
+    \end{equation}
+    with $\varepsilon = \frac{1}{255}$ the last density value that can result in a visible color and $c$ as the magnitude. Assuming the magnitude of the Gaussians to be in a reasonable range such as $[0, 10]$
+    using $k(1) = \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$.
     \chapter{Approximations}
     \label{ch:approximations}
     %@TODO: Explain why it is necessary to approximate functions / implement own approximations
@@ -417,19 +438,33 @@
     %@TODO: Describe cubic spline interpolation
 
     \section{Fast Exponential Function}
-    \cite{fast_exp}
+    The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp} \cite{fast_exp} is based
+    on the fact that
     \begin{equation}
         \exp{(x)} = 2^{\frac{x}{\ln{(2)}}}
+        \label{eq:exp_ident}
     \end{equation}
+    is an identity of the exponential function. The rest of the approximation relies on the structure of floating point numbers under the IEEE-754
+    standard and will be discussed in Section~\ref{sec:impl_fast_exp}.
     
     \section{Polynomial Approximations of the Error Function}
     \subsection{Taylor Series}
-    The Taylor series of the error function is given as:
+    The Taylor series of the error function is given by
     \begin{equation}
         \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
     \end{equation}
+    and can give a good approximation of the error function around $x = 0$ when evaluated at $x = 0$. For the approximation to be usable
+    on the relevant interval of $[-2, 2]$ it needs to include at least ten terms of the series as seen in Figure~\ref{fig:taylor_erf}.
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/taylor_erf}
+        \caption{Taylor approximation of the error function with 4, 8, 10 and 16 terms.}
+        \label{fig:taylor_erf}
+    \end{figure}
+
     \subsection{Abramowitz and Stegun}
-    \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as:
+    \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
     \begin{equation}
         \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
     \end{equation}
@@ -440,6 +475,14 @@
         c &= 0.000972,\,
         d = 0.078108
     \end{align*}
+    for $x \in [0, \infty)$. To extend the approximation for $x \in \R$ I exploit the point symmetry of the error function with respect to $x = 0$. This yields
+    \begin{equation}
+        \erf{(x)} = \begin{cases}
+            1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4} & x \in [0, \infty)\\
+            \erf{(-x)} & x \in (-\infty, 0)
+        \end{cases}
+    \end{equation}
+    with $a$, $b$, $c$ and $d$ the same as before.
     
     \chapter{Implementation}
     \label{ch:implementation}
@@ -448,9 +491,13 @@
     instructions provided by modern x64 CPUs (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool (\ref{sec:thread_pool}) to further increase
     the performance gained from the tiling (\ref{sec:tiling}).
 
-    The Implementation is split into two parts: (1) a library that implements the rendering functions, tiling and approximations and (2) a renderer that uses the library to generate images.
+    The Implementation is split into two parts: a library that implements the rendering functions, tiling and approximations (\ref{sec:library}) and a renderer that uses the library to generate images (\ref{sec:renderer}).
 
-    The source code of the implementation is available at: \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
+    Note that I will use aliased type names such as \mintinline{c++}{f32} instead of \mintinline{c++}{float} to keep the text consistent with the code base.
+    For a full list of the type aliases used see Listing~\ref{lst:type_aliases}.
+
+    The source code of the implementation is available at: \\\href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
+    \footnote{Or mirrored at \href{https://github.com/vaixr/_simd-gaussian-raytracing}{https://github.com/vaixr/\_simd-gaussian-raytracing}}
 
     \section{SIMD}
     \label{sec:simd}
@@ -475,9 +522,67 @@
     A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
 
     \section{Library}
+    \label{sec:library}
+
     \subsection{Approximations}
     I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for approximations from Intel's Short Vector
     Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library (\ref{sec:vcl}).
+
+    \subsubsection{Fast Exponential Function}
+    \label{sec:impl_fast_exp}
+    The IEEE-754 standard defines a double precision floating point number to consist of a sign bit $s \in \{ 0, 1 \}$, a 52-bit mantissa $m \in [0, 1)$ and an
+    11-bit exponent $x$ and is calculated as
+    \begin{equation}
+        (-1)^s (1 + m) 2^{x - x_0}
+        \label{eq:def_ieee754}
+    \end{equation}
+    with $x_0 = 1023$ as a bias term.
+
+    Note that \citeauthor{fast_exp} uses two 32-bit integers $i$ and $j$ to represent a 64-bit float, but the approximation does not rely on this decomposition. As such I will describe it
+    using a single 64-bit integer $i$ instead.
+
+    Given the identity \eqref{eq:exp_ident} of the exponential function it is sufficient to find an approximation for $2^x$. \citeauthor{fast_exp} gives 
+    \begin{equation}
+        2^{52}(x + 1023)
+    \end{equation}
+    as an exact approximation as long as $x$ is an integer. For non integer arguments $x$ he notes that the spillover into the most significant bits of the mantissa
+    provides a linear interpolation between $\lfloor x \rfloor$ and $\lceil x \rceil$ under IEEE-754.
+
+    The final approximation of $\exp{(x)}$ can now be computed as
+    \begin{equation}
+        \frac{2^{52}}{\ln{(2)}} x + 2^{52}(1023 - c)
+    \end{equation}
+    where $c$ is an adjustment term that provides some control over the approximation.
+
+    Since I use single precision floating point numbers instead of double precision floats the version of the approximation I use
+    \begin{equation}
+        \frac{2^{23}}{\ln{(2)}}x + 2^{23}(127 - c)
+    \end{equation}
+    instead. The exponent has changed from $52$ to $23$ due to the difference in mantissa and exponent length in single and double precision floats. The $1023$ has been replaced with $127$
+    since it is the single precision bias.
+
+    \citeauthor{fast_exp} derives that $c = 0.043677448$ minimizes the maximum relative error to range from $-2.98\%$ to $2.98\%$.
+    The implementation of the method shown in Listing~\ref{lst:fast_exp_impl} is based on the implementation by Johan Rade
+    \footnote{\href{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}}
+    that foregoes the usage of a \mintinline{c}{union} to realize the reinterpretation and uses \mintinline{c}{memcpy} instead.
+    In my implementation I opted to use \mintinline{c++}{std::bit_cast} and discard the bounds checking introduced by Rade since
+    my usage should never leave the given bounds.
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+constexpr f32 a = (1 << 23) / std::numbers::ln2_v<f32>;
+constexpr f32 b = (1 << 23) * (127 - 0.043677448f);
+f32 fast_exp(f32 x)
+{
+    x = a*x + b;
+    u32 n = static_cast<u32>(x);
+    return std::bit_cast<f32>(n);
+}
+        \end{minted}
+        \caption{Fast Exponential Function Implementations}
+        \label{lst:fast_exp_impl}
+    \end{listing}
+
     \subsubsection{Short Vector Math Library (SVML)}
     \label{sec:svml}
     Intel's SVML provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
@@ -574,7 +679,7 @@ struct thread_pool_t
     \label{sec:rendering_functions}
     \section{Renderer}
     \label{sec:renderer}
-    \begin{table}[H]
+    \begin{table}[b]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|}
@@ -598,6 +703,20 @@ struct thread_pool_t
     
     \chapter{Experiments}
     \label{ch:experiments}
+    
+    All experiments were performed on a Ryzen 9 7950X CPU, which has 16 cores with hyperthreading and AVX512 support.
+    A list of all instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and were determined
+    using the shell script given in Listing~\ref{lst:exts_script}.
+    \begin{listing}[H]
+        \begin{minted}[frame=lines]{sh}
+#!/usr/bin/env sh
+gcc -march=native -dM -E - < /dev/null \
+    | grep -E "SSE|AVX" | sort
+        \end{minted}
+        \caption{Shell script to determine supported vector extensions.}
+        \label{lst:exts_script}
+    \end{listing}
+
     \section{Approximations}
     \section{Transmittance}
     \section{Full Render}
@@ -610,7 +729,7 @@ struct thread_pool_t
     \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Model}\footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}
     Measure vector instruction waste, efficiency and cache effects
 
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \includegraphics[scale=.2]{images/teapot.png}
         \caption{Teapot rendered using renderer from Section~\ref{sec:renderer}}
@@ -619,7 +738,7 @@ struct thread_pool_t
 
     \subsection{Dense Cube}
     Runtime averaged over 10 frames
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \includegraphics[scale=.2]{images/cube.png}
         \caption{Dense cube rendered using renderer from Section~\ref{sec:renderer}}
@@ -639,7 +758,7 @@ struct thread_pool_t
     the speedups gained from employing the \gls{simd} routines described in Chapter~\ref{ch:optimizations}
     and Chapter~\ref{ch:implementation}. Showing a speedup of up to $25$ times when
     parallelization over the images pixels.
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/simd_speedup}
         \caption{Single Threaded Speedups from using SIMD}
@@ -648,14 +767,14 @@ struct thread_pool_t
 
     While the SVML routines provide much higher accuracy using them is not worth the
     performance trade-off as seen in Figure~\ref{fig:runtimes_st_svml_v_no}.
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/runtimes_svml}
         \caption{Single Threaded Runtimes using SVML and no SVML with Clang}
         \label{fig:runtimes_st_svml_v_no}
     \end{figure}
 
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/speedup}
         \caption{Speedup of Modes 6-8 relative to Mode 5}
@@ -749,53 +868,6 @@ f32 func(f32 in)
         \label{tab:perf_dense_cube_avx512}
     \end{table}
 
-    \begin{table}[H]
-        \centering
-        \rowcolors{1}{white}{lightgray}
-        \begin{tabular}{|c|c|c|c|c|}
-            \hline
-            Mode & \gls{radiance}             & \gls{transmittance}          & $\erf$                      & $\exp$\\\hline
-            1 st & & & &\\
-            2 st & & & &\\
-            3 st & & & &\\
-            4 st & & & &\\
-            5 st & & & &\\
-            6 st & & & &\\
-            7 st & $3.8 \cdot 10^7$ ($0.9\%$) & $1.15 \cdot 10^9$ ($28.4\%$) & $1.14 \cdot 10^8$ ($2.8\%$) & $4.0 \cdot 10^6$ ($0.1\%$)\\
-            8 st & & & &\\\hline\hline
-            5 mt & & & &\\
-            6 mt & & & &\\
-            7 mt & & $3.96 \cdot 10^8$ ($4.4\%$) & &\\
-            8 mt & & & &\\
-            \hline
-        \end{tabular}
-        \caption{Clang: Vector Instruction Waste (\% of total) by Mode}
-        \label{tab:clang_vec_waste}
-    \end{table}
-    \begin{table}[H]
-        \centering
-        \rowcolors{1}{white}{lightgray}
-        \begin{tabular}{|c|c|c|c|c|}
-            \hline
-            Mode & \gls{radiance} & \gls{transmittance} & $\erf$   & $\exp$\\\hline
-            1 st & & & &\\
-            2 st & & & &\\
-            3 st & & & &\\
-            4 st & & & &\\
-            5 st & & & &\\
-            6 st & & & &\\
-            7 st & $5.0\%$        & $53.78\%$           & $25.0\%$ & - \\
-            8 st & & & &\\\hline\hline
-            5 mt & & & &\\
-            6 mt & & & &\\
-            7 mt & & $31.25\%$ & &\\
-            8 mt & & & &\\
-            \hline
-        \end{tabular}
-        \caption{Clang: Vector Instruction Efficiency by Mode}
-        \label{tab:clang_vec_efficiency}
-    \end{table}
-
     \chapter{Figures}
     \begin{figure}[H]
         \centering
@@ -829,6 +901,58 @@ f32 func(f32 in)
         \input{plots/znver4_cmp_exp_err}
         \caption{$\exp$ Errors}
     \end{figure}
+
+    \chapter{Listings}
+    \label{ch:listings}
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+#define __AVX__ 1
+#define __AVX2__ 1
+#define __AVX512BF16__ 1
+#define __AVX512BITALG__ 1
+#define __AVX512BW__ 1
+#define __AVX512CD__ 1
+#define __AVX512DQ__ 1
+#define __AVX512F__ 1
+#define __AVX512IFMA__ 1
+#define __AVX512VBMI__ 1
+#define __AVX512VBMI2__ 1
+#define __AVX512VL__ 1
+#define __AVX512VNNI__ 1
+#define __AVX512VPOPCNTDQ__ 1
+#define __MMX_WITH_SSE__ 1
+#define __SSE__ 1
+#define __SSE2__ 1
+#define __SSE2_MATH__ 1
+#define __SSE3__ 1
+#define __SSE4_1__ 1
+#define __SSE4_2__ 1
+#define __SSE4A__ 1
+#define __SSE_MATH__ 1
+#define __SSSE3__ 1
+        \end{minted}
+        \caption{Ryzen 9 7950X Vector Extensions determined by gcc}
+        \label{lst:extensions}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t  i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+
+typedef float f32;
+typedef double f64;
+        \end{minted}
+        \caption{Primitive Type Aliases}
+        \label{lst:type_aliases}
+    \end{listing}
 
     \backmatter
     \printglossaries
