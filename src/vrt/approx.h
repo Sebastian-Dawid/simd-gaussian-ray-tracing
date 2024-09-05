@@ -60,26 +60,26 @@ namespace approx {
     inline simd::Vec<simd::Float, SIMD_WIDTH> svml_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
 
     template<>
-    inline simd::Vec<simd::Float, 32> svml_erf(simd::Vec<simd::Float, 32> x);
+    inline simd::Vec<simd::Float, 32> svml_erf(simd::Vec<simd::Float, 32> x)
     {
         return __svml_erff8(x);
     }
     
     template<>
-    inline simd::Vec<simd::Float, 32> svml_exp(simd::Vec<simd::Float, 32> x);
+    inline simd::Vec<simd::Float, 32> svml_exp(simd::Vec<simd::Float, 32> x)
     {
         return __svml_expf8(x);
     }
 
 #ifdef __AVX512F__
     template<>
-    inline simd::Vec<simd::Float, 32> svml_erf(simd::Vec<simd::Float, 32> x);
+    inline simd::Vec<simd::Float, 64> svml_erf(simd::Vec<simd::Float, 64> x)
     {
         return __svml_erff16(x);
     }
 
     template<>
-    inline simd::Vec<simd::Float, 64> svml_exp(simd::Vec<simd::Float, 64> x);
+    inline simd::Vec<simd::Float, 64> svml_exp(simd::Vec<simd::Float, 64> x)
     {
         return __svml_expf16(x);
     }

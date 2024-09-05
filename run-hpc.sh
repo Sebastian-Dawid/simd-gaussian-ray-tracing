@@ -7,7 +7,7 @@ mkdir hpctoolkit
 rm hpc-runtimes.log
 touch hpc-runtimes.log
 
-EVENTS="--event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPUTIME --event MEMLEAK"
+EVENTS="--event PAPI_TOT_CYC --event PAPI_TOT_INS --event PAPI_VEC_INS --event CPUTIME"
 EVENTS="--event perf::L1-DCACHE-LOADS ${EVENTS}"
 EVENTS="--event perf::L1-DCACHE-LOAD-MISSES ${EVENTS}"
 # events listed by hpcrun -L but can't be initialized
@@ -38,6 +38,10 @@ run_test () {
     fi
     make build -j32 ARGS="${clang} ${svml}"
     for mode in $(seq $first_mode 8); do
+        if [ "$2" = "true" ] && [ "${mode}" -eq 5 ]; then
+            continue
+        fi
+
         rm -rf hpctoolkit-volumetric-ray-tracer-measurements
         printf "\tMODE %s ST: " "${mode}" >> hpc-runtimes.log
         HPCRUN_TRACE=1 hpcrun $EVENTS  -- ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/teapot.obj -t1 --tiles 16 -m "${mode}" >> hpc-runtimes.log
@@ -56,7 +60,9 @@ run_test () {
     done
 }
 
-# run_test gcc false
-# run_test gcc true
+if [ $1 = "long" ]; then
+    run_test gcc false
+    run_test gcc true
+fi
 run_test clang false
-# run_test clang true
+run_test clang true

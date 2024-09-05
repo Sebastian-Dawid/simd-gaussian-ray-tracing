@@ -3,7 +3,7 @@ if ARCH == nil then
     ARCH = "native"
 end
 NVIDIA = os.getenv("NVIDIA")
-local svml_path = os.findlib("vcl")
+local svml_path = os.findlib("svml")
 SVML_AVAILABLE = svml_path~=nil
 
 workspace "ba-thesis"
@@ -19,9 +19,9 @@ workspace "ba-thesis"
         trigger = "with-svml",
         description = "link intels svml library"
     }
-    filter { "options:with-gcc" }
+    filter { "options:use-gcc" }
         toolset "gcc"
-    filter { "not options:with-gcc" }
+    filter { "not options:use-gcc" }
         toolset "clang"
     filter {}
 

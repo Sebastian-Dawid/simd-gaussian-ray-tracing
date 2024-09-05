@@ -32,6 +32,8 @@ run_test () {
 }
 
 run_test gcc false
-# run_test gcc true
+if [ $1 = "long" ]; then
+    run_test gcc true
+fi
 run_test clang false
 run_test clang true
