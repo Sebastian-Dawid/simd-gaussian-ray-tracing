@@ -426,18 +426,36 @@
     \end{align}
     yielding
     \begin{equation}
-        k(c) &= \sqrt{2(\ln{(c)} - \ln{(\varepsilon)})}
+        k(c) = \sqrt{2(\ln{(c)} - \ln{(\varepsilon)})}
         \label{eq:sig_lim}
     \end{equation}
     with $\varepsilon = \frac{1}{255}$ the last density value that can result in a visible color and $c$ as the magnitude. Assuming the magnitude of the Gaussians to be in a reasonable range such as $[0, 10]$
     using $k(1) = \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$.
+    
     \chapter{Approximations}
     \label{ch:approximations}
     %@TODO: Explain why it is necessary to approximate functions / implement own approximations
+    Gaussian ray tracing relies on the exponential and error functions. Usually standard implementations of these functions
+    are optimized for accuracy first and speed second and are not easily vectorized. In the case of ray tracing accuracy
+    is only important to a certain degree since the visual artifacts caused by errors smaller than $10^{-3}$ are unlikely
+    to be noticeable.
+
+    Therefore, it is worthwhile to investigate which approximations give the best balance between accuracy, speed and potential
+    to be vectorized.
+
+    The implementation of the approximations will be discussed in Section~\ref{sec:impl_approx}.
+
     \section{Cubic Spline Interpolation}
+    \label{sec:cubic_spline}
     %@TODO: Describe cubic spline interpolation
+    \begin{itemize}
+        \item Find decomposition $a = x_0 < \dots < x_n = b$
+        \item Approximate each interval $[x_{i-1}, x_i]$ with $P_i(x) = a_{i0} + a_{i1}x + a_{i2}x^2 + a_{i3}x^3$ and $P_i \in \mathcal{P}_3([x_{i-1}, x_i])$
+        \item Solve linear system of equations to determine $a_{ij}, i=1,\dots,n, j=0,\dots,3$
+    \end{itemize}
 
     \section{Fast Exponential Function}
+    \label{sec:fast_exp}
     The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp} \cite{fast_exp} is based
     on the fact that
     \begin{equation}
@@ -448,7 +466,10 @@
     standard and will be discussed in Section~\ref{sec:impl_fast_exp}.
     
     \section{Polynomial Approximations of the Error Function}
+    \label{sec:poly_approx}
+
     \subsection{Taylor Series}
+    \label{sec:taylor}
     The Taylor series of the error function is given by
     \begin{equation}
         \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
@@ -464,6 +485,7 @@
     \end{figure}
 
     \subsection{Abramowitz and Stegun}
+    \label{sec:abrasteg}
     \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
     \begin{equation}
         \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
@@ -524,7 +546,10 @@
     \section{Library}
     \label{sec:library}
 
+    %@TODO: Description of the functionality of the library
+
     \subsection{Approximations}
+    \label{sec:impl_approx}
     I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for approximations from Intel's Short Vector
     Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library (\ref{sec:vcl}).
 
@@ -677,8 +702,10 @@ struct thread_pool_t
 
     \subsection{Rendering Functions}
     \label{sec:rendering_functions}
+
     \section{Renderer}
     \label{sec:renderer}
+
     \begin{table}[b]
         \centering
         \rowcolors{1}{white}{lightgray}
