@@ -14,6 +14,8 @@ constexpr u64 ITER  = 100000;
 constexpr u64 COUNT = 1024;
 constexpr u64 SEED  = 42;
 
+using namespace vrt;
+
 i32 main()
 {
     cpu_set_t mask;

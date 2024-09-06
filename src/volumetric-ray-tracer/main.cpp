@@ -181,13 +181,13 @@ struct cmd_args_t
 i32 main(i32 argc, char **argv)
 {
     cmd_args_t cmd(argc, argv);
-    std::vector<gaussian_t> _gaussians;
+    std::vector<vrt::gaussian_t> _gaussians;
     if (cmd.use_grid)
     {
         u8 grid_dim = cmd.grid_dim;
         for (u8 i = 0; i < grid_dim; ++i)
             for (u8 j = 0; j < grid_dim; ++j)
-                _gaussians.push_back(gaussian_t{
+                _gaussians.push_back(vrt::gaussian_t{
                         .albedo{ 1.f - (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 0.f, 0.f + (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 1.f },
                         .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 1.f },
                         .sigma = 1.f/(2 * grid_dim),
@@ -200,12 +200,12 @@ i32 main(i32 argc, char **argv)
     }
     else
     {
-        _gaussians = { gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 10.f } };
+        _gaussians = { vrt::gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, vrt::gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, vrt::gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 10.f } };
     }
 
 
-    std::vector<gaussian_t> staging_gaussians = _gaussians;
-    gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
+    std::vector<vrt::gaussian_t> staging_gaussians = _gaussians;
+    vrt::gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = vrt::gaussian_vec_t::from_gaussians(_gaussians) };
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
     f32 draw_time = 0.f, tiling_time = 0.f, total_time = 0.f;
@@ -231,7 +231,7 @@ i32 main(i32 argc, char **argv)
         if (!renderer->init(width, height, "SIMD VRT")) return EXIT_FAILURE;
         renderer->custom_imgui = [&](){
             ImGui::Begin("Gaussians");
-            for (gaussian_t &g : staging_gaussians) g.imgui_controls();
+            for (vrt::gaussian_t &g : staging_gaussians) g.imgui_controls();
             ImGui::End();
             ImGui::Begin("Debug");
             ImGui::Text("Tiling Time: %f ms", tiling_time);
@@ -249,12 +249,12 @@ i32 main(i32 argc, char **argv)
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
     struct timespec start, end;
 
-    vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
-    camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
+    vrt::vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
+    vrt::camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
     f32 angle = -90.f;
     u64 frames = 0;
     cam.position = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(cmd.inital_rot), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
-    origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
+    origin = vrt::vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
     angle -= cmd.inital_rot;
     cam.turn(angle, 0.f);
 
@@ -264,7 +264,7 @@ i32 main(i32 argc, char **argv)
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         gaussians.gaussians = staging_gaussians;
         gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
-        tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
+        vrt::tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
 
@@ -272,28 +272,28 @@ i32 main(i32 argc, char **argv)
         bool res = false;
         if (use_tiling)
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
+            if (use_simd_pixels) res = vrt::simd_render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             else if (use_simd_l_hat)
             {
-                res = render_image<simd_l_hat>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
+                res = vrt::render_image<vrt::simd_radiance>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             }
-            else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
+            else if (use_simd_transmittance) res = vrt::render_image(width, height, image, cam, origin, tiles, running, cmd.thread_count); 
             else
             {
-                res = render_image<l_hat<transmittance>>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
+                res = vrt::render_image<vrt::radiance<vrt::transmittance>>(width, height, image, cam, origin, tiles, running, cmd.thread_count);
             }
         }
         else
         {
-            if (use_simd_pixels) res = simd_render_image(width, height, image, cam, origin, gaussians, running);
+            if (use_simd_pixels) res = vrt::simd_render_image(width, height, image, cam, origin, gaussians, running);
             else if (use_simd_l_hat)
             {
-                res = render_image<simd_l_hat>(width, height, image, cam, origin, gaussians, running);
+                res = vrt::render_image<vrt::simd_radiance>(width, height, image, cam, origin, gaussians, running);
             }
-            else if (use_simd_transmittance) res = render_image(width, height, image, cam, origin, gaussians, running);
+            else if (use_simd_transmittance) res = vrt::render_image(width, height, image, cam, origin, gaussians, running);
             else
             {
-                res = render_image<l_hat<transmittance>>(width, height, image, cam, origin, gaussians, running);
+                res = vrt::render_image<vrt::radiance<vrt::transmittance>>(width, height, image, cam, origin, gaussians, running);
             }
         }
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
@@ -333,7 +333,7 @@ i32 main(i32 argc, char **argv)
 
         angle_change = (!cmd.quiet) ? ((current_frame)/1000.f) * 90.f : cmd.rot / cmd.nr_frames;
         cam.position = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(angle_change), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));
-        origin = vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
+        origin = vrt::vec4f_t::from_glm(glm::vec4(cam.position, 0.f));
         angle -= angle_change;
         cam.turn(angle, 0.f);
     }

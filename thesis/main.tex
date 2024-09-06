@@ -162,20 +162,30 @@
 
     To project the 3D covariance matrix to a 2D covariance matrix they employ a method described by \citeauthor{volume_splatting}
     in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix $\Sigma'$ in camera coordinates can be computed
-    from the viewing transformation $W$ as:
+    from the viewing transformation $W$, as
     \begin{equation}
         \Sigma' = JW\Sigma W^TJ^T
     \end{equation}
     with $J$ as the jacobian of $P$ at $\mu$. \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting} also show that discarding the third row and column yields
     a 2D covariance matrix $\Sigma_{2D}$.
 
-    \begin{itemize}
-        \item back to front projection
-        \item alpha blending
-    \end{itemize}
+    %@TODO: This is not part of the paper technically -> how do I cite this?
+    %@TODO: Wording seems iffy, should rework this
+    At this point the means of the Gaussians are in \gls{ndc} (NDC), to render them they are converted to the corresponding
+    screen space coordinates. To ensure correct occlusion the Gaussians are sorted back to front by the $z$ coordinate of
+    their means in \gls{ndc}. To generate the final image the Gaussians are blended, using alpha blending, onto the image in order.
+    This means that
+    \begin{equation}
+        \mathbf{c}_{\text{new}} = \mathbf{c}_{\text{old}} \cdot (1 - \alpha) + \mathbf{a} \cdot \exp{\left(-(\mathbf{x} - \bar{\mu})^T\Sigma_{2D}^{-1}(\mathbf{x} - \bar{\mu})\right)} \cdot \alpha
+    \end{equation}
+    where $\mathbf{c}$ is the new/old pixel color and $\bar{\mu}$ the Gaussian's mean in screen space.
 
     \section{Ray Tracing vs. Splatting}
     %@TODO: What differentiates the two methods? Advantages? Disadvantages?
+    \begin{itemize}
+        \item perspective effects
+        \item intersecting Gaussians
+    \end{itemize}
 
     \chapter{Optimizations}
     \label{ch:optimizations}
@@ -303,7 +313,8 @@
     \end{align*}
 
     This version of the \gls{transmittance} equation \eqref{eq:transmittance_analytical} allows me to rewrite the \gls{radiance} equation
-    \eqref{eq:radiance} to operate on multiple Gaussians at the same time in the same way as in \ref{par:parallel_transmittance}
+    \eqref{eq:radiance} to operate on multiple Gaussians at the same time in the same way it was done in the parallel \gls{transmittance}
+    equation \eqref{eq:transmittance_parallel}, yielding the parallel \gls{radiance}
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}, \mathbf{n}, \gamma) &= \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1} \left( \begin{pmatrix}
@@ -470,11 +481,12 @@
 
     \subsection{Taylor Series}
     \label{sec:taylor}
-    The Taylor series of the error function is given by
+    The Taylor series of the error function
     \begin{equation}
         \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
+        \label{eq:taylor}
     \end{equation}
-    and can give a good approximation of the error function around $x = 0$ when evaluated at $x = 0$. For the approximation to be usable
+    can give a good approximation of the error function around $x = 0$ when evaluated at $x_0 = 0$. For the approximation to be usable
     on the relevant interval of $[-2, 2]$ it needs to include at least ten terms of the series as seen in Figure~\ref{fig:taylor_erf}.
 
     \begin{figure}[t]
@@ -486,23 +498,28 @@
 
     \subsection{Abramowitz and Stegun}
     \label{sec:abrasteg}
-    \citeauthor{AbraSteg72} give one such approximation in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
+    \citeauthor{AbraSteg72} give a polynomial approximation of the error function in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
     \begin{equation}
         \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
+        \label{eq:abrasteg_positive}
     \end{equation}
     with
-    \begin{align*}
-        a &= 0.278393,\,
-        b = 0.230289\\
-        c &= 0.000972,\,
-        d = 0.078108
-    \end{align*}
+    \begin{equation}
+        \begin{aligned}
+            a &= 0.278393,\,
+            b = 0.230289\\
+            c &= 0.000972,\,
+            d = 0.078108
+        \end{aligned}
+        \label{eq:abrasteg_defs}
+    \end{equation}
     for $x \in [0, \infty)$. To extend the approximation for $x \in \R$ I exploit the point symmetry of the error function with respect to $x = 0$. This yields
     \begin{equation}
         \erf{(x)} = \begin{cases}
             1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4} & x \in [0, \infty)\\
             \erf{(-x)} & x \in (-\infty, 0)
         \end{cases}
+        \label{eq:abrasteg}
     \end{equation}
     with $a$, $b$, $c$ and $d$ the same as before.
     
@@ -534,14 +551,34 @@
     Using instrinsics directly has the disadvantage that the code is tied to the extension that makes those intrinsics available. Therefore, I opted to use a wrapper library (\ref{sec:tsimd})
     to avoid direct usage of intrinsics.
 
-    \subsection{Math to SIMD}
+    \subsection{Vectorization to SIMD}
+    \label{sec:vectorization_to_simd}
     \begin{itemize}
         \item most conversion are 1 to 1
         \item p-vectors of vectors are implemented as vectors of p-vectors
     \end{itemize}
+
     \subsection{T-SIMD}
     \label{sec:tsimd}
-    A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+    A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}}
+    \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+    \begin{itemize}
+        \item Vector class →  Template determines width in bytes
+        \item Intrinsics are wrapped in template functions →  intrinsic used based on width template parameter
+        \item Which widths are instantiated is based on the vector extensions detected by the compiler (\mintinline{sh}{gcc -march=native}) or set via flags (\mintinline{sh}{gcc -march=znver2} or \mintinline{sh}{gcc -mavx2})
+        \item Only available widths are instantiated
+        \item Missing instructions are emulated (e.g. extension not available)
+    \end{itemize}
+
+    \subsubsection{Sequential to T-SIMD}
+    \label{sec:seq_to_tsimd}
+    \begin{itemize}
+        \item Most arithmetic conversions are one to one →  operator overloading in T-SIMD
+        \item \mintinline{c++}{if () {} else {}} can be done via \mintinline{c++}{simd::ifelse} →  a bit more restrictive (no code blocks, lambdas with returns as a workaround maybe? wasn't relevant here)
+        \item scalar values via \mintinline{c++}{simd::set1}
+        \item reciprocal and square root are available as instructions →  available in T-SIMD as \mintinline{c++}{simd::rcp} and \mintinline{c++}{simd::sqrt}
+        \item Sum over vector \mintinline{c++}{simd::hadds}
+    \end{itemize}
 
     \section{Library}
     \label{sec:library}
@@ -553,8 +590,27 @@
     I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for approximations from Intel's Short Vector
     Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library (\ref{sec:vcl}).
 
+    For the sake of readability I will only embed the sequential implementations of the approximations in the text. The versions of the functions
+    parallelized using T-SIMD can be found in Appendix~\ref{ch:listings}.
+
+    \subsubsection{Cubic Spline Interpolation}
+    \label{sec:impl_cubic_spline}
+
+    \begin{itemize}
+        \item horner's method
+        \item code gen using julia
+    \end{itemize}
+    
+    \begin{equation}
+        p(x) = \left(\left(\cdots\left(a_nx + a_{n-1}\right)x + \cdots a_2\right)x + a_1\right)x + a_0
+        \label{eq:horners_method}
+    \end{equation}
+
     \subsubsection{Fast Exponential Function}
     \label{sec:impl_fast_exp}
+    As described in Section~\ref{sec:fast_exp} this approximation of the exponential function relies on the structure of floating point numbers defined by the IEEE-754
+    standard.
+
     The IEEE-754 standard defines a double precision floating point number to consist of a sign bit $s \in \{ 0, 1 \}$, a 52-bit mantissa $m \in [0, 1)$ and an
     11-bit exponent $x$ and is calculated as
     \begin{equation}
@@ -606,6 +662,64 @@ f32 fast_exp(f32 x)
         \end{minted}
         \caption{Fast Exponential Function Implementations}
         \label{lst:fast_exp_impl}
+    \end{listing}
+
+    \subsubsection{Taylor Series and Abramowitz and Stegun}
+    \label{sec:impl_abrasteg_taylor}
+    Polynomial approximations of the error function as described by \citeauthor{AbraSteg72} (see Section~\ref{sec:abrasteg})
+    and the taylor series (see Section~\ref{sec:taylor}) could be implemented trivially (see Listing~\ref{lst:trivial_abrasteg}),
+    this however is an inefficient way of evaluating polynomials. As with the cubic spline interpolation above it is better to
+    use Horner's method \eqref{eq:horners_method} to evaluate the polynomial as shown in Listing~\ref{lst:horner_abrasteg} and
+    Listing~\ref{lst:horner_taylor}.
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+f32 abramowitz_stegun_erf(f32 x)
+{
+    const f32 sign = (x >= 0) - (x < 0);
+    x *= sign;
+    const f32 denom = 1.f + a*x + b*x*x
+            + c*x*x*x + d*x*x*x*x;
+    const f32 val = (1.f - 1.f/(denom*denom*denom*denom));
+    return sign * val;
+}
+        \end{minted}
+        \caption{Trivial implementation of approximation of the error function in Eq.~\refeq{eq:abrasteg}.}
+        \label{lst:trivial_abrasteg}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+f32 abramowitz_stegun_erf(f32 x)
+{
+    const f32 sign = (x >= 0) - (x < 0);
+    x *= sign;
+    const f32 denom = (((d*x + c)*x + b)*x + a)*x + 1.f;
+    const f32 denom2 = denom * denom;
+    const f32 val = (1.f - 1.f/(denom2*denom2));
+    return sign * val;
+}
+        \end{minted}
+        \caption{Implementation of the approximation of the error function in Eq.~\refeq{eq:abrasteg} using Horner's method.}
+        \label{lst:horner_abrasteg}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+constexpr f32 ts[] = { ... };
+f32 taylor_erf(const f32 x)
+{
+    if (-2.f >= x) return -1.f;
+    if (x >= 2.f) return 1.f;
+    return sign * 2.f * std::numbers::inv_sqrtpi_v<f32>
+            * ((((((((((ts[9])*x*x + ts[8])*x*x
+            + ts[7])*x*x + ts[6])*x*x + ts[5])*x*x
+            + ts[4])*x*x + ts[3])*x*x + ts[2])*x*x
+            + ts[1])*x*x + ts[0])*x;
+}
+        \end{minted}
+        \caption{Implementation of the approximation of the error function using ten terms of its taylor series \eqref{eq:taylor} at $0$ (\mintinline{c++}{ts}).}
+        \label{lst:horner_taylor}
     \end{listing}
 
     \subsubsection{Short Vector Math Library (SVML)}
@@ -703,8 +817,45 @@ struct thread_pool_t
     \subsection{Rendering Functions}
     \label{sec:rendering_functions}
 
+    \subsubsection{Tiling}
+    \begin{itemize}
+        \item one to one from Section~\ref{sec:tiling}
+    \end{itemize}
+
+    \subsubsection{\gls{transmittance}}
+    \begin{itemize}
+        \item implementation of Eq.~\refeq{eq:transmittance_analytical}
+        \item erf and exp implementations passed as template parameters
+        \item parallelism →  memory overhead through load instruction, horizontal add Eq.~\refeq{eq:transmittance_parallel}
+        \item broadcast Eq.~\refeq{eq:transmittance_broadcast}
+    \end{itemize}
+    
+    \subsubsection{\gls{radiance}}
+    \begin{itemize}
+        \item implementation of Eq.~\refeq{eq:radiance}
+        \item transmittance functions as template argument
+        \item parallelism →  memory overhead via load Eq.~\refeq{eq:radiance_parallel_final}
+        \item broadcast Eq.~\refeq{eq:radiance_parallel_pixels}
+    \end{itemize}
+    
+    \subsubsection{Full Render}
+    \begin{itemize}
+        \item parallel radiance or transmittance →  radiance function as template parameter
+        \item parallel →  exp and erf approximations as template parameters
+        \item 2 versions each with and without tiling
+        \item thread pool used in tiling versions
+    \end{itemize}
+
     \section{Renderer}
     \label{sec:renderer}
+
+    \begin{itemize}
+        \item renders and displays images via custom vulkan renderer (relevant?)
+        \item load \mintinline{sh}{.obj} files →  vertices as gaussians
+        \item command line flags (table?)
+        \item multiple rendering modes listed in Table~\ref{tab:exec_modes}
+        \item write images to file / headless mode
+    \end{itemize}
 
     \begin{table}[b]
         \centering
@@ -745,13 +896,20 @@ gcc -march=native -dM -E - < /dev/null \
     \end{listing}
 
     \section{Approximations}
-    \section{Transmittance}
+    \begin{itemize}
+        \item averaged cycle count
+        \item accuracy over relevant intervals
+    \end{itemize}
+
+    %@TODO: Do I need this section? Do I have relevant experiments w.r.t the transmittance? \section{Transmittance}
+
     \section{Full Render}
-    Aside from testing singular functions or sections of the program, I have also performed a number of end-to-end tests
-    to evaluate the performance improvements of the implemented optimizations in a, close to, real world scenario.
-    The tests will be performed on two separate models and evaluate different aspects of the implementation,
-    which I will describe in the following sections:
+    Aside from testing the approximations on their own, I have also performed end-to-end tests
+    to evaluate the performance improvements of the implemented optimizations in a - close to - real world scenario.
+    The tests will be performed on two separate models and evaluate metrics concerning the usage and efficiency of
+    \gls{simd} instructions (\ref{sec:utah_teapot}) and the runtime of the program (\ref{sec:dense_cube})
     \subsection{Utah/Newell Teapot}
+    \label{sec:utah_teapot}
     %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
     \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Model}\footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}
     Measure vector instruction waste, efficiency and cache effects
@@ -762,8 +920,54 @@ gcc -march=native -dM -E - < /dev/null \
         \caption{Teapot rendered using renderer from Section~\ref{sec:renderer}}
         \label{fig:teapot_render}
     \end{figure}
+    
+    \subsubsection{HPCToolkit}
+    \cite{hpc_toolkit}
+
+    The derived metrics used were vector instruction waste and vector instruction efficiency defined as:
+    \begin{align}
+        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions} \label{eq:vec_waste}\\
+        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}} \label{eq:vec_efficiency}
+    \end{align}
+    which should be based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured for that scope
+    alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
+    \href{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}}
+    \mintinline{c}{PAPI_TOT_CYC} (total cycles) and \mintinline{c}{PAPI_VEC_INS}
+    (vector instructions) metrics for the given scopes.
+
+    %@TODO: Verify this:
+    % HPCToolkit does not include inlined functions in exclusive metrics, which is why \gls{simd}
+    % instructions and CPU cycles generated by the T-SIMD library would not count towards the exclusive \mintinline{c}{PAPI_VEC_INS} and \mintinline{c}{PAPI_TOT_CYC}
+    % metrics.
+
+%     \begin{listing}[H]
+%         \begin{minted}[linenos, frame=lines]{c++}
+% f32 func(f32 in)
+% {
+%     // inlined broadcast should count for scope
+%     simd::Vec<simd::Float> x = simd::set1(in);
+%     // exp should not count for scope
+%     x = simd::exp(x);
+%     // inlined mul and broadcast should count for scope
+%     x = x * simd::set1(2.f);
+%     return x;
+% }
+%         \end{minted}
+%         \caption{Example for functions calls that should and should not count towards exclusive metrics.}
+%         \label{lst:scopes_example}
+%     \end{listing}
+% 
+%     As such the inclusive metrics are used for calculating the derived metrics. To get the exclusive derived metrics including the inlined T-SIMD functions I subtract
+%     the inclusive derived metrics of the functions I want to disregard. For the example in Listing~\ref{lst:scopes_example}
+%     this would be:
+%     \[ \text{metric}_e = \text{metric}_i - \text{metric}_{\text{simd::exp}} \]
+%     where $\text{metric}_i$ is the inclusive metric and $\text{matric}_{\text{simd::exp}}$ is the metric for the \mintinline{c++}{simd::exp} call.
+
+    %Therefore the derived metrics are calculated using the inclusive metrics. To obtain the final value for the derived metrics the
+    %value of the derived metrics of the scopes of non T-SIMD functions are subtracted from the value calculated using the inclusive metrics.
 
     \subsection{Dense Cube}
+    \label{sec:dense_cube}
     Runtime averaged over 10 frames
     \begin{figure}[t]
         \centering
@@ -778,6 +982,15 @@ gcc -march=native -dM -E - < /dev/null \
 
     \section{Runtime}
 
+    \subsection{Approximations}
+    \begin{itemize}
+        \item exp: \mintinline{c++}{approx::simd_fast_exp} is slightly faster than \mintinline{c++}{approx::vcl_exp}, but a lot less accurate →  \mintinline{c++}{approx::vcl_exp} as default
+        \item erf: \mintinline{c++}{approx::simd_abramowitz_stegun_erf} is significantly faster and accurate than the runner-up \mintinline{c++}{approx::simd_spline_erf_mirror} →
+            \mintinline{c++}{approx::simd_abramowitz_stegun_erf} as default.
+        \item svml: slowest error function →  beat by both splines which are ill-suited to simd parallelization
+    \end{itemize}
+
+    \subsection{Full Render}
     On average the runtime is reduced by $19\%$ when compiling with clang instead of GCC.
     Rendering finishes about $9.4$ times faster when using tiling.
 
@@ -808,47 +1021,7 @@ gcc -march=native -dM -E - < /dev/null \
         \label{fig:runtimes_st_v_mt}
     \end{figure}
 
-    \section{HPCTOOLKIT}
-    \cite{hpc_toolkit}
-
-    The derived metrics used were vector instruction waste and vector instruction efficiency defined as:
-    \begin{align}
-        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions} \label{eq:vec_waste}\\
-        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}} \label{eq:vec_efficiency}
-    \end{align}
-    which should be based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured for that scope
-    alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
-    \href{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}}
-    \mintinline{c}{PAPI_TOT_CYC} (total cycles) and \mintinline{c}{PAPI_VEC_INS}
-    (vector instructions) metrics for the given scopes. HPCToolkit does not include inlined functions in exclusive metrics, which is why \gls{simd}
-    instructions and CPU cycles generated by the T-SIMD library would not count towards the exclusive \mintinline{c}{PAPI_VEC_INS} and \mintinline{c}{PAPI_TOT_CYC}
-    metrics.
-
-    \begin{listing}[H]
-        \begin{minted}[linenos, frame=lines]{c++}
-f32 func(f32 in)
-{
-    // inlined broadcast should count for scope
-    simd::Vec<simd::Float> x = simd::set1(in);
-    // exp should not count for scope
-    x = simd::exp(x);
-    // inlined mul and broadcast should count for scope
-    x = x * simd::set1(2.f);
-    return x;
-}
-        \end{minted}
-        \caption{Example for functions calls that should and should not count towards exclusive metrics.}
-        \label{lst:scopes_example}
-    \end{listing}
-
-    As such the inclusive metrics are used for calculating the derived metrics. To get the exclusive derived metrics including the inlined T-SIMD functions I subtract
-    the inclusive derived metrics of the functions I want to disregard. For the example in Listing~\ref{lst:scopes_example}
-    this would be:
-    \[ \text{metric}_e = \text{metric}_i - \text{metric}_{\text{simd::exp}} \]
-    where $\text{metric}_i$ is the inclusive metric and $\text{matric}_{\text{simd::exp}}$ is the metric for the \mintinline{c++}{simd::exp} call.
-
-    %Therefore the derived metrics are calculated using the inclusive metrics. To obtain the final value for the derived metrics the
-    %value of the derived metrics of the scopes of non T-SIMD functions are subtracted from the value calculated using the inclusive metrics.
+    \section{Waste and Efficiency}
 
     \chapter{Conclusion and Future Work}
     %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
@@ -875,20 +1048,20 @@ f32 func(f32 in)
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c | c | c | c|}
             \hline
-            Mode & GCC               & Clang & SVML\\\hline
-            1 st & $\sim1648.17$ sec & $\sim1373.29$ sec & - \\
-            2 st & $\sim96.47$ sec   & $\sim82.86$ sec   & $\sim150.08$ sec\\
-            3 st & $\sim69.44$ sec   & $\sim56.78$ sec   & $\sim134.33$ sec\\
-            4 st & $\sim67.19$ sec   & $\sim52.62$ sec   & $\sim136.42$ sec\\
-            5 st & $\sim170.74$ sec  & $\sim136.84$ sec  & - \\
-            6 st & $\sim11.95$ sec   & $\sim9.69$ sec    & $\sim17.80$ sec\\
-            7 st & $\sim7.46$ sec    & $\sim5.83$ sec    & $\sim14.82$ sec\\
-            8 st & $\sim7.08$ sec    & $\sim5.61$ sec    & $\sim15.02$ sec\\\hline\hline
+            Mode & GCC               & Clang             & SVML\\\hline
+            1 st & $\sim1673.50$ sec & $\sim1367.64$ sec & - \\
+            2 st & $\sim96.78$ sec   & $\sim80.93$ sec   & $\sim152.43$ sec\\
+            3 st & $\sim69.46$ sec   & $\sim54.19$ sec   & $\sim135.71$ sec\\
+            4 st & $\sim67.39$ sec   & $\sim54.47$ sec   & $\sim137.09$ sec\\
+            5 st & $\sim210.41$ sec  & $\sim171.01$ sec  & - \\
+            6 st & $\sim14.84$ sec   & $\sim11.73$ sec   & $\sim23.29$ sec\\
+            7 st & $\sim9.32$ sec    & $\sim7.38$ sec    & $\sim18.59$ sec\\
+            8 st & $\sim8.79$ sec    & $\sim7.01$ sec    & $\sim18.99$ sec\\\hline\hline
 
-            5 mt & $\sim6.60$ sec    & $\sim5.93$ sec    & $\sim5.94$ sec\\
-            6 mt & $\sim0.62$ sec    & $\sim0.53$ sec    & $\sim0.95$ sec\\
-            7 mt & $\sim0.47$ sec    & $\sim0.40$ sec    & $\sim0.80$ sec\\
-            8 mt & $\sim0.45$ sec    & $\sim0.39$ sec    & $\sim0.78$ sec\\
+            5 mt & $\sim8.30$ sec    & $\sim7.24$ sec    & - \\
+            6 mt & $\sim0.77$ sec    & $\sim0.66$ sec    & $\sim1.19$ sec\\
+            7 mt & $\sim0.60$ sec    & $\sim0.49$ sec    & $\sim1.00$ sec\\
+            8 mt & $\sim0.56$ sec    & $\sim0.48$ sec    & $\sim0.97$ sec\\
             \hline
         \end{tabular}
         \caption{Runtime of rendering the dense cube based on compiler, SVML usage, and mode using AVX512. Averaged over 10 Frames.}

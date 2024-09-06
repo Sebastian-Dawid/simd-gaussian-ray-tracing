@@ -34,6 +34,7 @@
     }                                       \
 }
 
+using namespace vrt;
 using namespace approx;
 
 i32 main()
@@ -43,7 +44,8 @@ i32 main()
     CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
     FILE *CSV = std::fopen("csv/simd_erf.csv", "wd");
-    fmt::println(CSV, "count, t_svml, t_simd_spline, t_simd_spline_mirror, t_simd_abramowitz, t_spline, t_spline_mirror, t_abramowitz, t_std");
+    FILE *dev_null = std::fopen("/dev/null", "wd");
+    fmt::println(CSV, "count, t_svml, t_simd_spline, t_simd_spline_mirror, t_simd_abramowitz, t_simd_taylor, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std");
     struct rdpmc_ctx ctx;
     u64 start, end, acc;
 
@@ -73,6 +75,10 @@ i32 main()
                 simd::storeu(s + j, simd_abramowitz_stegun_erf(simd::loadu(t + j))););
         f32 t_simd_abramowitz = (f32)acc/ITER;
 
+        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
+                simd::storeu(s + j, simd_taylor_erf(simd::loadu(t + j))););
+        f32 t_simd_taylor = (f32)acc/ITER;
+
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = spline_erf(t[j]););
         f32 t_spline = (f32)acc/ITER;
@@ -86,15 +92,18 @@ i32 main()
         f32 t_abramowitz = (f32)acc/ITER;
 
         BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
+                s[j] = taylor_erf(t[j]););
+        f32 t_taylor = (f32)acc/ITER;
+
+        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
                 s[j] = std::erf(t[j]););
         f32 t_std = (f32)acc/ITER;
 
-        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_svml, t_simd, t_simd_mirror, t_simd_abramowitz, t_spline, t_spline_mirror, t_abramowitz, t_std);
+        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_svml, t_simd, t_simd_mirror, t_simd_abramowitz, t_simd_taylor, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std);
     }
     std::fclose(CSV);
 
     CSV = std::fopen("csv/simd_exp.csv", "wd");
-    FILE* dev_null = std::fopen("/dev/null", "wd");
     fmt::println(CSV, "count, t_vcl, t_svml, t_simd, t_spline, t_fast, t_simd_fast, t_std");
     for (u64 i = 1; i < 100; ++i)
     {

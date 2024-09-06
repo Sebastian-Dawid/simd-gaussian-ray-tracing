@@ -20,6 +20,8 @@
 
 #include <vrt/vrt.h>
 
+using namespace vrt;
+
 int main(i32 argc, char **argv)
 {
     cpu_set_t mask;

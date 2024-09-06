@@ -6,6 +6,8 @@
 
 #define GETTIME(ts) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(ts))
 
+using namespace vrt;
+
 int main()
 {
     cpu_set_t mask;
@@ -42,7 +44,7 @@ int main()
         });
 
         GETTIME(start);
-        render_image<l_hat<transmittance<approx::fast_exp, approx::abramowitz_stegun_erf>>>(dim, dim, image, cam, origin, gaussians, true);
+        render_image<radiance<transmittance<approx::fast_exp, approx::abramowitz_stegun_erf>>>(dim, dim, image, cam, origin, gaussians, true);
         GETTIME(end);
         f32 t_seq = simd::timeSpecDiffNsec(end, start)/1000.f;
 

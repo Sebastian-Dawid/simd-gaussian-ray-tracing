@@ -6,6 +6,7 @@
 
 #define GETTIME(ts) clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(ts))
 
+using namespace vrt;
 using namespace approx;
 
 int main()
@@ -34,27 +35,27 @@ int main()
                     .magnitude = 1.f
                     });
             GETTIME(start);
-            l_hat<transmittance<expf, spline_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<expf, spline_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            l_hat<transmittance<expf, spline_erf_mirror>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<expf, spline_erf_mirror>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_mirror = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            l_hat<transmittance<expf, taylor_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<expf, taylor_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_taylor = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             GETTIME(start);
-            l_hat<transmittance<expf, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<expf, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_abramowitz = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            l_hat<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             u64 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 
@@ -78,17 +79,17 @@ int main()
                     .magnitude = 1.f
                     });
             GETTIME(start);
-            l_hat<transmittance<spline_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<spline_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             GETTIME(start);
-            l_hat<transmittance<fast_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<fast_exp>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 
             GETTIME(start);
-            l_hat<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_std = simd::timeSpecDiffNsec(end, start)/1000.f;
 
@@ -114,12 +115,12 @@ int main()
                     });
             growing.gaussians_broadcast->load_gaussians(growing.gaussians);
             GETTIME(start);
-            l_hat<simd_transmittance<simd_fast_exp, simd_abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<simd_transmittance<simd_fast_exp, simd_abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_spline = simd::timeSpecDiffNsec(end, start)/1000.f;
             
             GETTIME(start);
-            l_hat<transmittance<fast_exp, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
+            radiance<transmittance<fast_exp, abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
             f32 t_fast = simd::timeSpecDiffNsec(end, start)/1000.f;
 

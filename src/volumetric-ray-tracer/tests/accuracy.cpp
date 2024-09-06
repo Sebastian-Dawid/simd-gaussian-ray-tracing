@@ -3,6 +3,7 @@
 #include "include/definitions.h"
 #include <sched.h>
 
+using namespace vrt;
 using namespace approx;
 
 int main()

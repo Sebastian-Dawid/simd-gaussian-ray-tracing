@@ -28,46 +28,38 @@ function cubic_spline_interpolation(x, y)
     return (t -> p(t)[get_index(t)]), [a_0, a_1, a_2, a_3]
 end
 
-function generate_c(f=erf, name="erf", x=-6:.5:6)
+function generate_c(f=erf, name="erf", x=-6.0:.5:6.0, lower=-1.0, upper=1.0)
     _, a = cubic_spline_interpolation(x, f.(x))
-    factors = map(x -> string.(x) .* "f", Vector{Float32}.(a))
+    factors = map(x -> string.(Float32.(x)) .* "f", Vector{Float32}.(a))
     xs = "(x - " .* string.(x[2:end]) .* "f)"
-    xs2 = xs .* " * " .* xs
-    xs3 = xs2 .* " * " .* xs
-    p3 = factors[4] .* " * " .* xs3
-    p2 = factors[3][2:end] .* " * " .* xs2
-    p1 = factors[2] .* " * " .* xs
-    polynomials = p3 .* " + " .* p2 .* " + " .* p1 .* " + " .* factors[1]
+    polynomials = "((" .* factors[4] .* " * " .* xs .* " + " .* factors[3][2:end] .* ") * " .* xs
+    polynomials = polynomials .* " + " .* factors[2] .* ") * " .* xs .* " + " .* factors[1]
     returns = "return " .* polynomials .* ";"
     fun = "/// generated using spline interpolation with supports $(x)
-static float spline_"*name*"(float x)
+f32 spline_"*name*"(const f32 x)
 {
-    if (x <= $(x[2])f) return -1.f;\n"
+    if (x <= $(Float32(x[2]))f) return $(lower)f;\n"
     for i in eachindex(returns)[1:end-1]
-fun = fun .* "    else if ($(x[i+1])f <= x && x <= $(x[i+2])f) { " .* returns[i] .* " }\n"
+        fun = fun .* "    else if (x < $(x[i+2])f) { " .* returns[i] .* " }\n"
     end
-    fun = fun .* "    return 1.f;
+    fun = fun .* "    return $(upper)f;
 }"
     println(fun)
 end
 
-function generate_simd_c(f=erf, name="erf", x=-6:.5:6)
+function generate_simd_c(f=erf, name="erf", x=-6.0:.5:6.0, lower=-1.0, upper=1.0)
     _, a = cubic_spline_interpolation(x, f.(x))
-    factors = map(x -> string.(x) .* "f", Vector{Float32}.(a))
+    factors = map(x -> "simd::set1(" .* string.(x) .* "f)", Vector{Float32}.(a))
     xs = "(x - " .* "simd::set1(" .* string.(x[2:end]) .* "f))"
-    xs2 = xs .* " * " .* xs
-    xs3 = xs2 .* " * " .* xs
-    p3 = "simd::set1(" .* factors[4] .* ") * " .* xs3
-    p2 = "simd::set1(" .* factors[3][2:end] .* ") * " .* xs2
-    p1 = "simd::set1(" .* factors[2] .* ") * " .* xs
-    polynomials = p3 .* " + " .* p2 .* " + " .* p1 .* " + " .* "simd::set1(" .* factors[1] .* ")"
+    polynomials = "((" .* factors[4] .* " * " .* xs .* " + " .* factors[3][2:end] .* ") * " .* xs
+    polynomials = polynomials .* " + " .* factors[2] .* ") * " .* xs .* " + " .* factors[1]
     fun = "/// generated using spline interpolation with supports $(x)
-static simd::Vec<simd::Float> simd_spline_"*name*"(simd::Vec<simd::Float> x)
+simd::Vec<simd::Float> simd_spline_"*name*"(const simd::Vec<simd::Float> x)
 {
-    simd::Vec<simd::Float> value = simd::set1(1.f);
-    simd::ifelse(x <= simd::set1($(x[2])f), simd::set1(-1.f), value);\n"
+    simd::Vec<simd::Float> value = simd::set1($(upper));
+    simd::ifelse(x <= simd::set1($(Float32(x[2]))f), simd::set1($(lower)), value);\n"
     for i in eachindex(polynomials)[1:end-1]
-    fun = fun .* "    value = simd::ifelse(simd::bit_and(simd::set1($(x[i+1])f) <= x, x <= simd::set1($(x[i+2])f)), " .* polynomials[i] .* ", value);\n"
+        fun = fun .* "    value = simd::ifelse(simd::bit_and(simd::set1($(x[i+1])f) <= x, x <= simd::set1($(x[i+2])f)), " .* polynomials[i] .* ", value);\n"
     end
     fun = fun .* "    return value;
 }"

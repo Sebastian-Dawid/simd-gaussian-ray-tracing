@@ -4,7 +4,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <include/tiny_obj_loader.h>
 
-std::vector<gaussian_t> read_from_obj(const char *const filename)
+std::vector<vrt::gaussian_t> read_from_obj(const char *const filename)
 {
     tinyobj::ObjReader reader;
     if (!reader.ParseFromFile(filename))
@@ -22,14 +22,14 @@ std::vector<gaussian_t> read_from_obj(const char *const filename)
     }
 
     const tinyobj::attrib_t &attrib = reader.GetAttrib();
-    std::vector<gaussian_t> gaussians;
+    std::vector<vrt::gaussian_t> gaussians;
     for (u64 i = 0; i < attrib.vertices.size(); i+=3)
     {
-        vec4f_t pt{ .x = attrib.vertices[i], .y = attrib.vertices[i+1], .z = attrib.vertices[i+2], .w = 0.0f };
-        vec4f_t c = pt;
+        vrt::vec4f_t pt{ .x = attrib.vertices[i], .y = attrib.vertices[i+1], .z = attrib.vertices[i+2], .w = 0.0f };
+        vrt::vec4f_t c = pt;
         c.normalize();
-        gaussians.emplace_back(gaussian_t{
-                .albedo = c * 0.5f + vec4f_t{ 0.5f, 0.5f, 0.5f, 1.0f },
+        gaussians.emplace_back(vrt::gaussian_t{
+                .albedo = c * 0.5f + vrt::vec4f_t{ 0.5f, 0.5f, 0.5f, 1.0f },
                 .mu = pt,
                 .sigma = (attrib.vertices.size() < 1000) ? 0.2f : 0.05f,
                 .magnitude = 2.0f

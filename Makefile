@@ -13,10 +13,7 @@ CONFIG=release
 endif
 
 clean: ## Remove build artifacts
-	rm -rf $(BUILD_DIR); \
-	pushd thesis > /dev/null; \
-	$(MAKE) clean; \
-	popd > /dev/null
+	rm -rf $(BUILD_DIR)
 
 build:	## Compile and link
 ifdef PREMAKE_AVAILABLE

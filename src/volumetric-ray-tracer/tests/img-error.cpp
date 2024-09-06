@@ -5,20 +5,7 @@
 
 #define SQ(X, Y, Z) (X)*(X) + (Y)*(Y) + (Z)*(Z)
 
-simd::Vec<simd::Float> _expf(simd::Vec<simd::Float> x)
-{
-    float __x[SIMD_FLOATS];
-    simd::storeu(__x, x);
-#ifndef __AVX512F__
-    vcl::Vec8f _x;
-#else
-    vcl::Vec16f _x;
-#endif
-    _x.load(__x);
-    _x = vcl::exp(_x);
-    _x.store(__x);
-    return simd::loadu(__x);
-}
+using namespace vrt;
 
 i32 main()
 {
@@ -44,7 +31,7 @@ i32 main()
 
     const vec4f_t origin{0.f, 0.f, 0.f};
     fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
-    render_image<l_hat<transmittance>>(256, 256, ref_image, cam, origin, tiles, true, 16);
+    render_image<radiance<transmittance>>(256, 256, ref_image, cam, origin, tiles, true, 16);
 
     fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
@@ -52,7 +39,7 @@ i32 main()
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
 
     simd_render_image(256, 256, svml_image, cam, origin, tiles, true, 16);
-    simd_render_image<_expf, approx::simd_abramowitz_stegun_erf>(256, 256, fog_image, cam, origin, tiles, true, 16);
+    simd_render_image<approx::vcl_exp, approx::simd_abramowitz_stegun_erf>(256, 256, fog_image, cam, origin, tiles, true, 16);
     simd_render_image<approx::simd_fast_exp, approx::simd_abramowitz_stegun_erf>(256, 256, my_image, cam, origin, tiles, true, 16);
 
     double svml_err = 0.0, fog_err = 0.0, my_err = 0.0;
