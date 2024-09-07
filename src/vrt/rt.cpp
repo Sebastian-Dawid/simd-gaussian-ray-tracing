@@ -61,7 +61,7 @@ namespace vrt
                         gs.gaussians.push_back(gaussians[idxs[i]]);
                     }
                 }
-                gs.gaussians_broadcast = gaussian_vec_t::from_gaussians(gs.gaussians);
+                gs.soa_gaussians = gaussian_vec_t::from_gaussians(gs.gaussians);
             }
         }
 

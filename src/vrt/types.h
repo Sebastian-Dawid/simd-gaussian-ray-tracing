@@ -101,10 +101,10 @@ namespace vrt
         /// Returns the density of the gaussian at point `x`. Templated to allow for substitution
         /// of the used approximation of the exponential function.
         template<f32 (*Exp)(f32) = expf>
-            f32 pdf(vec4f_t x) const
-            {
-                return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
-            }
+        f32 pdf(vec4f_t x) const
+        {
+            return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu))/(2 * this->sigma * this->sigma));
+        }
 #ifdef INCLUDE_IMGUI
         /// Creates controls for this `gaussian_t` instance. Uniqueness is ensured by using the address of the instance
         /// as its ID.
@@ -165,7 +165,7 @@ namespace vrt
     struct gaussians_t
     {
         std::vector<gaussian_t> gaussians;
-        gaussian_vec_t *gaussians_broadcast = nullptr;
+        gaussian_vec_t *soa_gaussians = nullptr;
     };
 
     struct tiles_t
@@ -181,7 +181,7 @@ namespace vrt
         /// Destroy all `gaussian_vec_t`s since they will not go out of scope naturally.
         ~tiles_t() {
             for (const gaussians_t &g : this->gaussians)
-                delete g.gaussians_broadcast;
+                delete g.soa_gaussians;
         }
     };
 

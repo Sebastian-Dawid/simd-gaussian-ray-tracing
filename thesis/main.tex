@@ -80,6 +80,10 @@
 
     \chapter{Background}
     \label{ch:background}
+    There are two Gaussian based image formation models relevant to the contents of this thesis. Here I will discuss both
+    Gaussian ray tracing (\ref{sec:int_grt}), the focus of the optimizations described in this thesis, and Gaussian
+    splatting (\ref{sec:splatting}). Additionally, I will describe some of the core differences of the methods (\ref{sec:ray_v_splat}).
+
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
     In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
@@ -148,17 +152,19 @@
     $K = \{ -4, -3, \dots, 0 \}$ delivers a good enough approximation.
 
     \section{Gaussian Splatting}
+    \label{sec:splatting}
     %@TODO: describe image formation model (splatting) as laid out in the following papers
     Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
     (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
-    Gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision and graphics
-    contexts, since its fully differentiable and its applicability in real time contexts.
+    Gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision
+    and graphics contexts, since its fully differentiable and its applicability in real time contexts.
 
-    One of these derived methods is called 3D Gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in their
-    \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting} define their Gaussians
-    as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the Gaussian, $\Sigma \in \R^{3\times 3}$
-    its 3D covariance Matrix, $\mathbf{a} \in [0, 1]^3$ its albedo and $\alpha \in [0, 1]$ its opacity. The camera is defined as a tuple
-    $(W, P)$, where $W$ is the viewing transformation and $P$ is the affine projective transformation.
+    One of these derived methods is called 3D Gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in
+    their \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting}
+    define their Gaussians as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the
+    Gaussian, $\Sigma \in \R^{3\times 3}$ its 3D covariance Matrix, $\mathbf{a} \in [0, 1]^3$ its albedo and
+    $\alpha \in [0, 1]$ its opacity. The camera is defined as a tuple $(W, P)$, where $W$ is the viewing transformation
+    and $P$ is the affine projective transformation.
 
     To project the 3D covariance matrix to a 2D covariance matrix they employ a method described by \citeauthor{volume_splatting}
     in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix $\Sigma'$ in camera coordinates can be computed
@@ -166,21 +172,22 @@
     \begin{equation}
         \Sigma' = JW\Sigma W^TJ^T
     \end{equation}
-    with $J$ as the jacobian of $P$ at $\mu$. \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting} also show that discarding the third row and column yields
-    a 2D covariance matrix $\Sigma_{2D}$.
+    with $J$ as the jacobian of $P$ at $\mu$. \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting}
+    also show that discarding the third row and column yields a 2D covariance matrix $\Sigma_{2D}$.
 
     %@TODO: This is not part of the paper technically -> how do I cite this?
     %@TODO: Wording seems iffy, should rework this
     At this point the means of the Gaussians are in \gls{ndc} (NDC), to render them they are converted to the corresponding
     screen space coordinates. To ensure correct occlusion the Gaussians are sorted back to front by the $z$ coordinate of
-    their means in \gls{ndc}. To generate the final image the Gaussians are blended, using alpha blending, onto the image in order.
-    This means that
+    their means in \gls{ndc}. To generate the final image the Gaussians are blended, using alpha blending, onto the image
+    in order. This means that
     \begin{equation}
         \mathbf{c}_{\text{new}} = \mathbf{c}_{\text{old}} \cdot (1 - \alpha) + \mathbf{a} \cdot \exp{\left(-(\mathbf{x} - \bar{\mu})^T\Sigma_{2D}^{-1}(\mathbf{x} - \bar{\mu})\right)} \cdot \alpha
     \end{equation}
     where $\mathbf{c}$ is the new/old pixel color and $\bar{\mu}$ the Gaussian's mean in screen space.
 
     \section{Ray Tracing vs. Splatting}
+    \label{sec:ray_v_splat}
     %@TODO: What differentiates the two methods? Advantages? Disadvantages?
     \begin{itemize}
         \item perspective effects
@@ -237,28 +244,30 @@
     \end{table}
 
     \subsection{Approaches}
-    There are multiple ways to parallelize Gaussian ray tracing using vectorization. To generate the final image it is necessary to iterate
-    over two quantities: (1) the Gaussians in the scene and (2) the pixels of the image. Therefore, these are the opportunities to parallelize.
-    Parallelism over the pixels is possible by expanding the rendering equations given in \cite{Rhodin:2015} to operate on multiple rays at the
-    same time. Parallelism over the Gaussians is possible in two ways:
+    There are multiple ways to parallelize Gaussian ray tracing using vectorization. To generate the final image it is
+    necessary to iterate over two quantities: (1) the Gaussians in the scene and (2) the pixels of the image. Therefore,
+    these are the opportunities to parallelize. Parallelism over the pixels is possible by expanding the rendering equations
+    given in \cite{Rhodin:2015} to operate on multiple rays at the same time. Parallelism over the Gaussians is possible
+    in two ways:
     \begin{enumerate}
-        \item The summands of the sum in the \gls{transmittance} equation~\eqref{eq:transmittance_analytical} do not depend on each
-            other therefore it is possible to divide the summands into equal groups and process these in parallel
-            and add these results up in the end to get the final result.
-        \item The same principle can be applied to the outer sum in the \gls{radiance} equation~\eqref{eq:radiance}: the summands are
-            not dependent on each other therefore they can be divided into equal groups that can
+        \item The summands of the sum in the \gls{transmittance} equation~\eqref{eq:transmittance_analytical} do not
+            depend on each other therefore it is possible to divide the summands into equal groups and process these in
+            parallel and add these results up in the end to get the final result.
+        \item The same principle can be applied to the outer sum in the \gls{radiance} equation~\eqref{eq:radiance}:
+            the summands are not dependent on each other therefore they can be divided into equal groups that can
             be processed in parallel and added up in the end to get the final \gls{radiance}.
     \end{enumerate}
-    The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting, in terms of parallelism, since the number
-    of summands it has is fixed and therefore potential runtime improvements would not scale with the width of the p-vectors used, and
-    it is fair to assume that most methods of vectorization will allow for p-vectors wider than five elements.
+    The inner sum of the \gls{radiance} equation~\eqref{eq:radiance} is not interesting, in terms of parallelism, since
+    the number of summands it has is fixed and therefore potential runtime improvements would not scale with the width
+    of the p-vectors used, and it is fair to assume that most methods of vectorization will allow for p-vectors wider
+    than five elements.
 
-    To enable parallelization over the Gaussians it is necessary to split the set of
-    Gaussians $\mathcal{G}$ into $W$ disjoint subsets of equal magnitude. Since the magnitude of $\mathcal{G}$ is not guaranteed to be divisible by $W$
+    To enable parallelization over the Gaussians it is necessary to split the set of Gaussians $\mathcal{G}$ into $W$
+    disjoint subsets of equal magnitude. Since the magnitude of $\mathcal{G}$ is not guaranteed to be divisible by $W$
     a number of subsets equal to the remainder $|\mathcal{G}| \mod W$ will be augmented with an additional zero element.
 
-    The most sensible division of $\mathcal{G}$ is to assign some order to its elements, such that $g_i, i=1,\dots,|\mathcal{G}|$ describes the $i$-th element of
-    $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets $\mathcal{G}_j$ with
+    The most sensible division of $\mathcal{G}$ is to assign some order to its elements, such that $g_i, i=1,\dots,|\mathcal{G}|$
+    describes the $i$-th element of $\mathcal{G}$. With this $\mathcal{G}$ can be divided into subsets $\mathcal{G}_j$ with
     \begin{equation}
         \mathcal{G}_j := \{ g_i \in \mathcal{G} \,|\, i \mod W \equiv j \} \text{ for } j=0,\dots,W-1.
     \end{equation}
@@ -286,10 +295,12 @@
     Now I replace the call to the \gls{transmittance} function in the \gls{radiance} equation~\eqref{eq:radiance} with the sum
     over the results of the parallel \gls{transmittance} equation~\eqref{eq:transmittance_parallel} yielding
     \begin{equation}
-        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o} + s\mathbf{n})\sum_{i = 1}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma).
+        \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o}
+        + s\mathbf{n})\sum_{i = 1}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma).
     \end{equation}
 
-    Since the subsets $\mathcal{G}_j$ are disjoint by definition this version of the \gls{radiance} equation yields the same results as the original (Eq.~\eqref{eq:radiance})
+    Since the subsets $\mathcal{G}_j$ are disjoint by definition this version of the \gls{radiance} equation yields the
+    same results as the original (Eq.~\eqref{eq:radiance})
 
     \paragraph{Parallel \gls{radiance}:}
     \label{par:parallel_radiance}
@@ -312,9 +323,9 @@
     - \left(\bar{\mu}^W\right)^2}{[2]^W \odot \left(\bar{\sigma}^W\right)^2} \right)}.
     \end{align*}
 
-    This version of the \gls{transmittance} equation \eqref{eq:transmittance_analytical} allows me to rewrite the \gls{radiance} equation
-    \eqref{eq:radiance} to operate on multiple Gaussians at the same time in the same way it was done in the parallel \gls{transmittance}
-    equation \eqref{eq:transmittance_parallel}, yielding the parallel \gls{radiance}
+    This version of the \gls{transmittance} equation \eqref{eq:transmittance_analytical} allows me to rewrite the
+    \gls{radiance} equation \eqref{eq:radiance} to operate on multiple Gaussians at the same time in the same way it
+    was done in the parallel \gls{transmittance} equation \eqref{eq:transmittance_parallel}, yielding the parallel \gls{radiance}
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}, \mathbf{n}, \gamma) &= \sum_{m = 0}^{\left\lceil \frac{|\mathcal{G}|}{W} \right\rceil - 1} \left( \begin{pmatrix}
@@ -343,7 +354,8 @@
 
     \paragraph{Parallel Pixels:}
     \label{par:parallel_pixels}
-    Given the broadcast version of the \gls{transmittance} equation \eqref{eq:transmittance_broadcast} from before I can broadcast the \gls{radiance} equation to
+    Given the broadcast version of the \gls{transmittance} equation \eqref{eq:transmittance_broadcast} from before I
+    can broadcast the \gls{radiance} equation to
     \begin{equation}
         \begin{aligned}
             \hat{L}^W(\mathbf{o}^W, \mathbf{n}^W, \gamma) &= \sum_q [ \mathbf{a}_q ]^W \sum_{s \in S_q} \Big(
@@ -388,42 +400,48 @@
         \label{fig:tiling}
     \end{figure}
 
-    One way of achieving this goal is to split the final image into $N \times N$ tiles (\eg Figure~\ref{fig:tiling}) and determining which Gaussians
-    are relevant to which tiles through spacial proximity. Since it is not clear where in the image any one Gaussian is
-    going to end up before generating the image it is necessary to estimate location and size of the Gaussians before
-    generating the final image through ray tracing.
+    One way of achieving this goal is to split the final image into $N \times N$ tiles (\eg Figure~\ref{fig:tiling})
+    and determining which Gaussians are relevant to which tiles through spacial proximity. Since it is not clear where
+    in the image any one Gaussian is going to end up before generating the image it is necessary to estimate location
+    and size of the Gaussians before generating the final image through ray tracing.
 
-    Tiling is technique that is not unique to ray tracing and has been used in various other rendering methods such as the rasterizer
-    used by \citeauthor{kerbl3Dgaussians} in \cite{kerbl3Dgaussians}.
+    Tiling is technique that is not unique to ray tracing and has been used in various other rendering methods such as
+    the rasterizer used by \citeauthor{kerbl3Dgaussians} in \cite{kerbl3Dgaussians}.
 
-    To estimate size and position of the Gaussians in the final image the guassians are projected to the image plane using
-    scaled orthographic projection. Let $V \in \R^{4 \times 4}$ be the view matrix of the camera. Then the projected guassian
-    $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a Gaussian $g = (\mu, \sigma)$ is calculated as
+    To estimate size and position of the Gaussians in the final image the guassians are projected to the image plane
+    using scaled orthographic projection. Let $V \in \R^{4 \times 4}$ be the view matrix of the camera. Then the
+    projected guassian $\bar{g} = (\bar{\mu}, \bar{\sigma})$ to a Gaussian $g = (\mu, \sigma)$ is calculated as
 
     \begin{align}
         \mu_p &= V \cdot (\mu, 1)^T\\
-        \bar{\mu} &= \frac{1}{\mu_{p3}} \cdot (\mu_{p1}, \mu_{p2})^T\\
+        \bar{\mu} &= \frac{1}{\mu_{p3}} \cdot (\mu_{p1}, \mu_{p2})^T \label{eq:tiling_projection}\\
         \text{and}\nonumber\\
         \bar{\sigma} &= \frac{\sigma}{\mu_{p3}}.
+        \label{eq:tiling_scale}
     \end{align}
 
-    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians}, since I only consider isotropic Gaussians which removes
-    the complexity of projecting the covariance matrix while retaining its properties.
-    As in \cite{Rhodin:2015} Gaussians with $\bar{\sigma} < 10^{-5}$ are discarded, since they are unlikely to contribute to the final image significantly.
-    Also note that after the projection the image coordinates are mapped to $[-1, 1] \times [-1, 1]$.
+    Note that this method of projection is a simplified version of the projection used in \cite{kerbl3Dgaussians},
+    since I only consider isotropic Gaussians which removes the complexity of projecting the covariance matrix while
+    retaining its properties. As in \cite{Rhodin:2015} Gaussians with $\bar{\sigma} < 10^{-5}$ are discarded, since
+    they are unlikely to contribute to the final image significantly. Also note that after the projection the image
+    coordinates are mapped to $[-1, 1] \times [-1, 1]$.
 
-    Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile. The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$
-    describes the absolute distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected Gaussian $\bar{\mu}$.
-    A Gaussian counts as relevant to a tile if
+    Let $tw, th \in \R$ be the width and height of a tile and let $\mathbf{c} \in \R^2$ denote the center of the tile.
+    The vector $\mathbf{p} = (|\mathbf{c}_1 - \bar{\mu}_1|, |\mathbf{c}_2 - \bar{\mu}_2|)^T$ describes the absolute
+    distances along the $x$ and $y$ Axes between the center of the tile $\mathbf{c}$ and mean of the projected
+    Gaussian $\bar{\mu}$. A Gaussian counts as relevant to a tile if
     \begin{equation}
-        \mathbf{p}_1 < |\mathbf{c}_1| + \frac{tw}{2} + 2\bar{\sigma}
+        \mathbf{p}_1 < |\mathbf{c}_1| + \frac{tw}{2} + 3.3\cdot\bar{\sigma}
+        \label{eq:tiling_cond_1}
     \end{equation}
     and 
     \begin{equation}
-        \mathbf{p}_2 < |\mathbf{c}_2| + \frac{th}{2} + 2\bar{\sigma}
+        \mathbf{p}_2 < |\mathbf{c}_2| + \frac{th}{2} + 3.3\cdot\bar{\sigma}
+        \label{eq:tiling_cond_2}
     \end{equation}
-    meaning that the Gaussian has to be in a $3.3 \cdot \bar{\sigma}$ range from the borders of the tile to be considered relevant.
-    The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion towards the edges of the image.
+    meaning that the Gaussian has to be in a $3.3 \cdot \bar{\sigma}$ range from the borders of the tile to be
+    considered relevant. The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion
+    towards the edges of the image.
 
     %@TODO: Note mathematical justification for using 3.3 sigma as limit
     % Visible tiling artifacts when using 2 sigma
@@ -440,19 +458,20 @@
         k(c) = \sqrt{2(\ln{(c)} - \ln{(\varepsilon)})}
         \label{eq:sig_lim}
     \end{equation}
-    with $\varepsilon = \frac{1}{255}$ the last density value that can result in a visible color and $c$ as the magnitude. Assuming the magnitude of the Gaussians to be in a reasonable range such as $[0, 10]$
-    using $k(1) = \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$.
-    
+    with $\varepsilon = \frac{1}{255}$ the last density value that can result in a visible color and $c$ as the
+    magnitude. Assuming the magnitude of the Gaussians to be in a reasonable range such as $[0, 10]$ using $k(1) =
+    \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$.
+
     \chapter{Approximations}
     \label{ch:approximations}
     %@TODO: Explain why it is necessary to approximate functions / implement own approximations
-    Gaussian ray tracing relies on the exponential and error functions. Usually standard implementations of these functions
-    are optimized for accuracy first and speed second and are not easily vectorized. In the case of ray tracing accuracy
-    is only important to a certain degree since the visual artifacts caused by errors smaller than $10^{-3}$ are unlikely
-    to be noticeable.
+    Gaussian ray tracing relies on the exponential and error functions. Usually standard implementations of these
+    functions are optimized for accuracy first and speed second and are not easily vectorized. In the case of ray
+    tracing accuracy is only important to a certain degree since the visual artifacts caused by errors smaller than
+    $10^{-3}$ are unlikely to be noticeable.
 
-    Therefore, it is worthwhile to investigate which approximations give the best balance between accuracy, speed and potential
-    to be vectorized.
+    Therefore, it is worthwhile to investigate which approximations give the best balance between accuracy, speed and
+    potential to be vectorized.
 
     The implementation of the approximations will be discussed in Section~\ref{sec:impl_approx}.
 
@@ -467,14 +486,14 @@
 
     \section{Fast Exponential Function}
     \label{sec:fast_exp}
-    The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp} \cite{fast_exp} is based
-    on the fact that
+    The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp}
+    \cite{fast_exp} is based on the fact that
     \begin{equation}
         \exp{(x)} = 2^{\frac{x}{\ln{(2)}}}
         \label{eq:exp_ident}
     \end{equation}
-    is an identity of the exponential function. The rest of the approximation relies on the structure of floating point numbers under the IEEE-754
-    standard and will be discussed in Section~\ref{sec:impl_fast_exp}.
+    is an identity of the exponential function. The rest of the approximation relies on the structure of floating point
+    numbers under the IEEE-754 standard and will be discussed in Section~\ref{sec:impl_fast_exp}.
     
     \section{Polynomial Approximations of the Error Function}
     \label{sec:poly_approx}
@@ -486,8 +505,9 @@
         \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
         \label{eq:taylor}
     \end{equation}
-    can give a good approximation of the error function around $x = 0$ when evaluated at $x_0 = 0$. For the approximation to be usable
-    on the relevant interval of $[-2, 2]$ it needs to include at least ten terms of the series as seen in Figure~\ref{fig:taylor_erf}.
+    can give a good approximation of the error function around $x = 0$ when evaluated at $x_0 = 0$. For the
+    approximation to be usable on the relevant interval of $[-2, 2]$ it needs to include at least ten terms of the
+    series as seen in Figure~\ref{fig:taylor_erf}.
 
     \begin{figure}[t]
         \centering
@@ -498,7 +518,8 @@
 
     \subsection{Abramowitz and Stegun}
     \label{sec:abrasteg}
-    \citeauthor{AbraSteg72} give a polynomial approximation of the error function in Section 7.1.27 of their \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
+    \citeauthor{AbraSteg72} give a polynomial approximation of the error function in Section 7.1.27 of their
+    \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
     \begin{equation}
         \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
         \label{eq:abrasteg_positive}
@@ -513,7 +534,8 @@
         \end{aligned}
         \label{eq:abrasteg_defs}
     \end{equation}
-    for $x \in [0, \infty)$. To extend the approximation for $x \in \R$ I exploit the point symmetry of the error function with respect to $x = 0$. This yields
+    for $x \in [0, \infty)$. To extend the approximation for $x \in \R$ I exploit the point symmetry of the error function
+    with respect to $x = 0$. This yields
     \begin{equation}
         \erf{(x)} = \begin{cases}
             1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4} & x \in [0, \infty)\\
@@ -526,30 +548,37 @@
     \chapter{Implementation}
     \label{ch:implementation}
     %@TODO: details TBD
-    I implemented Gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd}
-    instructions provided by modern x64 CPUs (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool (\ref{sec:thread_pool}) to further increase
-    the performance gained from the tiling (\ref{sec:tiling}).
+    I implemented Gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in
+    Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd} instructions provided by modern x64 CPUs
+    (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool
+    (\ref{sec:thread_pool}) to further increase the performance gained from the tiling (\ref{sec:tiling}).
 
-    The Implementation is split into two parts: a library that implements the rendering functions, tiling and approximations (\ref{sec:library}) and a renderer that uses the library to generate images (\ref{sec:renderer}).
+    The Implementation is split into two parts: a library that implements the rendering functions, tiling and approximations
+    (\ref{sec:library}) and a renderer that uses the library to generate images (\ref{sec:renderer}).
 
-    Note that I will use aliased type names such as \mintinline{c++}{f32} instead of \mintinline{c++}{float} to keep the text consistent with the code base.
-    For a full list of the type aliases used see Listing~\ref{lst:type_aliases}.
+    Note that I will use aliased type names such as \mintinline{c++}{f32} instead of \mintinline{c++}{float} to keep the
+    text consistent with the code base. For a full list of the type aliases used see Listing~\ref{lst:type_aliases}.
 
-    The source code of the implementation is available at: \\\href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
+    The source code of the implementation is available at: \\
+    \href{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}{https://github.com/Sebastian-Dawid/simd-gaussian-ray-tracing}
     \footnote{Or mirrored at \href{https://github.com/vaixr/_simd-gaussian-raytracing}{https://github.com/vaixr/\_simd-gaussian-raytracing}}
 
     \section{SIMD}
     \label{sec:simd}
-    \gls{simd} (Single Instruction Multiple Data) is a type of parallelism available in most modern x64 and ARM CPUs. This form of parallelism is made available in the form of CPU instructions
-    that operate on special vector registers that are characterized by their width. For example a x64 CPU might provide registers that are 256 bits wide instead of the usual
-    register width of 64 bits on x64 CPUs.
-    
-    Which instructions and which register width a CPU supports depend on which extensions to the instruction set are available on that CPU.
+    \gls{simd} (Single Instruction Multiple Data) is a type of parallelism available in most modern x64 and ARM CPUs. This
+    form of parallelism is made available in the form of CPU instructions that operate on special vector registers that
+    are characterized by their width. For example a x64 CPU might provide registers that are 256 bits wide instead of
+    the usual register width of 64 bits on x64 CPUs.
 
-    \gls{simd} instructions are usable from C/C++ code through intrinsics. Which intrinsics are available based on the available instruction set extensions
-    can be referenced in the \href{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}{Intel Intrinsics Guide}\footnote{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}.
-    Using instrinsics directly has the disadvantage that the code is tied to the extension that makes those intrinsics available. Therefore, I opted to use a wrapper library (\ref{sec:tsimd})
-    to avoid direct usage of intrinsics.
+    Which instructions and which register width a CPU supports depend on which extensions to the instruction set are
+    available on that CPU.
+
+    \gls{simd} instructions are usable from C/C++ code through intrinsics. Which intrinsics are available based on the
+    available instruction set extensions can be referenced in the
+    \href{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}{Intel Intrinsics
+    Guide}\footnote{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html}. Using instrinsics
+    directly has the disadvantage that the code is tied to the extension that makes those intrinsics available.
+    Therefore, I opted to use a wrapper library (\ref{sec:tsimd}) to avoid direct usage of intrinsics.
 
     \subsection{Vectorization to SIMD}
     \label{sec:vectorization_to_simd}
@@ -560,8 +589,8 @@
 
     \subsection{T-SIMD}
     \label{sec:tsimd}
-    A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in \enquote{\citetitle{own_moeller_16_2}}
-    \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+    A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in
+    \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
     \begin{itemize}
         \item Vector class →  Template determines width in bytes
         \item Intrinsics are wrapped in template functions →  intrinsic used based on width template parameter
@@ -587,11 +616,12 @@
 
     \subsection{Approximations}
     \label{sec:impl_approx}
-    I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for approximations from Intel's Short Vector
-    Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library (\ref{sec:vcl}).
+    I implemented the approximations described in Chapter~\ref{ch:approximations} and provide wrappers for
+    approximations from Intel's Short Vector Math Library (\ref{sec:svml}) and Agner Fogs Vector Class Library
+    (\ref{sec:vcl}).
 
-    For the sake of readability I will only embed the sequential implementations of the approximations in the text. The versions of the functions
-    parallelized using T-SIMD can be found in Appendix~\ref{ch:listings}.
+    For the sake of readability I will only embed the sequential implementations of the approximations in the text. The
+    versions of the functions parallelized using T-SIMD can be found in Appendix~\ref{ch:listings}.
 
     \subsubsection{Cubic Spline Interpolation}
     \label{sec:impl_cubic_spline}
@@ -608,26 +638,28 @@
 
     \subsubsection{Fast Exponential Function}
     \label{sec:impl_fast_exp}
-    As described in Section~\ref{sec:fast_exp} this approximation of the exponential function relies on the structure of floating point numbers defined by the IEEE-754
-    standard.
+    As described in Section~\ref{sec:fast_exp} this approximation of the exponential function relies on the structure of
+    floating point numbers defined by the IEEE-754 standard.
 
-    The IEEE-754 standard defines a double precision floating point number to consist of a sign bit $s \in \{ 0, 1 \}$, a 52-bit mantissa $m \in [0, 1)$ and an
-    11-bit exponent $x$ and is calculated as
+    The IEEE-754 standard defines a double precision floating point number to consist of a sign bit $s \in \{ 0, 1 \}$,
+    a 52-bit mantissa $m \in [0, 1)$ and an 11-bit exponent $x$ and is calculated as
     \begin{equation}
         (-1)^s (1 + m) 2^{x - x_0}
         \label{eq:def_ieee754}
     \end{equation}
     with $x_0 = 1023$ as a bias term.
 
-    Note that \citeauthor{fast_exp} uses two 32-bit integers $i$ and $j$ to represent a 64-bit float, but the approximation does not rely on this decomposition. As such I will describe it
-    using a single 64-bit integer $i$ instead.
+    Note that \citeauthor{fast_exp} uses two 32-bit integers $i$ and $j$ to represent a 64-bit float, but the
+    approximation does not rely on this decomposition. As such I will describe it using a single 64-bit integer $i$ instead.
 
-    Given the identity \eqref{eq:exp_ident} of the exponential function it is sufficient to find an approximation for $2^x$. \citeauthor{fast_exp} gives 
+    Given the identity \eqref{eq:exp_ident} of the exponential function it is sufficient to find an approximation for
+    $2^x$. \citeauthor{fast_exp} gives
     \begin{equation}
         2^{52}(x + 1023)
     \end{equation}
-    as an exact approximation as long as $x$ is an integer. For non integer arguments $x$ he notes that the spillover into the most significant bits of the mantissa
-    provides a linear interpolation between $\lfloor x \rfloor$ and $\lceil x \rceil$ under IEEE-754.
+    as an exact approximation as long as $x$ is an integer. For non integer arguments $x$ he notes that the spillover into
+    the most significant bits of the mantissa provides a linear interpolation between $\lfloor x \rfloor$ and $\lceil x
+    \rceil$ under IEEE-754.
 
     The final approximation of $\exp{(x)}$ can now be computed as
     \begin{equation}
@@ -635,19 +667,20 @@
     \end{equation}
     where $c$ is an adjustment term that provides some control over the approximation.
 
-    Since I use single precision floating point numbers instead of double precision floats the version of the approximation I use
+    Since I use single precision floating point numbers instead of double precision floats the version of the
+    approximation I use
     \begin{equation}
         \frac{2^{23}}{\ln{(2)}}x + 2^{23}(127 - c)
     \end{equation}
-    instead. The exponent has changed from $52$ to $23$ due to the difference in mantissa and exponent length in single and double precision floats. The $1023$ has been replaced with $127$
-    since it is the single precision bias.
+    instead. The exponent has changed from $52$ to $23$ due to the difference in mantissa and exponent length in single and
+    double precision floats. The $1023$ has been replaced with $127$ since it is the single precision bias.
 
-    \citeauthor{fast_exp} derives that $c = 0.043677448$ minimizes the maximum relative error to range from $-2.98\%$ to $2.98\%$.
-    The implementation of the method shown in Listing~\ref{lst:fast_exp_impl} is based on the implementation by Johan Rade
-    \footnote{\href{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}}
-    that foregoes the usage of a \mintinline{c}{union} to realize the reinterpretation and uses \mintinline{c}{memcpy} instead.
-    In my implementation I opted to use \mintinline{c++}{std::bit_cast} and discard the bounds checking introduced by Rade since
-    my usage should never leave the given bounds.
+    \citeauthor{fast_exp} derives that $c = 0.043677448$ minimizes the maximum relative error to range from $-2.98\%$ to
+    $2.98\%$. The implementation of the method shown in Listing~\ref{lst:fast_exp_impl} is based on the implementation
+    by Johan Rade \footnote{\href{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}{https://gist.github.com/jrade/293a73f89dfef51da6522428c857802d}}
+    that foregoes the usage of a \mintinline{c}{union} to realize the reinterpretation and uses \mintinline{c}{memcpy}
+    instead. In my implementation I opted to use \mintinline{c++}{std::bit_cast} and discard the bounds checking
+    introduced by Rade since my usage should never leave the given bounds.
 
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{c++}
@@ -666,11 +699,11 @@ f32 fast_exp(f32 x)
 
     \subsubsection{Taylor Series and Abramowitz and Stegun}
     \label{sec:impl_abrasteg_taylor}
-    Polynomial approximations of the error function as described by \citeauthor{AbraSteg72} (see Section~\ref{sec:abrasteg})
-    and the taylor series (see Section~\ref{sec:taylor}) could be implemented trivially (see Listing~\ref{lst:trivial_abrasteg}),
-    this however is an inefficient way of evaluating polynomials. As with the cubic spline interpolation above it is better to
-    use Horner's method \eqref{eq:horners_method} to evaluate the polynomial as shown in Listing~\ref{lst:horner_abrasteg} and
-    Listing~\ref{lst:horner_taylor}.
+    Polynomial approximations of the error function as described by \citeauthor{AbraSteg72} (see
+    Section~\ref{sec:abrasteg}) and the taylor series (see Section~\ref{sec:taylor}) could be implemented trivially (see
+    Listing~\ref{lst:trivial_abrasteg}), this however is an inefficient way of evaluating polynomials. As with the cubic
+    spline interpolation above it is better to use Horner's method \eqref{eq:horners_method} to evaluate the polynomial
+    as shown in Listing~\ref{lst:horner_abrasteg} and Listing~\ref{lst:horner_taylor}.
 
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{c++}
@@ -724,9 +757,11 @@ f32 taylor_erf(const f32 x)
 
     \subsubsection{Short Vector Math Library (SVML)}
     \label{sec:svml}
-    Intel's SVML provides implementations for both the exponential and error functions. Since the library is closed source I have no way of knowing how these approximations were implemented.
-    I export the symbols for the AVX2 (\mintinline{c}{__svml_expf8}) and AVX512 (\mintinline{c}{__svml_expf16}) versions of the implementations as part of the \mintinline{c++}{approx}
-    namespace along with a template wrapper function that is instantiated for the vector widths available (see Listing~\ref{lst:template_svml_exp}).
+    Intel's SVML provides implementations for both the exponential and error functions. Since the library is closed
+    source I have no way of knowing how these approximations were implemented. I export the symbols for the AVX2
+    (\mintinline{c}{__svml_expf8}) and AVX512 (\mintinline{c}{__svml_expf16}) versions of the implementations as part of
+    the \mintinline{c++}{approx} namespace along with a template wrapper function that is instantiated for the vector
+    widths available (see Listing~\ref{lst:template_svml_exp}).
 
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{c++}
@@ -758,14 +793,17 @@ svml_exp(simd::Vec<simd::Float, 64> x);
 
     \subsubsection{Vector Class Library (VCL)}
     \label{sec:vcl}
-    The approximation of the exponential function provided by VCL is based on the IEEE-754 single precision floating point format and the Taylor series of the exponential function.
-    I provide wrapped versions of the approximation in the same way shown in Listing~\ref{lst:template_svml_exp} to deal with the conversion between the T-SIMD and VCL vector types.
+    The approximation of the exponential function provided by VCL is based on the IEEE-754 single precision floating
+    point format and the Taylor series of the exponential function. I provide wrapped versions of the approximation in
+    the same way shown in Listing~\ref{lst:template_svml_exp} to deal with the conversion between the T-SIMD and VCL
+    vector types.
 
     \subsection{Thread Pool}
     \label{sec:thread_pool}
-    As part of the library I implemented a simple thread pool to provide multithreaded versions of the rendering functions (\ref{sec:rendering_functions}).
-    The pool provides a queue into which tasks are submitted. When a new task is submitted a waiting thread of the pool, if available, is notified.
-    All interactions with the queue are protected through a scoped \mintinline{c++}{std::unique_lock<std::mutex>}.
+    As part of the library I implemented a simple thread pool to provide multithreaded versions of the rendering
+    functions (\ref{sec:rendering_functions}). The pool provides a queue into which tasks are submitted. When a new task
+    is submitted a waiting thread of the pool, if available, is notified. All interactions with the queue are protected
+    through a scoped \mintinline{c++}{std::unique_lock<std::mutex>}.
 
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{c++}
@@ -787,12 +825,14 @@ struct thread_pool_t
     \end{listing}
 
     The pool implements the interface shown in Listing~\ref{lst:thread_pool_interface}.
-    The pool is initialized with \mintinline{c++}{thread_cont} threads. The threads are joined when the pool's destructor is called either through the end of the scope when
-    used as a stack object or smart pointer or the \mintinline{c++}{delete} operator in case of a heap object.
+    The pool is initialized with \mintinline{c++}{thread_cont} threads. The threads are joined when the pool's
+    destructor is called either through the end of the scope when used as a stack object or smart pointer or the
+    \mintinline{c++}{delete} operator in case of a heap object.
 
-    The threads execute the following steps: (1) claim the pool's mutex, (2) wait for the condition variable to be signaled if no tasks are available and the pool
-    has not been stopped, (3) exit if the pool has been stopped and there are no more tasks in the queue, (4) dequeue a task from the queue, (5) release the mutex, (6) execute
-    the task and return to (1).
+    The threads execute the following steps: (1) claim the pool's mutex, (2) wait for the condition variable to be
+    signaled if no tasks are available and the pool has not been stopped, (3) exit if the pool has been stopped and
+    there are no more tasks in the queue, (4) dequeue a task from the queue, (5) release the mutex, (6) execute the task
+    and return to (1).
 
 %     \begin{listing}[H]
 %         \begin{minted}[linenos, frame=lines]{c++}
@@ -817,12 +857,106 @@ struct thread_pool_t
     \subsection{Rendering Functions}
     \label{sec:rendering_functions}
 
+    \subsubsection{Types}
+    The implementation relies on various types representing the mathematical objects used for Gaussian ray tracing. They
+    are listed in Listing~\ref{lst:types_vrt}. Since most of the functions implemented on the structures are not essential
+    to the implementation I have omitted them here for the sake of brevity. The full interfaces are shown in Listing~\ref{lst:types_vrt_full}.
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+struct vec4f_t { f32 x, y, z, w; };
+struct simd_vec4f_t { simd::Vec<simd::Float> x, y, z, w; };
+struct gaussian_t {
+    vec4f_t albedo, mu;
+    f32 sigma, magnitude;
+};
+struct simd_gaussian_t {
+    simd_vec4f_t albedo, mu;
+    simd::Vec<simd::Float> sigma, magnitude;
+};
+struct gaussian_vec_t {
+    // all pointers aligned to SIMD_WIDTH
+    struct { f32 *r, *g, *b, *a; } albedo;
+    struct { f32 *x, *y, *z, *w; } mu;
+    f32 *sigma;
+    f32 *magnitude;
+    u64 size = 0;
+};
+struct gaussians_t {
+    std::vector<gaussian_t> gaussians;
+    gaussian_vec_t *soa_gaussians;
+};
+struct tiles_t {
+    const std::vector<gaussians_t> tiles;
+    const f32 tw, th;
+    const u64 w, h;
+};
+        \end{minted}
+        \caption{Types used for the implementation of the rendering functions.}
+        \label{lst:types_vrt}
+    \end{listing}
+
+    Since I rely on passing functions as template arguments to configure the rendering functions I have defined some
+    additional function types in Listing~\ref{lst:func_types_vrt} to make them more readable and meaningful.
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+typedef f32(*f32_func_t)(f32);
+typedef simd::Vec<simd::Float>(*simd_f32_func_t)
+            (simd::Vec<simd::Float>);
+typedef vec4f_t(*radiance_func_t)(const vec4f_t,
+            const vec4f_t, const gaussians_t&);
+typedef f32(*transmittance_func_t)(const vec4f_t,
+            const vec4f_t, const f32, const gaussians_t&);
+        \end{minted}
+        \caption{Function types used for template parameters.}
+        \label{lst:func_types_vrt}
+    \end{listing}
+
     \subsubsection{Tiling}
-    \begin{itemize}
-        \item one to one from Section~\ref{sec:tiling}
-    \end{itemize}
+    The tiling function has
+    \begin{minted}{c++}
+tiles_t tile_gaussians(const f32 tw, const f32 th,
+        const std::vector<gaussian_t> &gaussians,
+        const glm::mat4 &view)
+    \end{minted}
+    as its signature. Its implementation is fairly straight forward as the math from Section~\ref{sec:tiling} can be
+    translated into an algorithm directly. Note that the function returns a \mintinline{c++}{tiles_t} object. The
+    \mintinline{c++}{std::vector} of \mintinline{c++}{gaussian_t} objects is decomposed into
+    multiple \mintinline{c++}{std::vector}s, one for each field of the \mintinline{c++}{gaussian_t} structure, during
+    the projection \eqref{eq:tiling_projection} and scaling \eqref{eq:tiling_scale} phase of the algorithm. This is done
+    to prevent having to write the projected versions of discarded Gaussians back into memory.
+
+    After the Gaussians are in normalized screen space ($[-1, 1] \times [-1, 1]$), I iterate over the centers of all
+    tiles and over all remaining Gaussians per center. In the innermost loop the viability conditions for the $x$-distance
+    \eqref{eq:tiling_cond_1} and $y$-distance \eqref{eq:tiling_cond_2} are checked. If a Gaussian is viable it is
+    added to the \mintinline{c++}{gaussians} field of the current tile.
+
+    After all possibly viable Gaussians have been check for the current tile a \mintinline{c++}{gaussian_vec_t} object
+    is generated for the \mintinline{c++}{soa_gaussians} field of the current tile.
 
     \subsubsection{\gls{transmittance}}
+
+    \begin{minted}{c++}
+template<f32_func_t Exp, f32_func_t Erf>
+f32 transmittance(const vec4f_t o, const vec4f_t n,
+        const f32 s, const gaussians_t& gaussians)
+    \end{minted}
+    
+    \begin{minted}{c++}
+template<simd_f32_func_t Exp, simd_f32_func_t Erf,
+        f32_func_t Expf>
+f32 simd_transmittance(const vec4f_t o, const vec4f_t n,
+        const f32 s, const gaussians_t& gaussians)
+    \end{minted}
+    
+    \begin{minted}{c++}
+template<simd_f32_func_t Exp, simd_f32_func_t Erf>
+simd::Vec<simd::Float> broadcast_transmittance(
+        const simd_vec4f_t o, const simd_vec4f_t n,
+        const simd::Vec<simd::Float> s,
+        const gaussians_t& gaussians)
+    \end{minted}
+
     \begin{itemize}
         \item implementation of Eq.~\refeq{eq:transmittance_analytical}
         \item erf and exp implementations passed as template parameters
@@ -831,6 +965,25 @@ struct thread_pool_t
     \end{itemize}
     
     \subsubsection{\gls{radiance}}
+
+    \begin{minted}{c++}
+template<transmittance_func_t Tr>
+vec4f_t radiance(const vec4f_t o, const vec4f_t n,
+        const gaussians_t& gaussians)
+    \end{minted}
+    
+    \begin{minted}{c++}
+template<transmittance_func_t Tr>
+vec4f_t simd_radiance(const vec4f_t o, const vec4f_t n,
+        const gaussians_t& gaussians)
+    \end{minted}
+    
+    \begin{minted}{c++}
+template<simd_f32_func_t Exp, simd_f32_func_t Erf>
+simd_vec4f_t broadcast_radiance(const simd_vec4f_t o,
+        const simd_vec4f_t n, const gaussians_t& gaussians)
+    \end{minted}
+
     \begin{itemize}
         \item implementation of Eq.~\refeq{eq:radiance}
         \item transmittance functions as template argument
@@ -839,6 +992,40 @@ struct thread_pool_t
     \end{itemize}
     
     \subsubsection{Full Render}
+    \begin{minted}{c++}
+template<radiance_func_t Radiance>
+bool render_image(const u32 width, const u32 height,
+        u32 *image, const camera_t &cam,
+        const vec4f_t &origin,
+        const gaussians_t &gaussians,
+        const bool &running)
+    \end{minted}
+
+    \begin{minted}{c++}
+template<radiance_func_t Radiance>
+bool render_image(const u32 width, const u32 height,
+        u32 *image, const camera_t &cam,
+        const vec4f_t &origin, const tiles_t &tiles,
+        const bool &running, const u64 tc)
+    \end{minted}
+
+    \begin{minted}{c++}
+template<simd_f32_func_t Exp, simd_f32_func_t Erf>
+bool simd_render_image(const u32 width, const u32 height,
+        u32 *image, const camera_t &cam,
+        const vec4f_t &origin,
+        const gaussians_t &gaussians,
+        const bool &running)
+    \end{minted}
+
+    \begin{minted}{c++}
+template<simd_f32_func_t Exp, simd_f32_func_t Erf>
+bool simd_render_image(const u32 width, const u32 height,
+        u32 *image, const camera_t &cam,
+        const vec4f_t &origin, const tiles_t &tiles,
+        const bool &running, const u64 tc)
+    \end{minted}
+
     \begin{itemize}
         \item parallel radiance or transmittance →  radiance function as template parameter
         \item parallel →  exp and erf approximations as template parameters
@@ -883,10 +1070,10 @@ struct thread_pool_t
     \label{ch:experiments}
     
     All experiments were performed on a Ryzen 9 7950X CPU, which has 16 cores with hyperthreading and AVX512 support.
-    A list of all instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and were determined
-    using the shell script given in Listing~\ref{lst:exts_script}.
+    A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and
+    were determined using the shell script given in Listing~\ref{lst:exts_script}.
     \begin{listing}[H]
-        \begin{minted}[frame=lines]{sh}
+        \begin{minted}[linenos, frame=lines]{sh}
 #!/usr/bin/env sh
 gcc -march=native -dM -E - < /dev/null \
     | grep -E "SSE|AVX" | sort
@@ -897,7 +1084,7 @@ gcc -march=native -dM -E - < /dev/null \
 
     \section{Approximations}
     \begin{itemize}
-        \item averaged cycle count
+        \item averaged cycle count (pmu-tools)
         \item accuracy over relevant intervals
     \end{itemize}
 
@@ -908,29 +1095,43 @@ gcc -march=native -dM -E - < /dev/null \
     to evaluate the performance improvements of the implemented optimizations in a - close to - real world scenario.
     The tests will be performed on two separate models and evaluate metrics concerning the usage and efficiency of
     \gls{simd} instructions (\ref{sec:utah_teapot}) and the runtime of the program (\ref{sec:dense_cube})
+
     \subsection{Utah/Newell Teapot}
     \label{sec:utah_teapot}
     %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
-    \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Model}\footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}
-    Measure vector instruction waste, efficiency and cache effects
+    I use the \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Newell Teapot Model}
+    \footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj} to measure various metrics
+    related to the efficiency of the \gls{simd} implementation of the rendering functions (\ref{sec:rendering_functions}).
+    Additionally, I will measure L1 instruction and data cache loads and load misses.
 
     \begin{figure}[t]
         \centering
         \includegraphics[scale=.2]{images/teapot.png}
-        \caption{Teapot rendered using renderer from Section~\ref{sec:renderer}}
+        \caption{Newell Teapot rendered using renderer from Section~\ref{sec:renderer}}
         \label{fig:teapot_render}
     \end{figure}
     
-    \subsubsection{HPCToolkit}
-    \cite{hpc_toolkit}
+    For this purpose I will use a tool called HPCToolkit developed by \citeauthor{hpc_toolkit} and presented in
+    \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
+
+    The tool is able to measure many different metrics such as the Linux kernels perf events or the events supported by
+    PAPI (Performance Application Programming Interface) developed by \citeauthor{papi} at the university of Tennessee,
+    Knoxville, and first published in \citetitle{papi} \cite{papi}.
+
+    \begin{itemize}
+        \item how does it measure →  links instrumentation at runtime (\mintinline{sh}{hpcrun})
+        \item how to evaluate the output (metrics and views (top-down, bottom-up, flat))
+        \item derived metrics
+    \end{itemize}
 
     The derived metrics used were vector instruction waste and vector instruction efficiency defined as:
     \begin{align}
         \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions} \label{eq:vec_waste}\\
-        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}} \label{eq:vec_efficiency}
+        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}}
+        \label{eq:vec_efficiency}
     \end{align}
-    which should be based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured for that scope
-    alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
+    which should be based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured
+    for that scope alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
     \href{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}}
     \mintinline{c}{PAPI_TOT_CYC} (total cycles) and \mintinline{c}{PAPI_VEC_INS}
     (vector instructions) metrics for the given scopes.
@@ -984,9 +1185,11 @@ gcc -march=native -dM -E - < /dev/null \
 
     \subsection{Approximations}
     \begin{itemize}
-        \item exp: \mintinline{c++}{approx::simd_fast_exp} is slightly faster than \mintinline{c++}{approx::vcl_exp}, but a lot less accurate →  \mintinline{c++}{approx::vcl_exp} as default
-        \item erf: \mintinline{c++}{approx::simd_abramowitz_stegun_erf} is significantly faster and accurate than the runner-up \mintinline{c++}{approx::simd_spline_erf_mirror} →
-            \mintinline{c++}{approx::simd_abramowitz_stegun_erf} as default.
+        \item exp: \mintinline{c++}{approx::simd_fast_exp} is slightly faster than \mintinline{c++}{approx::vcl_exp},
+            but a lot less accurate →  \mintinline{c++}{approx::vcl_exp} as default
+        \item erf: \mintinline{c++}{approx::simd_abramowitz_stegun_erf} is significantly faster and accurate than the
+            runner-up \mintinline{c++}{approx::simd_spline_erf_mirror} →  \mintinline{c++}{approx::simd_abramowitz_stegun_erf}
+            as default.
         \item svml: slowest error function →  beat by both splines which are ill-suited to simd parallelization
     \end{itemize}
 
@@ -1131,7 +1334,7 @@ gcc -march=native -dM -E - < /dev/null \
 #define __SSE_MATH__ 1
 #define __SSSE3__ 1
         \end{minted}
-        \caption{Ryzen 9 7950X Vector Extensions determined by gcc}
+        \caption{Ryzen 9 7950X (\mintinline{sh}{-march=znver4}) Vector Extensions determined by \mintinline{sh}{gcc}}
         \label{lst:extensions}
     \end{listing}
 
@@ -1152,6 +1355,43 @@ typedef double f64;
         \end{minted}
         \caption{Primitive Type Aliases}
         \label{lst:type_aliases}
+    \end{listing}
+ 
+ %@TODO: fill out interfaces
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+struct vec4f_t {
+    f32 x, y, z, w;
+};
+struct simd_vec4f_t { simd::Vec<simd::Float> x, y, z, w; };
+struct gaussian_t {
+    vec4f_t albedo, mu;
+    f32 sigma, magnitude;
+};
+struct simd_gaussian_t {
+    simd_vec4f_t albedo, mu;
+    simd::Vec<simd::Float> sigma, magnitude;
+};
+struct gaussian_vec_t {
+    // all pointers aligned to SIMD_WIDTH
+    struct { f32 *r, *g, *b, *a; } albedo;
+    struct { f32 *x, *y, *z, *w; } mu;
+    f32 *sigma;
+    f32 *magnitude;
+    u64 size = 0;
+};
+struct gaussians_t {
+    std::vector<gaussian_t> gaussians;
+    gaussian_vec_t *soa_gaussians;
+};
+struct tiles_t {
+    const std::vector<gaussians_t> tiles;
+    const f32 tw, th;
+    const u64 w, h;
+};
+        \end{minted}
+        \caption{Types used for the implementation of the rendering functions.}
+        \label{lst:types_vrt_full}
     \end{listing}
 
     \backmatter

@@ -5,6 +5,7 @@
     year      = {2015},
     url       = {http://gvv.mpi-inf.mpg.de/projects/DiffVis}
 }
+
 @techreport{own_moeller_16_2,
     author      = {Ralf M\"oller},
     title       = {Design of a low-level C++ template SIMD library},
@@ -12,6 +13,7 @@
     institution = {Bielefeld University, Faculty of Technology, Computer Engineering Group},
     url         = {https://www.ti.uni-bielefeld.de/}
 }
+
 @article{fast_exp,
     author   = {Schraudolph, Nicol N.},
     title    = "{A Fast, Compact Approximation of the Exponential Function}",
@@ -27,6 +29,7 @@
     url      = {https://doi.org/10.1162/089976699300016467},
     eprint   = {https://direct.mit.edu/neco/article-pdf/11/4/853/814149/089976699300016467.pdf},
 }
+
 @Book{AbraSteg72,
   Title                    = {Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables},
   Editor                   = {Abramowitz, Milton and Stegun, Irene A.},
@@ -37,6 +40,7 @@
   Edition                  = {Tenth Printing},
   url                      = {https://personal.math.ubc.ca/~cbm/aands/}
 }
+
 @Article{kerbl3Dgaussians,
       author       = {Kerbl, Bernhard and Kopanas, Georgios and Leimk{\"u}hler, Thomas and Drettakis, George},
       title        = {3D Gaussian Splatting for Real-Time Radiance Field Rendering},
@@ -47,6 +51,7 @@
       year         = {2023},
       url          = {https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/}
 }
+
 @article{hpc_toolkit,
     author = {Adhianto, L. and Banerjee, S. and Fagan, M. and Krentel, M. and Marin, G. and Mellor-Crummey, J. and Tallent, N. R.},
     title = {HPCTOOLKIT: tools for performance analysis of optimized parallel programs},
@@ -61,6 +66,7 @@
     abstract = {Abstract HPCTOOLKIT is an integrated suite of tools that supports measurement, analysis, attribution, and presentation of application performance for both sequential and parallel programs. HPCTOOLKIT can pinpoint and quantify scalability bottlenecks in fully optimized parallel programs with a measurement overhead of only a few percent. Recently, new capabilities were added to HPCTOOLKIT for collecting call path profiles for fully optimized codes without any compiler support, pinpointing and quantifying bottlenecks in multithreaded programs, exploring performance information and source code using a new user interface, and displaying hierarchical space–time diagrams based on traces of asynchronous call path samples. This paper provides an overview of HPCTOOLKIT and illustrates its utility for performance analysis of parallel applications. Copyright © 2009 John Wiley \& Sons, Ltd.},
     year = {2010}
 }
+
 @inproceedings{volume_splatting,
   author={Zwicker, M. and Pfister, H. and van Baar, J. and Gross, M.},
   booktitle={Proceedings Visualization, 2001. VIS '01.}, 
@@ -73,10 +79,25 @@
   doi={10.1109/VISUAL.2001.964490},
   url={https://www.cs.umd.edu/~zwicker/publications/EWAVolumeSplatting-VIS01.pdf}
 }
+
 @techreport{splatting,
 author = {Westover, Lee A},
 title = {SPLATTING: A Parallel, Feed-Forward Volume Rendering Algorithm},
 year = {1991},
 publisher = {University of North Carolina at Chapel Hill},
 url = {https://www.cs.unc.edu/techreports/91-029.pdf}
+}
+
+@conference {papi,
+        title = {Using PAPI for Hardware Performance Monitoring on Linux Systems},
+        booktitle = {Conference on Linux Clusters: The HPC Revolution},
+        year = {2001},
+        month = {2001-06},
+        publisher = {Linux Clusters Institute},
+        organization = {Linux Clusters Institute},
+        address = {Urbana, Illinois},
+        abstract = {PAPI is a specification of a cross-platform interface to hardware performance counters on modern microprocessors. These counters exist as a small set of registers that count events, which are occurrences of specific signals related to a processor{\textquoteright}s function. Monitoring these events has a variety of uses in application performance analysis and tuning. The PAPI specification consists of both a standard set of events deemed most relevant for application performance tuning, as well as both high-level and low-level sets of routines for accessing the counters. The high level interface simply provides the ability to start, stop, and read sets of events, and is intended for the acquisition of simple but accurate measurement by application engineers. The fully programmable low-level interface provides sophisticated options for controlling the counters, such as setting thresholds for interrupt on overflow, as well as access to all native counting modes and events, and is intended for third-party tool writers or users with more sophisticated needs. PAPI has been implemented on a number of platforms, including Linux/x86 and Linux/IA-64. The Linux/x86 implementation requires a kernel patch that provides a driver for the hardware counters. The driver memory maps the counter registers into user space and allows virtualizing the counters on a perprocess or per-thread basis. The kernel patch is being proposed for inclusion in the main Linux tree. The PAPI library provides access on Linux platforms not only to the standard set of events mentioned above but also to all the Linux/x86 and Linux/IA-64 native events. PAPI has been installed and is in use, either directly or through incorporation into third-party end-user performance analysis tools, on a number of Linux clusters, including the New Mexico LosLobos cluster and Linux clusters at NCSA and the University of Tennessee being used for the GrADS (Grid Application Development Software) project. },
+        keywords = {papi},
+        author = {Jack Dongarra and Kevin London and Shirley Moore and Phil Mucci and Dan Terpstra},
+        url = {https://icl.utk.edu/publications/using-papi-hardware-performance-monitoring-linux-systems}
 }

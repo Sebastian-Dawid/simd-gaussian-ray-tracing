@@ -18,7 +18,7 @@ namespace vrt
     constexpr f32 SQRT_2 = 1.4142135623730951f;
 
     typedef f32(*f32_func_t)(f32);
-    typedef simd::Vec<simd::Float>(*simd_func_t)(simd::Vec<simd::Float>);
+    typedef simd::Vec<simd::Float>(*simd_f32_func_t)(simd::Vec<simd::Float>);
     typedef vec4f_t(*radiance_func_t)(const vec4f_t, const vec4f_t, const gaussians_t&);
     typedef f32(*transmittance_func_t)(const vec4f_t, const vec4f_t, const f32, const gaussians_t&);
 
@@ -47,7 +47,7 @@ namespace vrt
     /// \param n the direction of the ray. This should be a unit vector.
     /// \param s point along the ray to sample.
     /// \param gaussians the set of gaussians to compute the transmittance for.
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf, f32_func_t Expf = expf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf, f32_func_t Expf = expf>
     f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
     {
         simd::Vec<simd::Float> T = simd::set1(0.f);
@@ -55,11 +55,11 @@ namespace vrt
         {
             simd_gaussian_t g_q{
                 .albedo{},
-                    .mu{ .x = simd::load(gaussians.gaussians_broadcast->mu.x + i),
-                        .y = simd::load(gaussians.gaussians_broadcast->mu.y + i),
-                        .z = simd::load(gaussians.gaussians_broadcast->mu.z + i) },
-                    .sigma = simd::load(gaussians.gaussians_broadcast->sigma + i),
-                    .magnitude = simd::load(gaussians.gaussians_broadcast->magnitude + i)
+                    .mu{ .x = simd::load(gaussians.soa_gaussians->mu.x + i),
+                        .y = simd::load(gaussians.soa_gaussians->mu.y + i),
+                        .z = simd::load(gaussians.soa_gaussians->mu.z + i) },
+                    .sigma = simd::load(gaussians.soa_gaussians->sigma + i),
+                    .magnitude = simd::load(gaussians.soa_gaussians->magnitude + i)
             };
             simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
@@ -78,7 +78,7 @@ namespace vrt
     /// \param n directions of the rays. These should be unit vectors.
     /// \param s points along the rays.
     /// \param gaussinas the set of gaussians to compute the transmittance for.
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd_vec4f_t &n, const simd::Vec<simd::Float> &s, const gaussians_t &gaussians)
     {
         simd::Vec<simd::Float> T = simd::set1(0.f);
@@ -139,7 +139,7 @@ namespace vrt
         return L_hat;
     }
 
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     vec4f_t simd_radiance(const vec4f_t _o, const vec4f_t _n, const gaussians_t &gaussians)
     {
         vec4f_t L_hat{ 0.f, 0.f ,0.f };
@@ -147,17 +147,17 @@ namespace vrt
         {
             simd_gaussian_t g_q{
                 .albedo{
-                    .x = simd::load(gaussians.gaussians_broadcast->albedo.r),
-                        .y = simd::load(gaussians.gaussians_broadcast->albedo.g),
-                        .z = simd::load(gaussians.gaussians_broadcast->albedo.b),
+                    .x = simd::load(gaussians.soa_gaussians->albedo.r),
+                        .y = simd::load(gaussians.soa_gaussians->albedo.g),
+                        .z = simd::load(gaussians.soa_gaussians->albedo.b),
                         .w = simd::set1(1.f)
                 },
                     .mu{
-                        .x = simd::load(gaussians.gaussians_broadcast->mu.x + i),
-                        .y = simd::load(gaussians.gaussians_broadcast->mu.y + i),
-                        .z = simd::load(gaussians.gaussians_broadcast->mu.z + i) },
-                    .sigma = simd::load(gaussians.gaussians_broadcast->sigma + i),
-                    .magnitude = simd::load(gaussians.gaussians_broadcast->magnitude + i)
+                        .x = simd::load(gaussians.soa_gaussians->mu.x + i),
+                        .y = simd::load(gaussians.soa_gaussians->mu.y + i),
+                        .z = simd::load(gaussians.soa_gaussians->mu.z + i) },
+                    .sigma = simd::load(gaussians.soa_gaussians->sigma + i),
+                    .magnitude = simd::load(gaussians.soa_gaussians->magnitude + i)
             };
             simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
@@ -178,7 +178,7 @@ namespace vrt
     /// \param o the origins of the rays.
     /// \param n the directions of the rays. These should be unit vectors.
     /// \param gaussians the gaussians to take into account for the computation.
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     simd_vec4f_t broadcast_radiance(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
     {
         simd_vec4f_t L_hat{ .x = simd::set1(0.f), .y = simd::set1(0.f), .z = simd::set1(0.f), .w = simd::set1(0.f) };
@@ -202,7 +202,7 @@ namespace vrt
 
     /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
     /// The rays are defined in `xs` and `ys`.
-    template<radiance_func_t Lhat = radiance>
+    template<radiance_func_t Radiance = radiance>
     bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
     {
         //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
@@ -215,7 +215,7 @@ namespace vrt
                 .z = cam.projection_plane.zs[i],
             } - origin;
             dir.normalize();
-            const vec4f_t color = Lhat(origin, dir, gaussians);
+            const vec4f_t color = Radiance(origin, dir, gaussians);
             const u32 A = 0xFF000000; // final alpha channel is always 1
             const u32 R = (u32)(std::min(color.x, 1.0f) * 255);
             const u32 G = (u32)(std::min(color.y, 1.0f) * 255);
@@ -233,7 +233,7 @@ namespace vrt
     /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
     /// The rays are defined in `xs` and `ys`.
     /// This version of the function takes a tiled set of gaussians.
-    template<radiance_func_t Lhat = radiance>
+    template<radiance_func_t Radiance = radiance>
     bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const tiles_t &tiles, const bool &running, const u64 tc)
     {
         const u64 tile_width = width * tiles.tw/2.f;
@@ -249,7 +249,7 @@ namespace vrt
                 /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
                 //gaussians_t g{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*tiles.gaussians[tidx].gaussians_broadcast) };
                 std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height,
-                    g{gaussians_t{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*(tiles.gaussians[tidx].gaussians_broadcast)) }},
+                    g{gaussians_t{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*(tiles.gaussians[tidx].soa_gaussians)) }},
                     &tiles, &cam, &origin] () {
                         for (u64 _i = 0; _i < tile_width * tile_height; ++_i)
                         {
@@ -261,7 +261,7 @@ namespace vrt
                                 .z = cam.projection_plane.zs[i]
                             } - origin;
                             dir.normalize();
-                            const vec4f_t color = Lhat(origin, dir, g);
+                            const vec4f_t color = Radiance(origin, dir, g);
                             //simd::Vec<simd::Int> bg = simd::load(bg_image + i);
                             const u32 A = 0xFF000000; // final alpha channel is always 1
                             const u32 R = (u32)(std::min(color.x, 1.0f) * 255);
@@ -273,7 +273,7 @@ namespace vrt
                             // else
                             //     simd::store(img + _i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
                         }
-                        delete g.gaussians_broadcast;
+                        delete g.soa_gaussians;
                     };
                 if (tc == 1) {
                     task();
@@ -304,7 +304,7 @@ namespace vrt
     /// The rays are defined in `xs` and `ys`.
     /// This function is parallelized along the image pixels.
     /// Requires `image`, `xs` and `ys` to be aligned to `SIMD_BYTES`.
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
     {
         //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
@@ -339,7 +339,7 @@ namespace vrt
     /// Requires `image` to be aligned to `SIMD_BYTES`.
     /// This version of the function takes a tiled set of gaussians.
     /// The width of the tiles needs to be a multiple of `SIMD_FLOATS`.
-    template<simd_func_t Exp = simd::exp, simd_func_t Erf = simd::erf>
+    template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t origin, const tiles_t &tiles,
             const bool &running, const u64 tc)
     {
