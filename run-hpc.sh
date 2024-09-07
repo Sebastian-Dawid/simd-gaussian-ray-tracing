@@ -20,14 +20,13 @@ EVENTS="--event perf::CACHE-REFERENCES ${EVENTS}"
 EVENTS="--event perf::CACHE-MISSES ${EVENTS}"
 
 run_test () {
-    first_mode=1
+    first_mode=6
     make clean
     clang=""
     svml=""
     name="$1"
     if [ "$2" = "true" ]; then
         echo "${1}-svml:" >> hpc-runtimes.log
-        first_mode=2
         svml="--with-svml"
         name="${1}-svml"
     else
@@ -38,9 +37,6 @@ run_test () {
     fi
     make build -j32 ARGS="${clang} ${svml}"
     for mode in $(seq $first_mode 8); do
-        if [ "$2" = "true" ] && [ "${mode}" -eq 5 ]; then
-            continue
-        fi
 
         rm -rf hpctoolkit-volumetric-ray-tracer-measurements
         printf "\tMODE %s ST: " "${mode}" >> hpc-runtimes.log

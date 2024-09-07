@@ -205,7 +205,7 @@ i32 main(i32 argc, char **argv)
 
 
     std::vector<vrt::gaussian_t> staging_gaussians = _gaussians;
-    vrt::gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = vrt::gaussian_vec_t::from_gaussians(_gaussians) };
+    vrt::gaussians_t gaussians{ .gaussians = _gaussians, .soa_gaussians = vrt::gaussian_vec_t::from_gaussians(_gaussians) };
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
     f32 draw_time = 0.f, tiling_time = 0.f, total_time = 0.f;
@@ -263,7 +263,7 @@ i32 main(i32 argc, char **argv)
         frames++;
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         gaussians.gaussians = staging_gaussians;
-        gaussians.gaussians_broadcast->load_gaussians(staging_gaussians);
+        gaussians.soa_gaussians->load_gaussians(staging_gaussians);
         vrt::tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);
         tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;

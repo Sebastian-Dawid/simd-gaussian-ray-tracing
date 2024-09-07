@@ -30,7 +30,7 @@ int main()
                     .sigma = 1.f/(2 * num),
                     .magnitude = 3.f
                     });
-    gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
+    gaussians_t gaussians{ .gaussians = _gaussians, .soa_gaussians = gaussian_vec_t::from_gaussians(_gaussians) };
     struct timespec start, end;
 
     const vec4f_t origin{ 0.f, 0.f, 0.f };
@@ -82,7 +82,7 @@ int main()
                             .sigma = 1.f/(2 * num),
                             .magnitude = 3.f
                             });
-            gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
+            gaussians_t gaussians{ .gaussians = _gaussians, .soa_gaussians = gaussian_vec_t::from_gaussians(_gaussians) };
 
             u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * dim * dim);
             const camera_t cam(camera_create_info_t{

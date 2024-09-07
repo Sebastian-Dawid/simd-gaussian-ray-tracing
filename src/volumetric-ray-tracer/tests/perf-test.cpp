@@ -44,7 +44,7 @@ int main(i32 argc, char **argv)
                     });
 
 
-    gaussians_t gaussians{ .gaussians = _gaussians, .gaussians_broadcast = gaussian_vec_t::from_gaussians(_gaussians) };
+    gaussians_t gaussians{ .gaussians = _gaussians, .soa_gaussians = gaussian_vec_t::from_gaussians(_gaussians) };
     
     u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
 

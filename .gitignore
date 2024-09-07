@@ -5,7 +5,6 @@ out
 csv
 *.pdf
 imgui.ini
-perf*
 *measurements
 hpctoolkit
 *.bak*

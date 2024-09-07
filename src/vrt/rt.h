@@ -15,7 +15,8 @@
 namespace vrt
 {
     constexpr f32 SQRT_2_PI = 0.7978845608028654f;
-    constexpr f32 SQRT_2 = 1.4142135623730951f;
+    constexpr f32 INV_SQRT_2_PI = 1.f/SQRT_2_PI;
+    constexpr f32 SQRT_2 = std::numbers::sqrt2_v<f32>;
 
     typedef f32(*f32_func_t)(f32);
     typedef simd::Vec<simd::Float>(*simd_f32_func_t)(simd::Vec<simd::Float>);
@@ -33,11 +34,20 @@ namespace vrt
         f32 T = 0.f;
         for (const gaussian_t &g_q : gaussians.gaussians)
         {
-            const vec4f_t center_to_origin = g_q.mu - o;
-            const f32 mu_bar = (center_to_origin).dot(n);
-            const f32 c_bar = g_q.magnitude * Exp( -((center_to_origin).sqnorm() - std::pow(mu_bar, 2.f))/(2*std::pow(g_q.sigma, 2.f)) );
+            const vec4f_t origin_to_center = g_q.mu - o;
+            const f32 mu_bar = (origin_to_center).dot(n);
+            const f32 oc_sqnorm = origin_to_center.sqnorm();
+            const f32 mb2 = mu_bar * mu_bar;
+            const f32 inv_2_sigma2 = 1.f/(2.f * g_q.sigma * g_q.sigma);
+            const f32 oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
+            const f32 c_bar = g_q.magnitude * Exp( -(oc_sqnorm_diff_mb2 * inv_2_sigma2) );
+
             const f32 sqrt_2_sig = SQRT_2 * g_q.sigma;
-            T += ((g_q.sigma * c_bar)/(SQRT_2_PI)) * (Erf(-mu_bar/sqrt_2_sig) - Erf((s - mu_bar)/sqrt_2_sig));
+            const f32 mu_bar_sqrt_2_sig = mu_bar/sqrt_2_sig;
+            const f32 s_sqrt_2_sig = s/sqrt_2_sig;
+            const f32 erf1 = Erf(-mu_bar_sqrt_2_sig);
+            const f32 erf2 = Erf(s_sqrt_2_sig - mu_bar_sqrt_2_sig);
+            T += g_q.sigma * c_bar * INV_SQRT_2_PI * (erf1 - erf2);
         }
         return Exp(T);
     }
@@ -63,12 +73,22 @@ namespace vrt
             };
             simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
-            const simd_vec4f_t center_to_origin = g_q.mu - o;
-            const simd::Vec<simd::Float> mu_bar = (center_to_origin).dot(n);
-            const simd::Vec<simd::Float> c_bar = g_q.magnitude * Exp(-((center_to_origin).sqnorm() - (mu_bar * mu_bar))/(simd::set1(2.f) * g_q.sigma * g_q.sigma));
+
+            const simd_vec4f_t origin_to_center = g_q.mu - o;
+            const simd::Vec<simd::Float> mu_bar = (origin_to_center).dot(n);
+            const simd::Vec<simd::Float> oc_sqnorm = origin_to_center.sqnorm();
+            const simd::Vec<simd::Float> mb2 = mu_bar * mu_bar;
+            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * g_q.sigma * g_q.sigma);
+            const simd::Vec<simd::Float> oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
+            const simd::Vec<simd::Float> c_bar = g_q.magnitude * Exp(-(oc_sqnorm_diff_mb2 * inv_2_sigma2));
 
             const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * g_q.sigma;
-            T += ((g_q.sigma * c_bar)/simd::set1(SQRT_2_PI)) * (Erf(-mu_bar/sqrt_2_sig) - Erf((simd::set1(s) - mu_bar)/sqrt_2_sig));
+
+            const simd::Vec<simd::Float> mu_bar_sqrt_2_sig = mu_bar * simd::rcp(sqrt_2_sig);
+            const simd::Vec<simd::Float> s_sqrt_2_sig = simd::set1(s) * simd::rcp(sqrt_2_sig);
+            const simd::Vec<simd::Float> erf1 = Erf(-mu_bar_sqrt_2_sig);
+            const simd::Vec<simd::Float> erf2 = Erf(s_sqrt_2_sig-mu_bar_sqrt_2_sig);
+            T += g_q.sigma * c_bar * simd::set1(INV_SQRT_2_PI) * (erf1 - erf2);
         }
         return Expf(simd::hadds(T));
     }
@@ -87,7 +107,12 @@ namespace vrt
             const simd_gaussian_t G_q = simd_gaussian_t::from_gaussian_t(gaussians.gaussians[i]);
             const simd_vec4f_t origin_to_center = G_q.mu - o;
             const simd::Vec<simd::Float> mu_bar = (origin_to_center).dot(n);
-            const simd::Vec<simd::Float> c_bar = G_q.magnitude * Exp( -(((origin_to_center).sqnorm() - (mu_bar * mu_bar)) * simd::rcp(simd::set1(2.f) * G_q.sigma * G_q.sigma)) );
+            const simd::Vec<simd::Float> mb2 = mu_bar * mu_bar;
+            const simd::Vec<simd::Float> oc_sqnorm = origin_to_center.sqnorm();
+            const simd::Vec<simd::Float> sigma2 = G_q.sigma * G_q.sigma;
+            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * sigma2);
+            const simd::Vec<simd::Float> oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
+            const simd::Vec<simd::Float> c_bar = G_q.magnitude * Exp( -(oc_sqnorm_diff_mb2 * inv_2_sigma2) );
 
             const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * G_q.sigma;
 
@@ -95,7 +120,7 @@ namespace vrt
             const simd::Vec<simd::Float> s_sqrt_2_sig = s * simd::rcp(sqrt_2_sig);
             const simd::Vec<simd::Float> erf1 = Erf(-mu_bar_sqrt_2_sig);
             const simd::Vec<simd::Float> erf2 = Erf(s_sqrt_2_sig - mu_bar_sqrt_2_sig);
-            T += ((G_q.sigma * c_bar) * simd::rcp(simd::set1(SQRT_2_PI))) * (erf1 - erf2);
+            T += G_q.sigma * c_bar * simd::set1(INV_SQRT_2_PI) * (erf1 - erf2);
         }
         return Exp(T);
     }
@@ -105,8 +130,6 @@ namespace vrt
 
     /// Returns the combined density at point `pt` for the given set of gaussians.
     f32 density(const vec4f_t pt, const std::vector<gaussian_t> gaussians);
-
-    inline f32 (*_transmittance)(const vec4f_t, const vec4f_t, const f32, const gaussians_t&) = transmittance;
 
     /// Separate the given gaussians into sets based on which tiles of the image they affect.
     /// \param tw width of the image tiles.

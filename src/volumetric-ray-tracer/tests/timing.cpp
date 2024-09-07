@@ -101,7 +101,7 @@ int main()
     CSV = std::fopen("csv/timing_transmittance.csv", "wd");
     if (!CSV) exit(EXIT_FAILURE);
     fmt::println(CSV, "count, t_std, t_simd");
-    growing.gaussians_broadcast = gaussian_vec_t::from_gaussians(growing.gaussians);
+    growing.soa_gaussians = gaussian_vec_t::from_gaussians(growing.gaussians);
     growing.gaussians.clear();
     for (u8 i = 0; i < 16; ++i)
     {
@@ -113,7 +113,7 @@ int main()
                     .sigma = 1.f/8.f,
                     .magnitude = 1.f
                     });
-            growing.gaussians_broadcast->load_gaussians(growing.gaussians);
+            growing.soa_gaussians->load_gaussians(growing.gaussians);
             GETTIME(start);
             radiance<simd_transmittance<simd_fast_exp, simd_abramowitz_stegun_erf>>(origin, vec4f_t{ 0.f, 0.f, 1.f }, growing);
             GETTIME(end);
