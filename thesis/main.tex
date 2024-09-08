@@ -14,6 +14,8 @@
 \usepackage{minted}
 \usepackage{float}
 
+\usepackage{nicematrix}
+
 % pgfplots preamble
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{backgrounds}
@@ -157,7 +159,7 @@
     Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
     (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
     Gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision
-    and graphics contexts, since its fully differentiable and its applicability in real time contexts.
+    and graphics contexts, since its fully differentiable and can be applied in real time contexts.
 
     One of these derived methods is called 3D Gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in
     their \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{splatting}
@@ -167,13 +169,13 @@
     and $P$ is the affine projective transformation.
 
     To project the 3D covariance matrix to a 2D covariance matrix they employ a method described by \citeauthor{volume_splatting}
-    in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix $\Sigma'$ in camera coordinates can be computed
-    from the viewing transformation $W$, as
+    in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix
     \begin{equation}
         \Sigma' = JW\Sigma W^TJ^T
     \end{equation}
-    with $J$ as the jacobian of $P$ at $\mu$. \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting}
-    also show that discarding the third row and column yields a 2D covariance matrix $\Sigma_{2D}$.
+    in camera coordinates can be computed from the viewing transformation $W$ and the jacobian $J$ of $P$ at $\mu$.
+    \citeauthor{kerbl3Dgaussians} cite that \citeauthor{volume_splatting} also show that discarding the third row and
+    column yields a 2D covariance matrix $\Sigma_{2D}$.
 
     %@TODO: This is not part of the paper technically -> how do I cite this?
     %@TODO: Wording seems iffy, should rework this
@@ -188,15 +190,25 @@
 
     \section{Ray Tracing vs. Splatting}
     \label{sec:ray_v_splat}
-    %@TODO: What differentiates the two methods? Advantages? Disadvantages?
-    \begin{itemize}
-        \item perspective effects
-        \item intersecting Gaussians
-    \end{itemize}
+    Gaussian splatting and ray tracing are primarily differentiated by their handling of intersections between Gaussians
+    and the presence of perspective effects.
+
+    Due to the nature of the image formation model of Gaussian splatting it can not handle intersecting Gaussians correctly
+    since they are always blended onto the image sequentially. Ray tracing solves this problem since the order of the
+    Gaussians is irrelevant to the method.
+
+    Since Gaussian splatting relies on an affine projection to project the Gaussians into camera coordinates it can not
+    model perspective effects such as distortion at the edges of the field of view. The \gls{pinhole_camera} model that
+    Gaussian ray tracing relies on ensures that these perspective effects are present in images generated using ray
+    tracing.
+
+    The advantage to Gaussian splatting is speed, since its computational cost is a lot lower than that of ray tracing.
+    This allows Gaussian splatting to render scenes with thousands of Gaussians in real time ($>100$ frames per second
+    in some of the demo scenes from \cite{kerbl3Dgaussians}). Ray tracing provides more accurate renders at the expense
+    of real time performance.
 
     \chapter{Optimizations}
     \label{ch:optimizations}
-    %@TODO: Write introductory paragraph on optimizations
     I propose two optimizations to make execution of the method proposed by \citeauthor{Rhodin:2015}
     in \cite{Rhodin:2015} on the CPU possible with greatly reduced runtimes.
     The first optimization is vectorization (\ref{sec:vectorization}) of the method
@@ -218,6 +230,7 @@
     vector. This requires $\lceil \frac{N}{W} \rceil + W - 2 \leq N - 1$ additions.
 
     \subsection{Notation}
+    \label{sec:notation}
     Since the method as it is laid out in \cite{Rhodin:2015} makes use of conventional vectors it is
     necessary to introduce some notation to work with vectorization and ensure it is
     cleanly separated from conventional vector spaces. Vectors used for parallelization
@@ -371,7 +384,6 @@
 
     \section{Tiling}
     \label{sec:tiling}
-    %@TODO: describe the tiling method used. note similarities to splatting.
     In most scenes most pixels will be unaffected by most Gaussians, therefore it is not sensible to perform
     the per pixel calculations for all Gaussians instead of just the Gaussians that could affect the pixel.
     Reducing the number of Gaussians considered when dealing with any individual pixel is a good way to reduce
@@ -443,9 +455,6 @@
     considered relevant. The $|\mathbf{c}_i|, i=1,2$ terms are added to account for stronger perspective distortion
     towards the edges of the image.
 
-    %@TODO: Note mathematical justification for using 3.3 sigma as limit
-    % Visible tiling artifacts when using 2 sigma
-
     The $3.3 \cdot \sigma$ can be derived from
     \begin{align}
         G(\mu + k \cdot \sigma) &= c \cdot \exp{\left(-\frac{|k \sigma|^2}{2\sigma^2}\right)}\\
@@ -460,7 +469,8 @@
     \end{equation}
     with $\varepsilon = \frac{1}{255}$ the last density value that can result in a visible color and $c$ as the
     magnitude. Assuming the magnitude of the Gaussians to be in a reasonable range such as $[0, 10]$ using $k(1) =
-    \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$.
+    \sqrt{2(\ln{(1)} - \ln{(\frac{1}{255})})} = 3.3$ is a sufficient approximation since $k(10) = 3.9$. Using values
+    smaller than $k(1) = 3.3$, such as $2$, can lead to visible tiling artifacts for magnitudes in the given range.
 
     \chapter{Approximations}
     \label{ch:approximations}
@@ -475,15 +485,6 @@
 
     The implementation of the approximations will be discussed in Section~\ref{sec:impl_approx}.
 
-    \section{Cubic Spline Interpolation}
-    \label{sec:cubic_spline}
-    %@TODO: Describe cubic spline interpolation
-    \begin{itemize}
-        \item Find decomposition $a = x_0 < \dots < x_n = b$
-        \item Approximate each interval $[x_{i-1}, x_i]$ with $P_i(x) = a_{i0} + a_{i1}x + a_{i2}x^2 + a_{i3}x^3$ and $P_i \in \mathcal{P}_3([x_{i-1}, x_i])$
-        \item Solve linear system of equations to determine $a_{ij}, i=1,\dots,n, j=0,\dots,3$
-    \end{itemize}
-
     \section{Fast Exponential Function}
     \label{sec:fast_exp}
     The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp}
@@ -495,19 +496,81 @@
     is an identity of the exponential function. The rest of the approximation relies on the structure of floating point
     numbers under the IEEE-754 standard and will be discussed in Section~\ref{sec:impl_fast_exp}.
     
-    \section{Polynomial Approximations of the Error Function}
+    \section{Polynomial Approximations}
     \label{sec:poly_approx}
+    Many non-polynomial functions can be approximated locally using polynomial functions. There are various methods of
+    finding these approximations among them cubic spline interpolation (\ref{sec:cubic_spline}) and the taylor series
+    (\ref{sec:taylor}).
+
+    \subsection{Cubic Spline Interpolation}
+    \label{sec:cubic_spline}
+    Given the nodes $(x_i, y_i)$ of a decomposition $a = x_0 < \cdots < x_n = b$ a function
+    \begin{align}
+        \begin{aligned}
+            S_n \in S_n^{(k, r)}[a, b] = \{ &P \in C^r([a, b]),\\&P|_{[x_{i - 1}, x_i]} \in \mathcal{P}_k([x_{i - 1}, x_i]), i=1,\dots,n \}
+        \end{aligned}
+    \end{align}
+    is called a spline and
+    \begin{equation}
+        h_i = x_i - x_{i-1}
+    \end{equation}
+    for $i=1,\dots,n$ the step widths. If $S_n \in S_n^{(3, 2)}([a, b])$ it is called a cubic spline. A natural cubic spline is defined by
+    the additional condition $S_n''(a) = S_n''(b) = 0$.
+
+    Let
+    \begin{equation}
+        S_n|_{[x_{i-1}, x_i]} = P_i \in \mathcal{P}_3
+    \end{equation}
+    and
+    \begin{equation}
+        P_i(x) = a_{0,i} + a_{1,i}(x - x_i) + a_{2,i}(x - x_i)^2 + a_{3,i}(x - x_i)^3,
+    \end{equation}
+    with $x\in[x_{i-1}, x_i]$ for $i=1,\dots,n$.
+
+    I can determine the coefficients
+    \begin{align}
+        a_{0, i} &= y_i\\
+        a_{1, i} &= \frac{y_i - y_{i+1}}{h_i} + a_{2,i}h_i - a_{3,i}h_i^2\\
+        a_{2, i} &= \begin{cases}
+            0 & i = n\\
+            (A^{-1}b)_i & \text{else}
+        \end{cases}\label{eq:cubic_spline_a2}\\
+        a_{3, i} &= \frac{a_{2,i} - a_{2,i-1}}{3h_i}
+    \end{align}
+    for $i=1,\dots,n$.
+    For the computation of \eqref{eq:cubic_spline_a2} I additionally need
+    \begin{equation}
+        b_i = 3\left(\frac{y_{i+1} - y_i}{h_{i+1}} - \frac{y_i - y_{i-1}}{h_i}\right)
+    \end{equation}
+    for $i=1,\dots,n-1$ and
+    \begin{equation}
+        A = \begin{bNiceMatrix}
+            2(h_1 + h_2) & h_2          & \Cdots & 0\\
+            h_2          & 2(h_2 + h_3) & h_3     & \Vdots\\
+            \Vdots       &              &         & \\
+                         &              &         & \\
+                         & h_{n-2} & 2(h_{n-2} - h_{n-1}) & h_{n-1}\\
+            0            & \Cdots       & h_{n-1}              & 2(h_{n-1} - h_n)\\
+        \end{bNiceMatrix}
+    \end{equation}
+
+    This method can be applied to compute natural cubic splines for both the error and exponential functions.
 
     \subsection{Taylor Series}
     \label{sec:taylor}
-    The Taylor series of the error function
+    The Taylor series
     \begin{equation}
-        \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
+        \sum_{i = 0}^\infty \frac{f^{(n)}(x_0)}{n!}(x - x_0)^n
         \label{eq:taylor}
     \end{equation}
-    can give a good approximation of the error function around $x = 0$ when evaluated at $x_0 = 0$. For the
-    approximation to be usable on the relevant interval of $[-2, 2]$ it needs to include at least ten terms of the
-    series as seen in Figure~\ref{fig:taylor_erf}.
+    can be used to approximate the error and exponential functions. When evaluated at $x_0 = 0$ it can give a good
+    approximation
+    \begin{equation}
+        \erf{(x)} = \frac{2}{\sqrt{\pi}} \sum_{n = 0}^\infty \frac{x}{2n + 1} \prod_{k = 1}^n \frac{-x^2}{k}
+        \label{eq:taylor_erf}
+    \end{equation}
+    of the error function around $x = 0$. For the approximation to be usable on the
+    relevant interval of $[-2, 2]$ it needs to include at least ten terms of the series as seen in Figure~\ref{fig:taylor_erf}.
 
     \begin{figure}[t]
         \centering
@@ -515,6 +578,9 @@
         \caption{Taylor approximation of the error function with 4, 8, 10 and 16 terms.}
         \label{fig:taylor_erf}
     \end{figure}
+
+    The exponential function can be approximated using its taylor expansion on its own too, but it would require too
+    many terms to be reasonable.
 
     \subsection{Abramowitz and Stegun}
     \label{sec:abrasteg}
@@ -543,7 +609,8 @@
         \end{cases}
         \label{eq:abrasteg}
     \end{equation}
-    with $a$, $b$, $c$ and $d$ the same as before.
+    with $a$, $b$, $c$ and $d$ the same as before. How these factors were determined is unclear since they give the
+    approximation without an explanation as to how they derived it.
     
     \chapter{Implementation}
     \label{ch:implementation}
@@ -623,19 +690,6 @@
     For the sake of readability I will only embed the sequential implementations of the approximations in the text. The
     versions of the functions parallelized using T-SIMD can be found in Appendix~\ref{ch:listings}.
 
-    \subsubsection{Cubic Spline Interpolation}
-    \label{sec:impl_cubic_spline}
-
-    \begin{itemize}
-        \item horner's method
-        \item code gen using julia
-    \end{itemize}
-    
-    \begin{equation}
-        p(x) = \left(\left(\cdots\left(a_nx + a_{n-1}\right)x + \cdots a_2\right)x + a_1\right)x + a_0
-        \label{eq:horners_method}
-    \end{equation}
-
     \subsubsection{Fast Exponential Function}
     \label{sec:impl_fast_exp}
     As described in Section~\ref{sec:fast_exp} this approximation of the exponential function relies on the structure of
@@ -696,6 +750,27 @@ f32 fast_exp(f32 x)
         \caption{Fast Exponential Function Implementations}
         \label{lst:fast_exp_impl}
     \end{listing}
+    
+    \subsubsection{Cubic Spline Interpolation}
+    \label{sec:impl_cubic_spline}
+    An efficient implementation of a cubic spline first requires an efficient method of evaluating polynomials. A way to
+    evaluate polynomials efficiently is Horner's method
+    \begin{equation}
+        p(x) = \left(\left(\cdots\left(a_nx + a_{n-1}\right)x + \cdots a_2\right)x + a_1\right)x + a_0
+        \label{eq:horners_method}
+    \end{equation}
+    which avoids the need to evaluate multiple $x^n$ terms.
+    %@TODO: should I mention wasted pipelining opportunities here?
+
+    Applying the method for determining a cubic spline described in Section~\ref{sec:cubic_spline}, and writing the
+    corresponding code, for decompositions consisting of many intervals, by hand is not feasible. Therefore I implemented 
+    the algorithm for determining the coefficients (see Listing~\ref{lst:jl_cubic_spline}) along with two functions for
+    generating sequential (Listing~\ref{lst:jl_code_gen}) and \gls{simd} (Listing~\ref{lst:jl_code_gen_simd}) code.
+    
+    The generated code switches over the polynomials $P_i$ based on the passed parameter. The corresponding polynomial
+    $P_i$ is then evaluated using Horner's method \eqref{eq:horners_method}.
+
+    For the error function I can additionally expoit its symmetry to halve the number of cases that need to be checked.
 
     \subsubsection{Taylor Series and Abramowitz and Stegun}
     \label{sec:impl_abrasteg_taylor}
@@ -751,7 +826,7 @@ f32 taylor_erf(const f32 x)
             + ts[1])*x*x + ts[0])*x;
 }
         \end{minted}
-        \caption{Implementation of the approximation of the error function using ten terms of its taylor series \eqref{eq:taylor} at $0$ (\mintinline{c++}{ts}).}
+        \caption{Implementation of the approximation of the error function using ten terms of its taylor series \eqref{eq:taylor_erf} at $0$ (\mintinline{c++}{ts}).}
         \label{lst:horner_taylor}
     \end{listing}
 
@@ -794,9 +869,13 @@ svml_exp(simd::Vec<simd::Float, 64> x);
     \subsubsection{Vector Class Library (VCL)}
     \label{sec:vcl}
     The approximation of the exponential function provided by VCL is based on the IEEE-754 single precision floating
-    point format and the Taylor series of the exponential function. I provide wrapped versions of the approximation in
+    point format and the Taylor series \eqref{eq:taylor} of the exponential function
+    \begin{equation}
+        \exp{(x)} = \sum_{n = 0}^\infty \frac{x^n}{n!}.
+    \end{equation}
+    I provide wrapped versions of the approximation in
     the same way shown in Listing~\ref{lst:template_svml_exp} to deal with the conversion between the T-SIMD and VCL
-    vector types.
+    vector types (see Listing~\ref{lst:vcl_exp}).
 
     \subsection{Thread Pool}
     \label{sec:thread_pool}
@@ -1272,6 +1351,7 @@ gcc -march=native -dM -E - < /dev/null \
     \end{table}
 
     \chapter{Figures}
+    %@TODO: Remove figures for cycles -> boxplot instead
     \begin{figure}[H]
         \centering
         \input{plots/znver4_simd_erf_timing}
@@ -1334,7 +1414,7 @@ gcc -march=native -dM -E - < /dev/null \
 #define __SSE_MATH__ 1
 #define __SSSE3__ 1
         \end{minted}
-        \caption{Ryzen 9 7950X (\mintinline{sh}{-march=znver4}) Vector Extensions determined by \mintinline{sh}{gcc}}
+        \caption{Ryzen 9 7950X (\mintinline{sh}{-march=znver4}) Vector Extensions determined by \mintinline{sh}{gcc}.}
         \label{lst:extensions}
     \end{listing}
 
@@ -1356,7 +1436,140 @@ typedef double f64;
         \caption{Primitive Type Aliases}
         \label{lst:type_aliases}
     \end{listing}
- 
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{julia}
+function cubic_spline_interpolation(x, y)
+    h = [x[i] - x[i-1] for i in eachindex(x)[2:end]]
+    b = [ 3 * ((y[i+1] - y[i])/h[i] - (y[i] - y[i-1])/h[i-1])
+        for i in eachindex(y)[2:end-1]]
+    a_0 = y[2:end]
+    A = zeros(length(h) - 1, length(h) - 1)
+    for i in eachindex(h)[1:end-1]
+        if i-1 > 0
+            A[i, i-1] = h[i]
+        end
+        A[i, i] = 2*(h[i] + h[i+1])
+        if i+1 <= length(h)-1
+            A[i, i+1] = h[i+1]
+        end
+    end
+    Ai = inv(A)
+    a_2 = zeros(length(h) + 1)
+    a_2[2:end-1] = Ai * b
+    a_3 = [(a_2[i + 1] - a_2[i])/(3 * h[i])
+        for i in eachindex(h)]
+    a_1 = [(y[i+1] - y[i])/h[i] + a_2[i+1]*h[i]
+        - a_3[i]*h[i]^2 for i in eachindex(h)]
+    p = s -> a_0 + a_1 .* (s .- x[2:end]) + a_2[2:end]
+        .* (s .- x[2:end]).^2 + a_3 .* (s .- x[2:end]).^3
+    function get_index(t)
+        t = t < x[1] ? x[1] : t
+        t = t > x[end] ? x[end] : t
+        return argmax([x[i] <= t <= x[i+1]
+            for i in eachindex(x)[1:end-1]])
+    end
+    return (t -> p(t)[get_index(t)]), [a_0, a_1, a_2, a_3]
+end
+        \end{minted}
+        \caption{Julia function to generate cubic spline interpolation}
+        \label{lst:jl_cubic_spline}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{julia}
+function generate_c(f=erf, name="erf", x=-6.0:.5:6.0,
+            lower=-1.0, upper=1.0)
+    _, a = cubic_spline_interpolation(x, f.(x))
+    factors = map(x -> string.(Float32.(x)) .* "f",
+            Vector{Float32}.(a))
+    xs = "(x - " .* string.(x[2:end]) .* "f)"
+    polynomials = "((" .* factors[4] .* " * " .* xs
+            .* " + " .* factors[3][2:end] .* ") * " .* xs
+    polynomials = polynomials .* " + " .* factors[2]
+            .* ") * " .* xs .* " + " .* factors[1]
+    returns = "return " .* polynomials .* ";"
+    fun = "/// generated using spline \
+interpolation with supports $(x)
+f32 spline_"*name*"(const f32 x)
+{
+    if (x <= $(Float32(x[2]))f) return $(lower)f;\n"
+    for i in eachindex(returns)[1:end-1]
+        fun = fun .* "    else if (x < $(x[i+2])f) { "
+            .* returns[i] .* " }\n"
+    end
+    fun = fun .* "    return $(upper)f;
+}"
+    println(fun)
+end
+        \end{minted}
+        \caption{Julia functions to generate sequential code for cubic spline interpolation.}
+        \label{lst:jl_code_gen}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{julia}
+function generate_simd_c(f=erf, name="erf", x=-6.0:.5:6.0,
+            lower=-1.0, upper=1.0)
+    _, a = cubic_spline_interpolation(x, f.(x))
+    factors = map(x -> "simd::set1(" .* string.(x) .* "f)",
+            Vector{Float32}.(a))
+    xs = "(x - " .* "simd::set1(" .* string.(x[2:end])
+            .* "f))"
+    polynomials = "((" .* factors[4] .* " * " .* xs .* " + "
+            .* factors[3][2:end] .* ") * " .* xs
+    polynomials = polynomials .* " + " .* factors[2]
+            .* ") * " .* xs .* " + " .* factors[1]
+    fun = "/// generated using spline interpolation \
+with supports $(x)
+simd::Vec<simd::Float> simd_spline_"*name*
+"(const simd::Vec<simd::Float> x)
+{
+    simd::Vec<simd::Float> value = simd::set1($(upper));
+    simd::ifelse(x <= simd::set1($(Float32(x[2]))f), \
+simd::set1($(lower)), value);\n"
+    for i in eachindex(polynomials)[1:end-1]
+        fun = fun .* "    value = simd::ifelse(simd::\
+bit_and(simd::set1($(x[i+1])f) <= x, x <= simd::set1\
+($(x[i+2])f)), " .* polynomials[i] .* ", value);\n"
+    end
+    fun = fun .* "    return value;
+}"
+    println(fun)
+end
+        \end{minted}
+        \caption{Julia function to generate \gls{simd} code for cubic spline interpolation.}
+        \label{lst:jl_code_gen_simd}
+    \end{listing}
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+template<size_t SIMD_WIDTH>
+inline simd::Vec<simd::Float, SIMD_WIDTH>
+vcl_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
+
+template<>
+inline simd::Vec<simd::Float, 32>
+vcl_exp(simd::Vec<simd::Float, 32> x)
+{
+    return static_cast<__m256>(
+            vcl::exp(vcl::Vec8f(static_cast<__m256>(x))));
+}
+
+#ifdef __AVX512F__
+template<>
+inline simd::Vec<simd::Float, 64>
+vcl_exp(simd::Vec<simd::Float, 64> x)
+{
+    return static_cast<__m512>(
+            vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
+}
+#endif
+        \end{minted}
+        \caption{Template wrapper for VCL exponential function.}
+        \label{lst:vcl_exp}
+    \end{listing}
+
  %@TODO: fill out interfaces
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{c++}

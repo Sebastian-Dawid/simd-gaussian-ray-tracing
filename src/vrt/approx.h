@@ -89,20 +89,20 @@ namespace vrt::approx
 #endif
 
         template<size_t SIMD_WIDTH>
-            inline simd::Vec<simd::Float, SIMD_WIDTH> vcl_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
+        inline simd::Vec<simd::Float, SIMD_WIDTH> vcl_exp(simd::Vec<simd::Float, SIMD_WIDTH> x);
 
         template<>
-            inline simd::Vec<simd::Float, 32> vcl_exp(simd::Vec<simd::Float, 32> x)
-            {
-                return static_cast<__m256>(vcl::exp(vcl::Vec8f(static_cast<__m256>(x))));
-            }
+        inline simd::Vec<simd::Float, 32> vcl_exp(simd::Vec<simd::Float, 32> x)
+        {
+            return static_cast<__m256>(vcl::exp(vcl::Vec8f(static_cast<__m256>(x))));
+        }
 
 #ifdef __AVX512F__
         template<>
-            inline simd::Vec<simd::Float, 64> vcl_exp(simd::Vec<simd::Float, 64> x)
-            {
-                return static_cast<__m512>(vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
-            }
+        inline simd::Vec<simd::Float, 64> vcl_exp(simd::Vec<simd::Float, 64> x)
+        {
+            return static_cast<__m512>(vcl::exp(vcl::Vec16f(static_cast<__m512>(x))));
+        }
 #endif
 };
 
