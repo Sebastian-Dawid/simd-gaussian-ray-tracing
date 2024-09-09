@@ -19,9 +19,14 @@ run_test () {
     for mode in $(seq 1 8); do
         frames=10
         if [ "${mode}" -eq 5 ] || [ "${mode}" -eq 1 ]; then
+            if [ "$2" = "true" ]; then
+                continue
+            fi
             frames=1
         fi
         printf "\tMODE %s ST: " "${mode}" >> runtimes.log
+        # warm-up
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t32 --tiles 16
         ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t1 --tiles 16 -m "${mode}" >> runtimes.log
 
         if [ "${mode}" -gt 4 ]; then
@@ -31,9 +36,15 @@ run_test () {
     done
 }
 
+printf "START: "
+date >> runtimes.log
+
 run_test gcc false
-if [ $1 = "long" ]; then
+if [ "$1" = "long" ]; then
     run_test gcc true
 fi
 run_test clang false
 run_test clang true
+
+printf "END: "
+date >> runtimes.log

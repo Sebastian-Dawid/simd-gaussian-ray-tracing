@@ -51,9 +51,9 @@ namespace vrt
     {
         this->view_matrix = glm::translate(glm::lookAt(this->position, this->position + this->front, this->up), this->focal_length * this->front);
         //PRINT_MAT(this->view_matrix);
-        //if (this->projection_plane.xs != nullptr) simd_aligned_free(this->projection_plane.xs);
-        //if (this->projection_plane.ys != nullptr) simd_aligned_free(this->projection_plane.ys);
-        //if (this->projection_plane.zs != nullptr) simd_aligned_free(this->projection_plane.zs);
+        if (this->projection_plane.xs != nullptr) simd_aligned_free(this->projection_plane.xs);
+        if (this->projection_plane.ys != nullptr) simd_aligned_free(this->projection_plane.ys);
+        if (this->projection_plane.zs != nullptr) simd_aligned_free(this->projection_plane.zs);
         this->projection_plane.xs = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);
         this->projection_plane.ys = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);
         this->projection_plane.zs = (f32 *)simd_aligned_malloc(SIMD_BYTES, sizeof(f32) * this->w * this->h);

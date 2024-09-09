@@ -197,7 +197,7 @@ namespace vrt
         return L_hat.hadds();
     }
 
-    /// Version of `l_hat` that operates a set of `SIMD_FLOATS` rays.
+    /// Version of `radiance` that operates a set of `SIMD_FLOATS` rays.
     /// \param o the origins of the rays.
     /// \param n the directions of the rays. These should be unit vectors.
     /// \param gaussians the gaussians to take into account for the computation.
@@ -222,13 +222,10 @@ namespace vrt
     }
 
 
-    /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
-    /// The rays are defined in `xs` and `ys`.
+    /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     template<radiance_func_t Radiance = radiance>
     bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
     {
-        //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
-
         for (u64 i = 0; i < width * height; ++i)
         {
             vec4f_t dir = vec4f_t{
@@ -243,24 +240,18 @@ namespace vrt
             const u32 G = (u32)(std::min(color.y, 1.0f) * 255);
             const u32 B = (u32)(std::min(color.z, 1.0f) * 255);
             image[i] = A | R << 16 | G << 8 | B;
-            //if (is_wayland_display)
-            //    image[i] = A | R | G << 8 | B << 16;
-            //else
-            //    image[i] = A | R << 16 | G << 8 | B;
             if (!running) return true;
         }
         return false;
     }
 
-    /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
-    /// The rays are defined in `xs` and `ys`.
+    /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     /// This version of the function takes a tiled set of gaussians.
     template<radiance_func_t Radiance = radiance>
     bool render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const tiles_t &tiles, const bool &running, const u64 tc)
     {
         const u64 tile_width = width * tiles.tw/2.f;
         const u64 tile_height = height * tiles.th/2.f;
-        //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
 
         std::vector<i32*> tile_buffers;
         {
@@ -284,16 +275,11 @@ namespace vrt
                             } - origin;
                             dir.normalize();
                             const vec4f_t color = Radiance(origin, dir, g);
-                            //simd::Vec<simd::Int> bg = simd::load(bg_image + i);
                             const u32 A = 0xFF000000; // final alpha channel is always 1
                             const u32 R = (u32)(std::min(color.x, 1.0f) * 255);
                             const u32 G = (u32)(std::min(color.y, 1.0f) * 255);
                             const u32 B = (u32)(std::min(color.z, 1.0f) * 255);
                             img[_i] = (A | R << 16 | G << 8 | B);
-                            // if (is_wayland_display)
-                            //     simd::store(img + _i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
-                            // else
-                            //     simd::store(img + _i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
                         }
                         delete g.soa_gaussians;
                     };
@@ -322,14 +308,12 @@ namespace vrt
         return false;
     }
 
-    /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
-    /// The rays are defined in `xs` and `ys`.
+    /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     /// This function is parallelized along the image pixels.
     /// Requires `image`, `xs` and `ys` to be aligned to `SIMD_BYTES`.
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
     {
-        //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
         const simd_vec4f_t simd_origin = simd_vec4f_t::from_vec4f_t(origin);
 
         for (u64 i = 0; i < width * height; i += SIMD_FLOATS)
@@ -346,17 +330,12 @@ namespace vrt
             const simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(color.y, simd::set1(1.f)) * simd::set1(255.f));
             const simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(color.z, simd::set1(1.f)) * simd::set1(255.f));
             simd::store((i32*)image + i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
-            //if (is_wayland_display)
-            //    simd::store((i32*)image + i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
-            //else
-            //    simd::store((i32*)image + i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
             if (!running) return true;
         }
         return false;
     }
 
-    /// Renders an image with dimensions `width` x `height` of the given `gaussians` with the given `bg_image`  into `image`.
-    /// The rays are defined in `xs` and `ys`.
+    /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     /// This function is parallelized along the image pixels.
     /// Requires `image` to be aligned to `SIMD_BYTES`.
     /// This version of the function takes a tiled set of gaussians.
@@ -368,7 +347,6 @@ namespace vrt
         const u64 tile_width = width * tiles.tw/2.f;
         const u64 tile_height = height * tiles.th/2.f;
         ASSERT((tile_width % SIMD_FLOATS == 0));
-        //static bool is_wayland_display = getenv("WAYLAND_DISPLAY") != NULL;
         const simd_vec4f_t simd_origin = simd_vec4f_t::from_vec4f_t(origin);
 
         std::vector<i32*> tile_buffers;
@@ -396,10 +374,6 @@ namespace vrt
                         simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.y) * simd::set1(255.f));
                         simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.z) * simd::set1(255.f));
                         simd::store(img + _i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
-                        // if (is_wayland_display)
-                        //     simd::store(img + _i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
-                        // else
-                        //     simd::store(img + _i, (A | R | simd::slli<8>(G) | simd::slli<16>(B)));
                     }
                 };
                 if (tc == 1) {

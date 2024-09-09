@@ -740,7 +740,7 @@
     instead. In my implementation I opted to use \mintinline{c++}{std::bit_cast} and discard the bounds checking
     introduced by Rade since my usage should never leave the given bounds.
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 constexpr f32 a = (1 << 23) / std::numbers::ln2_v<f32>;
 constexpr f32 b = (1 << 23) * (127 - 0.043677448f);
@@ -784,7 +784,7 @@ f32 fast_exp(f32 x)
     spline interpolation above it is better to use Horner's method \eqref{eq:horners_method} to evaluate the polynomial
     as shown in Listing~\ref{lst:horner_abrasteg} and Listing~\ref{lst:horner_taylor}.
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 f32 abramowitz_stegun_erf(f32 x)
 {
@@ -800,7 +800,7 @@ f32 abramowitz_stegun_erf(f32 x)
         \label{lst:trivial_abrasteg}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 f32 abramowitz_stegun_erf(f32 x)
 {
@@ -816,7 +816,7 @@ f32 abramowitz_stegun_erf(f32 x)
         \label{lst:horner_abrasteg}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 constexpr f32 ts[] = { ... };
 f32 taylor_erf(const f32 x)
@@ -842,7 +842,7 @@ f32 taylor_erf(const f32 x)
     the \mintinline{c++}{approx} namespace along with a template wrapper function that is instantiated for the vector
     widths available (see Listing~\ref{lst:template_svml_exp}).
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 template<size_t SIMD_WIDTH>
 inline simd::Vec<simd::Float, SIMD_WIDTH>
@@ -888,7 +888,7 @@ svml_exp(simd::Vec<simd::Float, 64> x);
     is submitted a waiting thread of the pool, if available, is notified. All interactions with the queue are protected
     through a scoped \mintinline{c++}{std::unique_lock<std::mutex>}.
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 struct thread_pool_t
 {
@@ -908,9 +908,9 @@ struct thread_pool_t
     \end{listing}
 
     The pool implements the interface shown in Listing~\ref{lst:thread_pool_interface}.
-    The pool is initialized with \mintinline{c++}{thread_cont} threads. The threads are joined when the pool's
+    The pool is initialized with \mintinline{c++}{thread_count} threads. The threads are joined when the pool's
     destructor is called either through the end of the scope when used as a stack object or smart pointer or the
-    \mintinline{c++}{delete} operator in case of a heap object.
+    \mintinline{c++}{delete} operator.
 
     The threads execute the following steps: (1) claim the pool's mutex, (2) wait for the condition variable to be
     signaled if no tasks are available and the pool has not been stopped, (3) exit if the pool has been stopped and
@@ -944,7 +944,7 @@ struct thread_pool_t
     The implementation relies on various types representing the mathematical objects used for Gaussian ray tracing. They
     are listed in Listing~\ref{lst:types_vrt}. Since most of the functions implemented on the structures are not essential
     to the implementation I have omitted them here for the sake of brevity. The full interfaces are shown in Listing~\ref{lst:types_vrt_full}.
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 struct vec4f_t { f32 x, y, z, w; };
 struct simd_vec4f_t { simd::Vec<simd::Float> x, y, z, w; };
@@ -978,10 +978,10 @@ struct tiles_t {
         \label{lst:types_vrt}
     \end{listing}
 
-    I rely on passing functions as template arguments to configure the rendering functions I have defined some
+    I rely on passing functions as template arguments to configure the rendering functions, therefore I have defined some
     additional function types in Listing~\ref{lst:func_types_vrt} to make them more readable and meaningful.
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 typedef f32(*f32_func_t)(f32);
 typedef simd::Vec<simd::Float>(*simd_f32_func_t)
@@ -1053,7 +1053,7 @@ f32 simd_transmittance(const vec4f_t o, const vec4f_t n,
     field is disregarded since none of the computations rely on it and setting it might have adverse effects when
     computing the dot product.
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 simd_gaussian_t g_q{
     .albedo{
@@ -1130,46 +1130,61 @@ simd_vec4f_t broadcast_radiance(const simd_vec4f_t o,
     aside from the types.
     
     \subsubsection{Full Render}
-    \begin{minted}{c++}
+    %@TODO: This section needs more detail
+    In addition to the radiance function that calculates the color for an individual ray I also provide functions to
+    render entire images. The images are rendered based on a passed set of gaussians, camera configuration, camera position,
+    width and height.
+
+    There are two functions that do not allow for parallel processing of the pixels. These take the used \gls{radiance}
+    function as a template argument. Their signatures are given in Listing~\ref{lst:seq_pixels_render}.
+
+    \begin{listing}[t]
+        \begin{minted}[linenos, frame=lines]{c++}
 template<radiance_func_t Radiance>
 bool render_image(const u32 width, const u32 height,
         u32 *image, const camera_t &cam,
         const vec4f_t &origin,
         const gaussians_t &gaussians,
-        const bool &running)
-    \end{minted}
+        const bool &running);
 
-    \begin{minted}{c++}
 template<radiance_func_t Radiance>
 bool render_image(const u32 width, const u32 height,
         u32 *image, const camera_t &cam,
         const vec4f_t &origin, const tiles_t &tiles,
-        const bool &running, const u64 tc)
-    \end{minted}
+        const bool &running, const u64 tc);
+        \end{minted}
+        \caption{Image rendering functions without parallel pixel processing.}
+        \label{lst:seq_pixels_render}
+    \end{listing}
 
-    \begin{minted}{c++}
+    There are two functions that process pixels in parallel, but do not allow for other methods of parallelization. These
+    functions take the approximations for the exponential and error functions as template arguments, since the only
+    \gls{radiance} and \gls{transmittance} functions that can be used here are \mintinline{c++}{broadcast_radiance} and
+    \mintinline{c++}{broadcast_transmittance}. Their signatures are given in Listing~\ref{lst:par_pixels_render}.
+
+    \begin{listing}[t]
+        \begin{minted}[linenos, frame=lines]{c++}
 template<simd_f32_func_t Exp, simd_f32_func_t Erf>
 bool simd_render_image(const u32 width, const u32 height,
         u32 *image, const camera_t &cam,
         const vec4f_t &origin,
         const gaussians_t &gaussians,
         const bool &running)
-    \end{minted}
 
-    \begin{minted}{c++}
 template<simd_f32_func_t Exp, simd_f32_func_t Erf>
 bool simd_render_image(const u32 width, const u32 height,
         u32 *image, const camera_t &cam,
         const vec4f_t &origin, const tiles_t &tiles,
         const bool &running, const u64 tc)
-    \end{minted}
+        \end{minted}
+        \caption{Image rendering function with parallel pixel processing.}
+        \label{lst:par_pixels_render}
+    \end{listing}
 
-    \begin{itemize}
-        \item parallel radiance or transmittance →  radiance function as template parameter
-        \item parallel →  exp and erf approximations as template parameters
-        \item 2 versions each with and without tiling
-        \item thread pool used in tiling versions
-    \end{itemize}
+    The second version of each function uses tiling, which enables the use of multithreading. Each tile is allocated and
+    rendered in its own buffer. These buffers are collected into the final image after all tiles are completed. The
+    rendering code for the individual tiles is extracted into a lambda. The lambda is generated for each tile and either
+    submitted to the thread pool via its \mintinline{c++}{thread_pool_t::enqueue} function or executed after its creation.
 
     \section{Renderer}
     \label{sec:renderer}
@@ -1187,7 +1202,7 @@ bool simd_render_image(const u32 width, const u32 height,
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c|c|}
             \hline
-            Mode & Features\\
+            Mode & Features\\\hline
             1    & Sequential Baseline\\
             2    & Parallel \gls{transmittance}\\
             3    & Parallel \gls{radiance}\\
@@ -1222,7 +1237,7 @@ gcc -march=native -dM -E - < /dev/null \
 
     \section{Approximations}
     \begin{itemize}
-        \item averaged cycle count (pmu-tools)
+        \item averaged cycle count (pmu-tools) (exp: Figure~\ref{fig:cycles_exp}, erf: Figure~\ref{fig:cycles_erf})
         \item accuracy over relevant intervals
     \end{itemize}
 
@@ -1410,43 +1425,48 @@ gcc -march=native -dM -E - < /dev/null \
     \end{table}
 
     \chapter{Figures}
-    %@TODO: Remove figures for cycles -> boxplot instead
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_simd_erf_timing}
-        \caption{Cycles to calculate $n$ values of $\erf$.}
+        \caption{Average cycle count to calculate a value of $\erf$.}
+        \label{fig:cycles_erf}
     \end{figure}
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_simd_exp_timing}
-        \caption{Cycles to calculate $n$ values of $\exp$.}
+        \caption{Average cycle count to calculate a value of $\exp$.}
+        \label{fig:cycles_exp}
     \end{figure}
     
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_cmp_erf_approx}
         \caption{$\erf$ Approximations}
+        \label{fig:erf_approx}
     \end{figure}
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_cmp_erf_err}
         \caption{$\erf$ Errors}
+        \label{fig:erf_errors}
     \end{figure}
     
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_cmp_exp_approx}
         \caption{$\exp$ Approximations}
+        \label{fig:exp_approx}
     \end{figure}
-    \begin{figure}[H]
+    \begin{figure}[t]
         \centering
         \input{plots/znver4_cmp_exp_err}
         \caption{$\exp$ Errors}
+        \label{fig:exp_errors}
     \end{figure}
 
     \chapter{Listings}
     \label{ch:listings}
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 #define __AVX__ 1
 #define __AVX2__ 1
@@ -1477,7 +1497,7 @@ gcc -march=native -dM -E - < /dev/null \
         \label{lst:extensions}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 typedef uint8_t  u8;
 typedef uint16_t u16;
@@ -1496,7 +1516,7 @@ typedef double f64;
         \label{lst:type_aliases}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{julia}
 function cubic_spline_interpolation(x, y)
     h = [x[i] - x[i-1] for i in eachindex(x)[2:end]]
@@ -1535,7 +1555,7 @@ end
         \label{lst:jl_cubic_spline}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{julia}
 function generate_c(f=erf, name="erf", x=-6.0:.5:6.0,
             lower=-1.0, upper=1.0)
@@ -1566,7 +1586,7 @@ end
         \label{lst:jl_code_gen}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{julia}
 function generate_simd_c(f=erf, name="erf", x=-6.0:.5:6.0,
             lower=-1.0, upper=1.0)
@@ -1601,7 +1621,7 @@ end
         \label{lst:jl_code_gen_simd}
     \end{listing}
 
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 template<size_t SIMD_WIDTH>
 inline simd::Vec<simd::Float, SIMD_WIDTH>
@@ -1630,7 +1650,7 @@ vcl_exp(simd::Vec<simd::Float, 64> x)
     \end{listing}
 
  %@TODO: fill out interfaces
-    \begin{listing}[H]
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 struct vec4f_t {
     f32 x, y, z, w;

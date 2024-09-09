@@ -38,7 +38,7 @@
     "\t--quiet, -q:                            Quit after rendering without displaying the image to the screen.\n"\
     "\t--frames <count>:                       Render <count> frames. Does nothing if --quiet is not set.\n"\
     "\t--tiles <count>:                        Split the image into <count> tiles vertically and horizontally.\n"\
-    "\t--roation <rot>, -r <rot>:              Changes the viewing angle by <rot> every frame if --quiet is set.\n"\
+    "\t--rotation <rot>, -r <rot>:              Changes the viewing angle by <rot> every frame if --quiet is set.\n"\
     "\t--initial-rotation <rot>, -i <rot>:     Sets the initial rotation to <rot>.\n"\
     "\t--camaera-offset <offset>, -c <offset>: Set the position of the camera along the Z-Axis to <offset>.\n"\
     "\t--mode <mode>, -m <mode>:               Set the rendering mode to <mode>:\n"\

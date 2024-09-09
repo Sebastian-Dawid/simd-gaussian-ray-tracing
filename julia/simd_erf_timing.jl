@@ -1,48 +1,26 @@
-using CSV, DataFrames, Plots, LaTeXStrings
+using CSV, DataFrames, Plots, LaTeXStrings, StatsPlots
 
 function load_data()
     data_path = "./"*dirname(relpath(@__FILE__))*"/"
     data = CSV.File(data_path*"../csv/simd_erf.csv") |> DataFrame
-    count = Vector(data[:, 1])
-    t_svml = Vector(data[:, 2])
-    t_simd_spline = Vector(data[:, 3])
-    t_simd_spline_mirror = Vector(data[:, 4])
-    t_simd_abramowitz = Vector(data[:, 5])
-    t_simd_taylor = Vector(data[:, 6])
-    t_spline = Vector(data[:, 7])
-    t_spline_mirror = Vector(data[:, 8])
-    t_abramowitz = Vector(data[:, 9])
-    t_taylor = Vector(data[:, 10])
-    t_std = Vector(data[:, 11])
+    name = repeat(["Spline", "Spline Mirror", "Abramowitz", "Taylor", "SVML/STD"], outer=2)
+    counts = Vector(data[:, 1])
+    tmp = sum(Matrix(data) ./ counts; dims=1)
+    res = reshape(tmp[2:end] ./ tmp[1], (5,2))
 
-    plt_erf = plot(dpi=300, xlabel=L"$n$", ylabel=L"cycles", legend=:topleft)
-    # plot!(count, t_std, label="std::erf")
-    # plot!(count, t_spline, label="spline")
-    # plot!(count, t_spline_mirror, label="spline mirror")
-    # plot!(count, t_abramowitz, label="abramowitz stegun")
-    plot!(count, t_svml, label="SVML")
-    plot!(count, t_simd_spline, label="simd spline")
-    plot!(count, t_simd_spline_mirror, label="simd spline mirror")
-    plot!(count, t_simd_abramowitz, label="simd abramowitz stegun")
-    plot!(count, t_simd_taylor, label="simd taylor series")
+    plt_erf = groupedbar(name, res, groups=repeat(["SIMD", "Sequential"], inner=5), ylabel="avg. cycles",
+                        legend=:topleft, dpi=300)
     
     data = CSV.File(data_path*"../csv/simd_exp.csv") |> DataFrame
-    count = Vector(data[:, 1])
-    t_vcl = Vector(data[:, 2])
-    t_svml = Vector(data[:, 3])
-    t_simd_spline = Vector(data[:, 4])
-    t_spline = Vector(data[:, 5])
-    t_fast = Vector(data[:, 6])
-    t_simd_fast = Vector(data[:, 7])
-    t_std = Vector(data[:, 8])
-    plt_exp = plot(dpi=300, xlabel=L"$n$", ylabel=L"cycles", legend=:topleft)
-    # plot!(count, t_std, label="std::exp")
-    # plot!(count, t_spline, label="spline")
-    # plot!(count, t_fast, label="fast_exp")
-    plot!(count, t_svml, label="SVML")
-    plot!(count, t_simd_spline, label="simd spline")
-    plot!(count, t_simd_fast, label="simd fast_exp")
-    plot!(count, t_vcl, label="vcl")
+    name = repeat(["Spline", "Fast", "SVML/STD", "VCL"], outer=2)
+    counts = Vector(data[:, 1])
+    tmp = sum(Matrix(data) ./ counts, dims=1)
+    res = tmp[2:end] ./ tmp[1]
+    append!(res, NaN)
+    
+    plt_exp = groupedbar(name, reshape(res, (4,2)), groups=repeat(["SIMD", "Sequential"], inner=4), ylabel="avg. cycles",
+                        legend=:topleft, dpi=300)
+
     return plt_erf, plt_exp
 end
 

@@ -11,7 +11,12 @@ LATEX=latexmk -pdf -jobname=./target/$(NAME)
 FIGURES=$(shell find plots -name '*.tex')
 FILES=main.tex main.bib glossary.tex $(FIGURES)
 
+TODO_AVAILABLE = $(shell command -v todo-manager 2> /dev/null)
+
 all: $(FIGURES) ## Build full thesis
+ifdef TODO_AVAILABLE
+	todo-manager -o TODOs.md -i main.tex
+endif
 	mkdir -p target
 	$(LATEX) $(PAPER)
 
