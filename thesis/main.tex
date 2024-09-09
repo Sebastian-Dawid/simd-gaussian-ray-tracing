@@ -141,7 +141,7 @@
             \sum_q G_q(\mathbf{o} + s\mathbf{n})\mathbf{a}_q ds.
     \end{equation}
     
-    This integral may be approximated with sufficient accuracy by sampling around the mean of each Gaussian $G_q$
+    This integral may be approximated with sufficient accuracy by sampling around the mean of each Gaussian $G_q$ in
     a compact interval $S_q = \{ \bar{\mu}_q + k\lambda_q | k \in K \subset \Z \}$. For their purposes it was sufficient
     to choose $\lambda_q \sim \bar{\sigma}_q$ as the step length, which yields
     \begin{equation}
@@ -150,8 +150,8 @@
         \label{eq:radiance}
     \end{equation}
 
-    Rhodin \etal describe that local sampling with $\lambda_q = \bar{\sigma}_q$ and
-    $K = \{ -4, -3, \dots, 0 \}$ delivers a good enough approximation.
+    Rhodin \etal describe that local sampling with $\lambda_q = \bar{\sigma}_q$ and $K = \{ -4, -3, \dots, 0 \}$
+    delivers a good enough approximation.
 
     \section{Gaussian Splatting}
     \label{sec:splatting}
@@ -310,6 +310,7 @@
     \begin{equation}
         \hat{L}(\mathbf{o}, \mathbf{n}, \gamma) = \sum_{q} \mathbf{a}_q \sum_{s \in S_q} \lambda_qG_q(\mathbf{o}
         + s\mathbf{n})\sum_{i = 1}^W T^W_i(\mathbf{o}, \mathbf{n}, s, \gamma).
+        \label{eq:radiance_parallel_transmittance}
     \end{equation}
 
     Since the subsets $\mathcal{G}_j$ are disjoint by definition this version of the \gls{radiance} equation yields the
@@ -678,8 +679,11 @@
 
     \section{Library}
     \label{sec:library}
-
     %@TODO: Description of the functionality of the library
+    The library has two primary components (1) the implementations of the approximations (\ref{sec:impl_approx})
+    discussed in Chapter~\ref{ch:approximations} and (2) implementations of the rendering functions and tiling
+    algorithm (\ref{sec:rendering_functions}) described in Chapter~\ref{ch:optimizations}. Additionally, the library
+    provides an implementation of a thread pool (\ref{sec:thread_pool}).
 
     \subsection{Approximations}
     \label{sec:impl_approx}
@@ -974,7 +978,7 @@ struct tiles_t {
         \label{lst:types_vrt}
     \end{listing}
 
-    Since I rely on passing functions as template arguments to configure the rendering functions I have defined some
+    I rely on passing functions as template arguments to configure the rendering functions I have defined some
     additional function types in Listing~\ref{lst:func_types_vrt} to make them more readable and meaningful.
 
     \begin{listing}[H]
@@ -1014,20 +1018,66 @@ tiles_t tile_gaussians(const f32 tw, const f32 th,
     is generated for the \mintinline{c++}{soa_gaussians} field of the current tile.
 
     \subsubsection{\gls{transmittance}}
-
+    The sequential implementation of the \gls{transmittance} implementation is a one-to-one mapping to the
+    \gls{transmittance} equation \eqref{eq:transmittance_analytical}. It has
     \begin{minted}{c++}
 template<f32_func_t Exp, f32_func_t Erf>
 f32 transmittance(const vec4f_t o, const vec4f_t n,
         const f32 s, const gaussians_t& gaussians)
     \end{minted}
+    as its signature and receives the implementations of the exponential and error functions it uses as template
+    arguments. The operations within the function are separated such that the individual computations have as few
+    dependencies as possible. This ensures that the compiler can generate code that takes advantage of the CPUs
+    \gls{pipelining} capabilities.
     
+    The function corresponding to the parallel \gls{transmittance} equation \eqref{eq:transmittance_parallel} has the
+    signature
     \begin{minted}{c++}
 template<simd_f32_func_t Exp, simd_f32_func_t Erf,
         f32_func_t Expf>
 f32 simd_transmittance(const vec4f_t o, const vec4f_t n,
         const f32 s, const gaussians_t& gaussians)
     \end{minted}
-    
+    and implements the sum over the elements of the parallel \gls{transmittance} $T^W$ in the \gls{radiance} equation
+    \eqref{eq:radiance_parallel_transmittance}. This means there is an additional \mintinline{c++}{simd::hadds} call
+    at the end of the function.
+
+    In the main loop of the function all operations are performed on \mintinline{c++}{simd::Vec<simd::Float>}s, therefore
+    the exponential and error functions passed as template parameters are of the type \mintinline{c++}{simd_f32_func_t}.
+    But due to the sum over the vector at the end an additional template parameter \mintinline{c++}{Expf} for a
+    sequential exponential function is required.
+
+    Since this version of the function is parallelized over the Gaussians a vector of Gaussians needs to be loaded at the
+    beginning of the loop (Listing~\ref{lst:gaussian_load}). In this case the loads for the \mintinline{c++}{albedo}
+    field can be discarded since the \gls{transmittance} does not depend on the \gls{albedo}. The \mintinline{c++}{mu.w}
+    field is disregarded since none of the computations rely on it and setting it might have adverse effects when
+    computing the dot product.
+
+    \begin{listing}[H]
+        \begin{minted}[linenos, frame=lines]{c++}
+simd_gaussian_t g_q{
+    .albedo{
+        simd::load(gaussians.soa_gaussians->albedo.r + i),
+        simd::load(gaussians.soa_gaussians->albedo.g + i),
+        simd::load(gaussians.soa_gaussians->albedo.b + i),
+        simd::set1(1.f)
+    },
+    .mu{
+        simd::load(gaussians.soa_gaussians->mu.x + i),
+        simd::load(gaussians.soa_gaussians->mu.y + i),
+        simd::load(gaussians.soa_gaussians->mu.z + i)
+    },
+    .sigma = simd::load(gaussians.soa_gaussians->sigma + i),
+    .magnitude =
+        simd::load(gaussians.soa_gaussians->magnitude + i)
+};
+        \end{minted}
+        \caption{Loading vector of Gaussians.}
+        \label{lst:gaussian_load}
+    \end{listing}
+
+    The function corresponding to the broadcast \gls{transmittance} equation \eqref{eq:transmittance_broadcast} has the
+    signature
     \begin{minted}{c++}
 template<simd_f32_func_t Exp, simd_f32_func_t Erf>
 simd::Vec<simd::Float> broadcast_transmittance(
@@ -1035,40 +1085,49 @@ simd::Vec<simd::Float> broadcast_transmittance(
         const simd::Vec<simd::Float> s,
         const gaussians_t& gaussians)
     \end{minted}
-
-    \begin{itemize}
-        \item implementation of Eq.~\refeq{eq:transmittance_analytical}
-        \item erf and exp implementations passed as template parameters
-        \item parallelism →  memory overhead through load instruction, horizontal add Eq.~\refeq{eq:transmittance_parallel}
-        \item broadcast Eq.~\refeq{eq:transmittance_broadcast}
-    \end{itemize}
+    and is aside from the types, \mintinline{c++}{simd::Vec<simd::Float>} instead of \mintinline{c++}{f32}, identical
+    to the sequential version. Due to the difference in types the functions passed as template parameters are of the
+    \mintinline{c++}{simd_f32_func_t} type.
     
     \subsubsection{\gls{radiance}}
-
+    The sequential implementation of the \gls{radiance} equation \eqref{eq:radiance} has the signature
     \begin{minted}{c++}
 template<transmittance_func_t Tr>
 vec4f_t radiance(const vec4f_t o, const vec4f_t n,
         const gaussians_t& gaussians)
     \end{minted}
+    and receives an implementation of a non-broadcast \gls{transmittance} functions as its template argument
+    \mintinline{c++}{Tr}. The innermost loop over the samples \mintinline{c++}{s} along the ray computes the fraction
+    of the color determined by the current Gaussians \gls{albedo}. The loop iterates over the values in
+    $K = \{-4, -3, \dots, 0\}$ instead of and $s$ is computed at the start of each iteration. The outer loop adds the
+    \gls{albedo} of the current Gaussian, scaled by the result of the inner loop, onto the current total.
+    %@TODO: wording w.r.t color arithmetic seems weird?
     
+    The parallel and broadcast implementations both receive \gls{simd} implementations of the exponential and error
+    functions as template parameters, since they always use \mintinline{c++}{broadcast_transmittance}.
+
+    The implementation of the parallel \gls{radiance} equation \eqref{eq:radiance_parallel_gaussians} has the signature
     \begin{minted}{c++}
-template<transmittance_func_t Tr>
+template<simd_f32_func_t Exp, simd_f32_func_t Erf>
 vec4f_t simd_radiance(const vec4f_t o, const vec4f_t n,
         const gaussians_t& gaussians)
     \end{minted}
     
+    Since this version of the functions is parallelized over the Gaussians it has to load a vector of Gaussians in the
+    outer loop (see Listing~\ref{lst:gaussian_load}).
+
+    The sum over the elements of the \gls{radiance} vector \eqref{eq:radiance_parallel_final} is implemented via
+    \mintinline{c++}{simd_vec4f_t::hadds} which performs \mintinline{c++}{simd::hadds} on all of its elements and returns
+    a \mintinline{c++}{vec4f_t} containing the sums.
+
+    The function implementing the broadcast \gls{radiance} equation \eqref{eq:radiance_parallel_pixels} has
     \begin{minted}{c++}
 template<simd_f32_func_t Exp, simd_f32_func_t Erf>
 simd_vec4f_t broadcast_radiance(const simd_vec4f_t o,
         const simd_vec4f_t n, const gaussians_t& gaussians)
     \end{minted}
-
-    \begin{itemize}
-        \item implementation of Eq.~\refeq{eq:radiance}
-        \item transmittance functions as template argument
-        \item parallelism →  memory overhead via load Eq.~\refeq{eq:radiance_parallel_final}
-        \item broadcast Eq.~\refeq{eq:radiance_parallel_pixels}
-    \end{itemize}
+    as its signature and is, the same as \mintinline{c++}{broadcast_transmittance}, identical to the sequential version,
+    aside from the types.
     
     \subsubsection{Full Render}
     \begin{minted}{c++}

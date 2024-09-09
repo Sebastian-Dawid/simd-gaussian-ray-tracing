@@ -165,22 +165,22 @@ namespace vrt
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     vec4f_t simd_radiance(const vec4f_t _o, const vec4f_t _n, const gaussians_t &gaussians)
     {
-        vec4f_t L_hat{ 0.f, 0.f ,0.f };
+        simd_vec4f_t L_hat{};
         for (u64 i = 0; i < gaussians.gaussians.size(); i += SIMD_FLOATS)
         {
             simd_gaussian_t g_q{
                 .albedo{
-                    .x = simd::load(gaussians.soa_gaussians->albedo.r),
-                        .y = simd::load(gaussians.soa_gaussians->albedo.g),
-                        .z = simd::load(gaussians.soa_gaussians->albedo.b),
-                        .w = simd::set1(1.f)
+                    .x = simd::load(gaussians.soa_gaussians->albedo.r + i),
+                    .y = simd::load(gaussians.soa_gaussians->albedo.g + i),
+                    .z = simd::load(gaussians.soa_gaussians->albedo.b + i),
+                    .w = simd::set1(1.f)
                 },
-                    .mu{
-                        .x = simd::load(gaussians.soa_gaussians->mu.x + i),
-                        .y = simd::load(gaussians.soa_gaussians->mu.y + i),
-                        .z = simd::load(gaussians.soa_gaussians->mu.z + i) },
-                    .sigma = simd::load(gaussians.soa_gaussians->sigma + i),
-                    .magnitude = simd::load(gaussians.soa_gaussians->magnitude + i)
+                .mu{
+                    .x = simd::load(gaussians.soa_gaussians->mu.x + i),
+                    .y = simd::load(gaussians.soa_gaussians->mu.y + i),
+                    .z = simd::load(gaussians.soa_gaussians->mu.z + i) },
+                .sigma = simd::load(gaussians.soa_gaussians->sigma + i),
+                .magnitude = simd::load(gaussians.soa_gaussians->magnitude + i)
             };
             simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
@@ -192,9 +192,9 @@ namespace vrt
                 const simd::Vec<simd::Float> T = broadcast_transmittance<Exp, Erf>(o, n, s, gaussians);
                 inner += g_q.pdf(o + (n * s)) * T * lambda;
             }
-            L_hat = L_hat + (g_q.albedo * inner).hadds();
+            L_hat = L_hat + (g_q.albedo * inner);
         }
-        return L_hat;
+        return L_hat.hadds();
     }
 
     /// Version of `l_hat` that operates a set of `SIMD_FLOATS` rays.
@@ -212,9 +212,8 @@ namespace vrt
             simd::Vec<simd::Float> inner = simd::set1(0.f);
             for (i8 k = -4; k <= 0; ++k)
             {
-                const simd::Vec<simd::Float> s = (G_q.mu - o).dot(n) + simd::set1((f32)k) * lambda_q;
-                simd::Vec<simd::Float> T;
-                T = broadcast_transmittance<Exp, Erf>(o, n, s, gaussians);
+                const simd::Vec<simd::Float> s = (G_q.mu - o).dot(n) + simd::set1<simd::Float>(k) * lambda_q;
+                simd::Vec<simd::Float> T = broadcast_transmittance<Exp, Erf>(o, n, s, gaussians);
                 inner += G_q.pdf(o + (n * s)) * T * lambda_q;
             }
             L_hat = L_hat + (G_q.albedo * inner);
