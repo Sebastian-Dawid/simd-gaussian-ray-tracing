@@ -182,7 +182,11 @@ i32 main(i32 argc, char **argv)
 {
     cmd_args_t cmd(argc, argv);
     std::vector<vrt::gaussian_t> _gaussians;
-    if (cmd.use_grid)
+    if (cmd.infile != nullptr)
+    {
+        _gaussians = read_from_obj(cmd.infile);
+    }
+    else
     {
         u8 grid_dim = cmd.grid_dim;
         for (u8 i = 0; i < grid_dim; ++i)
@@ -191,16 +195,8 @@ i32 main(i32 argc, char **argv)
                         .albedo{ 1.f - (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 0.f, 0.f + (i * grid_dim + j)/(f32)(grid_dim*grid_dim), 1.f },
                         .mu{ -1.f + 1.f/grid_dim + i * 1.f/(grid_dim/2.f), -1.f + 1.f/grid_dim + j * 1.f/(grid_dim/2.f), 1.f },
                         .sigma = 1.f/(2 * grid_dim),
-                        .magnitude = 3.f
+                        .magnitude = 1.f
                         });
-    }
-    else if (cmd.infile != nullptr)
-    {
-        _gaussians = read_from_obj(cmd.infile);
-    }
-    else
-    {
-        _gaussians = { vrt::gaussian_t{ .albedo{ 0.f, 1.f, 0.f, 1.f }, .mu{ .3f, .3f, .5f }, .sigma = 0.1f, .magnitude = 2.f }, vrt::gaussian_t{ .albedo{ 0.f, 0.f, 1.f, 1.f }, .mu{ -.3f, -.3f, 1.f }, .sigma = 0.4f, .magnitude = .7f }, vrt::gaussian_t{ .albedo{ 1.f, 0.f, 0.f, 1.f }, .mu{ 0.f, 0.f, 2.f }, .sigma = .75f, .magnitude = 10.f } };
     }
 
 
@@ -209,11 +205,6 @@ i32 main(i32 argc, char **argv)
     
     std::unique_ptr<renderer_t> renderer = (cmd.quiet) ? nullptr : std::make_unique<renderer_t>();
     f32 draw_time = 0.f, tiling_time = 0.f, total_time = 0.f;
-    //bool use_spline_approx = false;
-    //bool use_mirror_approx = false;
-    //bool use_taylor_approx = false;
-    //bool use_abramowitz_approx = false;
-    //bool use_fast_exp = false;
     bool use_simd_transmittance = cmd.use_simd_transmittance;
     bool use_simd_l_hat = cmd.use_simd_l_hat;
     bool use_simd_pixels = cmd.use_simd_pixels;

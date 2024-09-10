@@ -648,34 +648,57 @@
     directly has the disadvantage that the code is tied to the extension that makes those intrinsics available.
     Therefore, I opted to use a wrapper library (\ref{sec:tsimd}) to avoid direct usage of intrinsics.
 
-    \subsection{Vectorization to SIMD}
+    \subsection{Vectorization to \gls{simd}}
     \label{sec:vectorization_to_simd}
-    \begin{itemize}
-        \item most conversion are 1 to 1
-        \item p-vectors of vectors are implemented as vectors of p-vectors
-    \end{itemize}
+    For elementwise operations translating the vectorized operations introduced in Section~\ref{sec:vectorization} to
+    \gls{simd} operations is a simple one-to-one conversion.
+
+    A p-vector of vectors however is not possible using \gls{simd}, since the vectors are realized as hardware registers.
+    Therefore, this construct has to be implemented as a structure or vector of \gls{simd} vectors.
+    
+    Additionally, there is no hardware instruction to sum up a \gls{simd} vector. There is a horizontal add instruction
+    that adds up adjacent pairs of elements that can be used to implement this functionality.
 
     \subsection{T-SIMD}
     \label{sec:tsimd}
     A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in
     \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
-    \begin{itemize}
-        \item Vector class →  Template determines width in bytes
-        \item Intrinsics are wrapped in template functions →  intrinsic used based on width template parameter
-        \item Which widths are instantiated is based on the vector extensions detected by the compiler (\mintinline{sh}{gcc -march=native}) or set via flags (\mintinline{sh}{gcc -march=znver2} or \mintinline{sh}{gcc -mavx2})
-        \item Only available widths are instantiated
-        \item Missing instructions are emulated (e.g. extension not available)
-    \end{itemize}
+
+    The library provides a template vector class
+    \begin{minted}{c++}
+template<typename T, size_t SIMD_WIDTH> class Vec;
+    \end{minted}
+    that wraps a native \gls{simd} vector of byte width \mintinline{c++}{SIMD_WIDTH} and type \mintinline{c++}{T}. As an
+    example \mintinline{c++}{Vec<f32, 32>} wraps a 32 byte (256 bit) vector of single precision floating point numbers
+    which corresponds to the native \mintinline{c++}{__m256} type which holds eight floats.
+
+    The vector instrinsics are generally wrapped in the same way. The corresponding function is a template function that
+    takes the vector type and byte width as template arguments and the instantiation of the function ensures that the
+    correct instrinsic is called.
+
+    The widths the functions and types are instantiated for depend on the vector extensions defined as available at compile
+    time. Extensions are usually defined automatically by the compiler, \eg by passing \mintinline{c++}{-march=native} for
+    the extensions that are supported on the CPU that the software is compiled on. The \mintinline{c++}{SIMD_WIDTH}
+    template parameter is set to the highest available width by default.
+
+    Instructions are emulated if they are made available by an extension that is unavailable on the given architecture.
+    This has an adverse effect on the performance, but ensures that code will compile even if a specific instruction
+    is technically not available.
 
     \subsubsection{Sequential to T-SIMD}
     \label{sec:seq_to_tsimd}
-    \begin{itemize}
-        \item Most arithmetic conversions are one to one →  operator overloading in T-SIMD
-        \item \mintinline{c++}{if () {} else {}} can be done via \mintinline{c++}{simd::ifelse} →  a bit more restrictive (no code blocks, lambdas with returns as a workaround maybe? wasn't relevant here)
-        \item scalar values via \mintinline{c++}{simd::set1}
-        \item reciprocal and square root are available as instructions →  available in T-SIMD as \mintinline{c++}{simd::rcp} and \mintinline{c++}{simd::sqrt}
-        \item Sum over vector \mintinline{c++}{simd::hadds}
-    \end{itemize}
+
+    Scalar values are broadcast to a \mintinline{c++}{simd::Vec} using the \mintinline{c++}{simd::set1} function. All
+    standard arithmetic operators (\mintinline{c++}{+, -, *, /}) can be converted by converting the types of the
+    operands to the corresponding T-SIMD types. For the division it is more sensible to use the reciprocal function
+    \mintinline{c++}{simd::rcp} and a multiplication if accuracy is not the most important factor. Since there is a
+    hardware \gls{simd} instruction for calculating the square root it is available in the library as
+    \mintinline{c++}{simd::sqrt}. While there is no hardware instruction for a full horizontal sum as discussed previously
+    the library provides an implementation in the \mintinline{c++}{simd::hadds} function.
+
+    The ternary \mintinline{c++}{() ? :} operator can be converted to \mintinline{c++}{simd::ifelse}. More complex
+    \mintinline{c++}{if () {} else {}} expressions with blocks of code
+    to be executed are not possible.
 
     \section{Library}
     \label{sec:library}
@@ -1184,18 +1207,56 @@ bool simd_render_image(const u32 width, const u32 height,
     The second version of each function uses tiling, which enables the use of multithreading. Each tile is allocated and
     rendered in its own buffer. These buffers are collected into the final image after all tiles are completed. The
     rendering code for the individual tiles is extracted into a lambda. The lambda is generated for each tile and either
-    submitted to the thread pool via its \mintinline{c++}{thread_pool_t::enqueue} function or executed after its creation.
+    submitted to the thread pool via its \mintinline{c++}{thread_pool_t::enqueue} function or executed after its creation,
+    in case of single threaded execution.
 
     \section{Renderer}
     \label{sec:renderer}
+    As an example of how these rendering functions might be used I implemented a renderer that provides multiple rendering
+    modes corresponding to different configurations of the rendering functions (\ref{sec:rendering_modes}), a graphical
+    interface to display rendered images to the screen directly (\ref{sec:displaying_images}), the option to write
+    rendered images directly to file and loading Gaussian configurations from the vertices in a \mintinline{sh}{.obj}
+    file.
 
-    \begin{itemize}
-        \item renders and displays images via custom vulkan renderer (relevant?)
-        \item load \mintinline{sh}{.obj} files →  vertices as gaussians
-        \item command line flags (table?)
-        \item multiple rendering modes listed in Table~\ref{tab:exec_modes}
-        \item write images to file / headless mode
-    \end{itemize}
+    Writing images to disk is handled through the \href{https://github.com/nothings/stb/blob/master/stb_image_write.h}{stb image write}
+    \footnote{https://github.com/nothings/stb/blob/master/stb\_image\_write.h} library by passing the image generated by
+    the rendering function to the \mintinline{c}{stbi_write_png} function along with the width, height, number of color
+    channels and size of the image data in bytes.
+
+    The vertices from \mintinline{sh}{.obj} files are parsed using the \href{https://github.com/tinyobjloader/tinyobjloader}{tinyobjloader}
+    \footnote{https://github.com/tinyobjloader/tinyobjloader} library. The vertices are interpreted as Gaussians with a
+    standard deviation $\sigma$ based on their number.
+
+    The renderer provides various command line options to modify its behavior. A list of all available options is shown
+    when using the \mintinline{sh}{--help} flag.
+
+    \subsection{Rendering Modes}
+    \label{sec:rendering_modes}
+    The renderer provides the eight rendering modes shown in Table~\ref{tab:exec_modes}. The distinction between single-
+    and multithreading only applies to modes five through eight, since rendering without tiling does not support
+    multithreading.
+    The modes are implemented by instantiating the \mintinline{c++}{render_image} and \mintinline{c++}{simd_render_image}
+    functions with different template arguments. The corresponding template instantiations are shown in Listing~\ref{lst:template_inst}
+
+    \begin{listing}[t]
+        \begin{minted}[frame=lines]{c++}
+// sequential
+render_image<radiance<transmittance<expf, erff>>>
+
+// parallel transmittance
+render_image<radiance<simd_transmittance<vcl_exp,
+        simd_abramowitz_stegun_erf, expf>>>
+
+// parallel radiance
+render_image<simd_radiance<vcl_exp,
+        simd_abramowitz_stegun_erf>>
+
+// parallel pixels
+simd_render_image<vcl_exp, simd_abramowitz_stegun_erf>
+        \end{minted}
+        \caption{Template instantiations of rendering functions based on method of \gls{simd} parallelization.}
+        \label{lst:template_inst}
+    \end{listing}
 
     \begin{table}[b]
         \centering
@@ -1218,7 +1279,22 @@ bool simd_render_image(const u32 width, const u32 height,
         \caption{Modes}
         \label{tab:exec_modes}
     \end{table}
+
+    \subsection{Displaying Images}
+    \label{sec:displaying_images}
+
+    Images are displayed to the screen using a custom image viewer implemented using vulkan. In addition to displaying
+    the rendered images it shows statistics with respect to the rendering, such as the frames per second and fame time,
+    and provides controls to manipulate attributes of the Gaussians in the scene, like their position, color and standard
+    deviation.
+    The UI elements are implemented using the \href{https://github.com/ocornut/imgui}{Dear ImGui}
+    \footnote{https://github.com/ocornut/imgui} library.
     
+    In case the renderer is started with the \mintinline{sh}{--quiet} flag the image viewer will not be used. The frame
+    time will be printed to the command line after rendering is completed. If the \mintinline{sh}{--frames} flag is
+    specified with an argument greater than one the average frame time will be printed. Unless the \mintinline{sh}{--quiet}
+    flag is specified the \mintinline{sh}{--frames} flag has no effect.
+
     \chapter{Experiments}
     \label{ch:experiments}
     
@@ -1357,7 +1433,7 @@ gcc -march=native -dM -E - < /dev/null \
     \begin{figure}[t]
         \centering
         \input{plots/simd_speedup}
-        \caption{Single Threaded Speedups from using SIMD}
+        \caption{Single Threaded Speedups from using \gls{SIMD}}
         \label{fig:runtimes_st_simd_speedup}
     \end{figure}
 
@@ -1399,7 +1475,7 @@ gcc -march=native -dM -E - < /dev/null \
     \appendix
     \chapter{Tables}
     \label{ch:tables}
-    \begin{table}[H]
+    \begin{table}[b]
         \centering
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c | c | c | c|}
