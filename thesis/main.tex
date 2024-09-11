@@ -1298,9 +1298,11 @@ simd_render_image<vcl_exp, simd_abramowitz_stegun_erf>
     \chapter{Experiments}
     \label{ch:experiments}
     
-    All experiments were performed on a Ryzen 9 7950X CPU, which has 16 cores with hyperthreading and AVX512 support.
-    A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and
-    were determined using the shell script given in Listing~\ref{lst:exts_script}.
+    All experiments were performed on a machine running Linux\footnote{Kernel version 6.10.9-arch1-1} with a Ryzen 9 7950X CPU, which has 16 cores with
+    hyperthreading and AVX512 support. For the duration of the experiments all cores of the CPU were locked to a
+    frequency of $3.0$GHz. I locked the frequency using the userspace frequency scaling governor and \mintinline{sh}{cpupower}
+    utility. A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions}
+    and were determined using the shell script given in Listing~\ref{lst:exts_script}.
     \begin{listing}[H]
         \begin{minted}[linenos, frame=lines]{sh}
 #!/usr/bin/env sh
@@ -1311,13 +1313,13 @@ gcc -march=native -dM -E - < /dev/null \
         \label{lst:exts_script}
     \end{listing}
 
+    I set up two tests to determine the viability of the approximations
+
     \section{Approximations}
     \begin{itemize}
-        \item averaged cycle count (pmu-tools) (exp: Figure~\ref{fig:cycles_exp}, erf: Figure~\ref{fig:cycles_erf})
+        \item averaged cycle count (pmu-tools) \mintinline{c}{PERF_COUNT_HW_CPU_CYCLES} (exp: Figure~\ref{fig:cycles_exp}, erf: Figure~\ref{fig:cycles_erf})
         \item accuracy over relevant intervals
     \end{itemize}
-
-    %@TODO: Do I need this section? Do I have relevant experiments w.r.t the transmittance? \section{Transmittance}
 
     \section{Full Render}
     Aside from testing the approximations on their own, I have also performed end-to-end tests
