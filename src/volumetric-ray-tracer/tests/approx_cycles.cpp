@@ -27,7 +27,7 @@
     {                                       \
         START = rdpmc_read(&(CTX));         \
         asm volatile("":::"memory");        \
-        FUNC                                \
+        FUNC;                               \
         asm volatile("":::"memory");        \
         END = rdpmc_read(&(CTX));           \
         ACC += END - START;                 \

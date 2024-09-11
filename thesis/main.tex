@@ -16,6 +16,9 @@
 
 \usepackage{nicematrix}
 
+\usepackage{chngcntr}
+\counterwithin{listing}{chapter}
+
 % pgfplots preamble
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{backgrounds}
@@ -1298,12 +1301,13 @@ simd_render_image<vcl_exp, simd_abramowitz_stegun_erf>
     \chapter{Experiments}
     \label{ch:experiments}
     
-    All experiments were performed on a machine running Linux\footnote{Kernel version 6.10.9-arch1-1} with a Ryzen 9 7950X CPU, which has 16 cores with
-    hyperthreading and AVX512 support. For the duration of the experiments all cores of the CPU were locked to a
-    frequency of $3.0$GHz. I locked the frequency using the userspace frequency scaling governor and \mintinline{sh}{cpupower}
-    utility. A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions}
-    and were determined using the shell script given in Listing~\ref{lst:exts_script}.
-    \begin{listing}[H]
+    All experiments were performed on a machine running Linux\footnote{Kernel version 6.10.9-arch1-1} with a Ryzen 9
+    7950X CPU, which has 16 cores with hyperthreading and AVX512 support. For the duration of the experiments all cores
+    of the CPU were locked to a frequency of $3.0$GHz. I locked the frequency using the userspace frequency scaling
+    governor and \mintinline{sh}{cpupower}\footnote{The name of the tool appears to be distribution dependent.} utility.
+    A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and
+    were determined using the shell script given in Listing~\ref{lst:exts_script}.
+    \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{sh}
 #!/usr/bin/env sh
 gcc -march=native -dM -E - < /dev/null \
@@ -1313,27 +1317,97 @@ gcc -march=native -dM -E - < /dev/null \
         \label{lst:exts_script}
     \end{listing}
 
-    I set up two tests to determine the viability of the approximations
+    I set up benchmarks for the approximations on their own (\ref{sec:expr_approx}) as well as the full renderer
+    (\ref{sec:expr_full_render}).
 
     \section{Approximations}
-    \begin{itemize}
-        \item averaged cycle count (pmu-tools) \mintinline{c}{PERF_COUNT_HW_CPU_CYCLES} (exp: Figure~\ref{fig:cycles_exp}, erf: Figure~\ref{fig:cycles_erf})
-        \item accuracy over relevant intervals
-    \end{itemize}
+    \label{sec:expr_approx}
+    For the approximations I benchmarked the average cycle count per calculated value (\ref{sec:expr_average_cycles}) and
+    the accuracy on the intervals relevant to the application to ray tracing (\ref{sec:expr_accuracy}).
+
+    \subsection{Average Cycles}
+    \label{sec:expr_average_cycles}
+    To evaluate the viability of the implementations of the approximations described in Section~\ref{sec:impl_approx} I
+    measure the average number of CPU cycles it takes to calculate a value. For this purpose I use the
+    \href{https://github.com/andikleen/pmu-tools/tree/master/jevents}{jevents}\footnote{https://github.com/andikleen/pmu-tools/tree/master/jevents}
+    library to query the \mintinline{c}{PERF_COUNT_HW_CPU_CYCLES} counter from the Linux kernels performance counters.
+
+    To benchmark the individual functions I measure the CPU cycles it takes to execute the function $N$ times. I average
+    this result over $1000$ runs, which yields the average CPU cycle count for $N$ executions. I repeat this for increasing
+    values for $N$. Finally, I write these measurements into a \mintinline{sh}{.csv} file along with the number of
+    executions $N$.
+
+    The benchmark is implemented as a macro shown in Listing~\ref{lst:benchmark_macro}. The code to benchmark
+    (\mintinline{c++}{FUNC}) is enclosed by memory barriers to ensure the compiler does not move parts of it out of the
+    enclosing \mintinline{c}{rdpmc_read} calls.
+
+    The \mintinline{c++}{BENCHMARK} macro is used as shown in Listing~\ref{lst:benchmark_example}. Where \mintinline{c++}{t}
+    is initialized with pseudorandom values generated with \mintinline{c}{drand48} and the results are written back to
+    unique memory locations to ensure the calls are not optimized out by the compiler.
+
+    \begin{listing}[t]
+        \begin{minted}[linenos, frame=lines]{c++}
+#define BENCHMARK(CTX,START,END,ACC,FUNC)   \
+{                                           \
+    ACC = 0;                                \
+    for (u64 _ = 0; _ < ITER; ++_)          \
+    {                                       \
+        START = rdpmc_read(&(CTX));         \
+        asm volatile("":::"memory");        \
+        FUNC;                               \
+        asm volatile("":::"memory");        \
+        END = rdpmc_read(&(CTX));           \
+        ACC += END - START;                 \
+    }                                       \
+}
+        \end{minted}
+        \caption{Benchmark Macro}
+        \label{lst:benchmark_macro}
+    \end{listing}
+
+    \begin{listing}[t]
+        \begin{minted}[linenos, frame=lines]{c++}
+BENCHMARK(ctx, start, end, acc, for (u64 j = 0;
+        j < SIMD_FLOATS * i; ++j)
+        s_abramowitz[j] = abramowitz_stegun_erf(t[j]););
+f32 ac_abramowitz = static_cast<f32>(acc)/ITER;
+
+BENCHMARK(ctx, start, end, acc, for (u64 j = 0;
+        j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
+        simd::storeu(s_simd_abramowitz + j,
+        simd_abramowitz_stegun_erf(simd::loadu(t + j))););
+f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
+        \end{minted}
+        \caption{Example usage of the \mintinline{c++}{BENCHMARK} macro.}
+        \label{lst:benchmark_example}
+    \end{listing}
+
+    \subsection{Accuracy}
+    \label{sec:expr_accuracy}
+    To determine the accuracy of the approximations I sample values across the relevant interval with a small step size,
+    \eg samples $\{ -6 + \frac{12n}{N}\,|\, n=0,\dots,N \}$ for the interval $[-6, 6]$ and $N+1$ steps.
+
+    For these samples I calculate the error of the approximation $f$
+    \begin{equation}
+        \text{err}_f(x, y) = \left|\frac{y - f(x)}{x}\right| \text{ for } x\ne0
+    \end{equation}
+    relative to the size of the input $x$, where $y$ is the actual value.
 
     \section{Full Render}
-    Aside from testing the approximations on their own, I have also performed end-to-end tests
-    to evaluate the performance improvements of the implemented optimizations in a - close to - real world scenario.
-    The tests will be performed on two separate models and evaluate metrics concerning the usage and efficiency of
-    \gls{simd} instructions (\ref{sec:utah_teapot}) and the runtime of the program (\ref{sec:dense_cube})
+    \label{sec:expr_full_render}
+    Aside from testing the approximations on their own, I have also performed benchmarks to evaluate the performance
+    improvements of the implemented optimizations in a - close to - real world scenario. The benchmarks used two separate
+    models and evaluate metrics concerning the usage and efficiency of \gls{simd} instructions (\ref{sec:utah_teapot})
+    and the runtime of the program (\ref{sec:dense_cube}).
 
     \subsection{Utah/Newell Teapot}
     \label{sec:utah_teapot}
     %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
-    I use the \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Newell Teapot Model}
+    I used the \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Newell Teapot Model}
     \footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj} to measure various metrics
     related to the efficiency of the \gls{simd} implementation of the rendering functions (\ref{sec:rendering_functions}).
-    Additionally, I will measure L1 instruction and data cache loads and load misses.
+    Additionally, I measured L1 instruction and data cache loads and load misses to investigate possible memory related
+    bottlenecks.
 
     \begin{figure}[t]
         \centering
@@ -1425,8 +1499,11 @@ gcc -march=native -dM -E - < /dev/null \
     \end{itemize}
 
     \subsection{Full Render}
-    On average the runtime is reduced by $19\%$ when compiling with clang instead of GCC.
-    Rendering finishes about $9.4$ times faster when using tiling.
+    \begin{itemize}
+        \item GCC better at sequential and innermost loop SIMD
+        \item Clang Mode 8 w/ multithreading fastest overall
+        \item SVML always the slowest
+    \end{itemize}
 
     Figure~\ref{fig:runtimes_st_simd_speedup} shows
     the speedups gained from employing the \gls{simd} routines described in Chapter~\ref{ch:optimizations}
@@ -1435,7 +1512,7 @@ gcc -march=native -dM -E - < /dev/null \
     \begin{figure}[t]
         \centering
         \input{plots/simd_speedup}
-        \caption{Single Threaded Speedups from using \gls{SIMD}}
+        \caption{Single Threaded Speedups from using \gls{simd}}
         \label{fig:runtimes_st_simd_speedup}
     \end{figure}
 
@@ -1518,26 +1595,26 @@ gcc -march=native -dM -E - < /dev/null \
     
     \begin{figure}[t]
         \centering
-        \input{plots/znver4_cmp_erf_approx}
+        \input{plots/cmp_erf_approx}
         \caption{$\erf$ Approximations}
         \label{fig:erf_approx}
     \end{figure}
     \begin{figure}[t]
         \centering
-        \input{plots/znver4_cmp_erf_err}
+        \input{plots/cmp_erf_err}
         \caption{$\erf$ Errors}
         \label{fig:erf_errors}
     \end{figure}
     
     \begin{figure}[t]
         \centering
-        \input{plots/znver4_cmp_exp_approx}
+        \input{plots/cmp_exp_approx}
         \caption{$\exp$ Approximations}
         \label{fig:exp_approx}
     \end{figure}
     \begin{figure}[t]
         \centering
-        \input{plots/znver4_cmp_exp_err}
+        \input{plots/cmp_exp_err}
         \caption{$\exp$ Errors}
         \label{fig:exp_errors}
     \end{figure}

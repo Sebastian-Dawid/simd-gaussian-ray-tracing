@@ -252,14 +252,14 @@ i32 main(i32 argc, char **argv)
     while (running)
     {
         frames++;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         gaussians.gaussians = staging_gaussians;
         gaussians.soa_gaussians->load_gaussians(staging_gaussians);
         vrt::tiles_t tiles = tile_gaussians(2.f/cmd.tiles, 2.f/cmd.tiles, staging_gaussians, cam.view_matrix);
-        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        clock_gettime(CLOCK_MONOTONIC, &end);
         tiling_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
 
-        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        clock_gettime(CLOCK_MONOTONIC, &start);
         bool res = false;
         if (use_tiling)
         {
@@ -287,7 +287,7 @@ i32 main(i32 argc, char **argv)
                 res = vrt::render_image<vrt::radiance<vrt::transmittance>>(width, height, image, cam, origin, gaussians, running);
             }
         }
-        clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+        clock_gettime(CLOCK_MONOTONIC, &end);
         draw_time = simd::timeSpecDiffNsec(end, start)/1000000.f;
         if (res) break;
 

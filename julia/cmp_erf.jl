@@ -16,11 +16,11 @@ function load_data()
     plot!(x, y_svml, label="svml")
     y = Vector(data[:, 7])
     plot!(x, y, label="std::erf")
-    erf_err = plot(x, abs.(y - y_spline), dpi=300, label="spline", xlabel=L"x", ylabel="err", legend=:topleft)
-    plot!(x, abs.(y - y_mirror), label="mirror")
-    plot!(x, abs.(y - y_taylor), label="taylor")
-    plot!(x, abs.(y - y_abramowitz), label="abramowitz stegun")
-    plot!(x, abs.(y - y_svml), label="svml")
+    erf_err = plot(x, clamp.(abs.((y - y_spline) ./ x), 0, 0.1), dpi=300, label="spline", xlabel=L"x", ylabel="err", legend=:topleft)
+    plot!(x, clamp.(abs.((y - y_mirror) ./ x), 0, 0.1), label="mirror")
+    plot!(x, abs.((y - y_taylor) ./ x), label="taylor")
+    plot!(x, abs.((y - y_abramowitz) ./ x), label="abramowitz stegun")
+    plot!(x, abs.((y - y_svml) ./ x), label="svml")
 
     data = CSV.File(data_path*"../csv/exp.csv") |> DataFrame
     x = Vector(data[:, 1])
@@ -35,9 +35,9 @@ function load_data()
     y = Vector(data[:, 2])
     plot!(x, y, label="std::exp")
     exp_err = plot(x, abs.(y - y_spline), dpi=300, label="spline", xlabel=L"x", ylabel="err", legend=:topleft)
-    plot!(x, abs.(y - y_fast), label="fast")
-    plot!(x, abs.(y - y_vcl), label="vcl")
-    plot!(x, abs.(y - y_svml), label="svml")
+    plot!(x, abs.((y - y_fast) ./ x), label="fast")
+    plot!(x, abs.((y - y_vcl) ./ x), label="vcl")
+    plot!(x, abs.((y - y_svml) ./ x), label="svml")
 
     return erf_approx, erf_err, exp_approx, exp_err
 end
@@ -59,9 +59,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
         savefig(plot(erf_approx, erf_err), img_dir*"/"*ENV["ARCH"]*"_cmp_erf"*ext)
         savefig(plot(exp_approx, exp_err), img_dir*"/"*ENV["ARCH"]*"_cmp_exp"*ext)
     else
-        savefig(erf_approx, img_dir*"/"*ENV["ARCH"]*"_cmp_erf_approx"*ext)
-        savefig(erf_err, img_dir*"/"*ENV["ARCH"]*"_cmp_erf_err"*ext)
-        savefig(exp_approx, img_dir*"/"*ENV["ARCH"]*"_cmp_exp_approx"*ext)
-        savefig(exp_err, img_dir*"/"*ENV["ARCH"]*"_cmp_exp_err"*ext)
+        savefig(erf_approx, img_dir*"/cmp_erf_approx"*ext)
+        savefig(erf_err, img_dir*"/cmp_erf_err"*ext)
+        savefig(exp_approx, img_dir*"/cmp_exp_approx"*ext)
+        savefig(exp_err, img_dir*"/cmp_exp_err"*ext)
     end
 end
