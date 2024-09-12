@@ -1400,6 +1400,114 @@ f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
     models and evaluate metrics concerning the usage and efficiency of \gls{simd} instructions (\ref{sec:utah_teapot})
     and the runtime of the program (\ref{sec:dense_cube}).
 
+    \subsection{HPCToolkit}
+    %@TODO: Turn this into its own section maybe?
+    For the purpose of evaluating \gls{simd} efficiency I will use a tool called HPCToolkit developed by
+    \citeauthor{hpc_toolkit} and presented in \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
+
+    The tool is able to measure many different metrics such as the Linux kernels performance counters or the events
+    provided by the PAPI (Performance Application Programming Interface) developed by \citeauthor{papi} at the university
+    of Tennessee, Knoxville, and first published in \citetitle{papi} \cite{papi}.
+
+    Instead of instrumenting the binary the tool takes a statistical sample of the program contexts. Given that the number
+    of samples taken is sufficiently large this is expected to be representative. The samples are taken by sending a signal
+    to the program that triggers a signal handler which records the current context.
+
+    It uses synchronous and asynchronous event triggers to measure various types of program performance. Asynchronous
+    event triggers correspond to events like cache misses or cycles executed and are sampled based on either an interval
+    timer or hardware performance counter event. Synchronous triggers are related directly to actions in the program like
+    allocations or IO.
+
+    HPCToolkit preloads its profiling library when an application is launched. During the library's initialization it
+    allocates and sets up the profiler state, signal handlers and asynchronous event triggers, then it initiates profiling.
+    The results are written to disk at end of the process' lifetime.
+
+    The recorded data can be viewed using the \mintinline{sh}{hpcviewer} tool, which provides different views of the
+    program's callstack. It presents the recorded metrics in a tabular format next to the associated scope or function
+    call. The \enquote{top-down} view presents the call stack as a tree starting at the program root. The \enquote{bottom-up}
+    view presents all functions that are called in the program. Expanding the function shows all contexts from which the
+    expanded function was called associated with the fraction of the total quantity of the functions metrics caused by
+    that context. The \enquote{flat} view presents the program divided into its components, like the binary and dynamically
+    linked libraries.
+
+    The metrics presented in \mintinline{sh}{hpcviewer} are divided into inclusive, marked \enquote{(I)}, and exclusive,
+    marked \enquote{(E)}, metrics. The difference between the two types is the scope they encompass. Inclusive metrics
+    encompass the current and all enclosed scopes such as loops and function calls. Exclusive metrics disregard nested
+    scopes.
+
+    \mintinline{sh}{hpcviewer} allows the user to define \enquote{derived metrics} based on the recorded metrics and other
+    derived metrics. These derived metrics are defined by a formular operating on the point-wise or aggregate values of
+    the other metrics and can be assigned a custom format for presentation.
+
+    %@TODO: Paragraph on filters -> filtered out scopes count towards the parent scope in exclusive metrics
+
+    The full workflow of evaluating an optimized binary using HPCToolkit is shown in Listing~\ref{lst:hpctoolkit_workflow}.
+    \begin{listing}[t]
+        \begin{minted}{bash}
+$ # profile binary
+$ hpcrun [event list] -- <binary>
+$ # analyse structure
+$ hpcstruct hpctoolkit-<binary>-measurements
+$ # link structure and profile
+$ hpcprof hpctoolkit-<binary>-measurements
+$ # view results
+$ hpcviewer hpctoolkit-<binary>-database
+        \end{minted}
+        \caption{Typical HPCToolkit Workflow}
+        \label{lst:hpctoolkit_workflow}
+    \end{listing}
+
+    \subsubsection{Used Metrics}
+    For the purpose of evaluating the efficiency of the \gls{simd} usage I recorded the metrics listed in Table~\ref{tab:metrics}.
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|}
+            \hline
+            Metric & Description \\\hline
+            \mintinline{c}{PAPI_VEC_INS} & Number of vector instructions executed\\
+            \mintinline{c}{PAPI_TOT_CYC} & Total number of cycles executed\\
+            \mintinline{c}{perf::L1-ICACHE-LOADS} & Number of L1 instruction cache load accesses\\
+            \mintinline{c}{perf::L1-ICACHE-LOAD-MISSES} & Number of L1 instruction cache load misses\\
+            \mintinline{c}{perf::L1-DCACHE-LOADS} & Number of L1 data cache load accesses\\
+            \mintinline{c}{perf::L1-DCACHE-LOAD-MISSES} & Number of L1 data cache load misses\\
+            \hline
+        \end{tabular}
+        \caption{Recorded Metrics}
+        \label{tab:metrics}
+    \end{table}
+
+    Based on these metrics I defined metrics, to evaluate \gls{simd} efficiency, which are the vector instruction waste
+    \begin{equation}
+        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions},
+        \label{eq:vec_waste}
+    \end{equation}
+    vector instruction efficiency
+    \begin{equation}
+        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}}
+        \label{eq:vec_efficiency}
+    \end{equation}
+    and vector instructions per cycle
+    \begin{equation}
+        \text{vpc}(\text{cycles}, \text{instructions}) = \frac{\text{instructions}}{\text{cycles}}.
+        \label{eq:vpc}
+    \end{equation}
+
+    Note that the two in the waste and efficiency formulas are based on the facts that most of the \gls{simd} operations
+    have a throughput of $0.5$ which means that two can be executed per cycle.
+
+    Additionally, I defined the instruction cache miss ratio
+    \begin{equation}
+        \text{icmr}(ca, cm) = \frac{cm}{ca + cm}
+    \end{equation}
+    where $ca$ corresponds to the instruction cache accesses and $cm$ the instruction cache misses. In the same way I defined
+    the data cache miss ratio
+    \begin{equation}
+        \text{dcmr}(ca, cm) = \frac{cm}{ca + cm}
+    \end{equation}
+    with $ca$ the data cache accesses and $cm$ the data cache misses. Both of these cache related metrics are defined
+    for the L1 cache.
+
     \subsection{Utah/Newell Teapot}
     \label{sec:utah_teapot}
     %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
@@ -1409,6 +1517,11 @@ f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
     Additionally, I measured L1 instruction and data cache loads and load misses to investigate possible memory related
     bottlenecks.
 
+    This benchmark consists of rendering the Newell Teapot using the renderer (\ref{sec:renderer}) via \mintinline{sh}{hpcrun},
+    recording the metrics listed in Table~\ref{tab:metrics}, once for each multithreaded rendering mode. The benchmark
+    used all 32 hardware threads available on the CPU. The render created in this benchmark can be seen in
+    Figure~\ref{fig:teapot_render} and consists of 3644 Gaussians.
+
     \begin{figure}[t]
         \centering
         \includegraphics[scale=.2]{images/teapot.png}
@@ -1416,65 +1529,13 @@ f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
         \label{fig:teapot_render}
     \end{figure}
     
-    For this purpose I will use a tool called HPCToolkit developed by \citeauthor{hpc_toolkit} and presented in
-    \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
-
-    The tool is able to measure many different metrics such as the Linux kernels perf events or the events supported by
-    PAPI (Performance Application Programming Interface) developed by \citeauthor{papi} at the university of Tennessee,
-    Knoxville, and first published in \citetitle{papi} \cite{papi}.
-
-    \begin{itemize}
-        \item how does it measure →  links instrumentation at runtime (\mintinline{sh}{hpcrun})
-        \item how to evaluate the output (metrics and views (top-down, bottom-up, flat))
-        \item derived metrics
-    \end{itemize}
-
-    The derived metrics used were vector instruction waste and vector instruction efficiency defined as:
-    \begin{align}
-        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions} \label{eq:vec_waste}\\
-        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}}
-        \label{eq:vec_efficiency}
-    \end{align}
-    which should be based on the exclusive\footnote{An exclusive metric refers to the quantity of the metric measured
-    for that scope alone, disregarding nested scopes such as function calls. Reference: HPCTOOLKIT User Manual page 18
-    \href{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}{https://hpctoolkit.org/manual/HPCToolkit-users-manual.pdf}}
-    \mintinline{c}{PAPI_TOT_CYC} (total cycles) and \mintinline{c}{PAPI_VEC_INS}
-    (vector instructions) metrics for the given scopes.
-
-    %@TODO: Verify this:
-    % HPCToolkit does not include inlined functions in exclusive metrics, which is why \gls{simd}
-    % instructions and CPU cycles generated by the T-SIMD library would not count towards the exclusive \mintinline{c}{PAPI_VEC_INS} and \mintinline{c}{PAPI_TOT_CYC}
-    % metrics.
-
-%     \begin{listing}[H]
-%         \begin{minted}[linenos, frame=lines]{c++}
-% f32 func(f32 in)
-% {
-%     // inlined broadcast should count for scope
-%     simd::Vec<simd::Float> x = simd::set1(in);
-%     // exp should not count for scope
-%     x = simd::exp(x);
-%     // inlined mul and broadcast should count for scope
-%     x = x * simd::set1(2.f);
-%     return x;
-% }
-%         \end{minted}
-%         \caption{Example for functions calls that should and should not count towards exclusive metrics.}
-%         \label{lst:scopes_example}
-%     \end{listing}
-% 
-%     As such the inclusive metrics are used for calculating the derived metrics. To get the exclusive derived metrics including the inlined T-SIMD functions I subtract
-%     the inclusive derived metrics of the functions I want to disregard. For the example in Listing~\ref{lst:scopes_example}
-%     this would be:
-%     \[ \text{metric}_e = \text{metric}_i - \text{metric}_{\text{simd::exp}} \]
-%     where $\text{metric}_i$ is the inclusive metric and $\text{matric}_{\text{simd::exp}}$ is the metric for the \mintinline{c++}{simd::exp} call.
-
-    %Therefore the derived metrics are calculated using the inclusive metrics. To obtain the final value for the derived metrics the
-    %value of the derived metrics of the scopes of non T-SIMD functions are subtracted from the value calculated using the inclusive metrics.
-
     \subsection{Dense Cube}
     \label{sec:dense_cube}
-    Runtime averaged over 10 frames
+    To measure the runtime improvements of the optimizations described in Chapter~\ref{ch:optimizations} I took the average
+    frame time, over 500 frames, rendering a cube (see Figure~\ref{fig:cube_render}). The cube's surface consists of
+    386 Gaussians. I performed this benchmark for the multithreaded rendering modes and compared them against a purely
+    sequential baseline measurement.
+
     \begin{figure}[t]
         \centering
         \includegraphics[scale=.2]{images/cube.png}

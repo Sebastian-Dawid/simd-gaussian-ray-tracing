@@ -41,6 +41,7 @@
     "\t--rotation <rot>, -r <rot>:              Changes the viewing angle by <rot> every frame if --quiet is set.\n"\
     "\t--initial-rotation <rot>, -i <rot>:     Sets the initial rotation to <rot>.\n"\
     "\t--camaera-offset <offset>, -c <offset>: Set the position of the camera along the Z-Axis to <offset>.\n"\
+    "\t--focal-length <focal-length>:          Set the focal length of the camera to <focal-length>.\n"\
     "\t--mode <mode>, -m <mode>:               Set the rendering mode to <mode>:\n"\
         "\t\t1 - sequential execution without tiling\n"\
         "\t\t2 - parallel transmittance calculation without tiling\n"\
@@ -69,6 +70,7 @@ struct cmd_args_t
     f32 rot = 360.f;
     f32 inital_rot = 0.f;
     f32 camera_offset = -4.f;
+    f32 focal_length = 1.f;
     cmd_args_t(i32 argc, char **argv)
     {
         static struct option opts[] = {
@@ -85,6 +87,7 @@ struct cmd_args_t
             { "rotation", required_argument, NULL, 'r' },
             { "initial-rotation", required_argument, NULL, 'i'},
             { "camera-offset", required_argument, NULL, 'c' },
+            { "focal-length", required_argument, NULL, 0xfe },
             { "help", no_argument, NULL, 0xff }
         };
         i32 lidx;
@@ -141,6 +144,9 @@ struct cmd_args_t
                 case 0xff:
                     fmt::println(HELP_MSG);
                     exit(EXIT_SUCCESS);
+                    break;
+                case 0xfe:
+                    this->focal_length = strtof(optarg, NULL);
                     break;
                 case 'm':
                     u64 mode = strtoul(optarg, NULL, 10);
@@ -241,7 +247,7 @@ i32 main(i32 argc, char **argv)
     struct timespec start, end;
 
     vrt::vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
-    vrt::camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height);
+    vrt::camera_t cam(origin.to_glm(), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f), -90.f, 0.f, width, height, cmd.focal_length);
     f32 angle = -90.f;
     u64 frames = 0;
     cam.position = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(cmd.inital_rot), glm::vec3(0.f, 1.f, 0.f)) * glm::vec4(cam.position, 1.f));

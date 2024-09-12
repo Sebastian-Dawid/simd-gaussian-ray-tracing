@@ -75,10 +75,10 @@ namespace vrt
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
 
             const simd_vec4f_t origin_to_center = g_q.mu - o;
+            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * g_q.sigma * g_q.sigma);
             const simd::Vec<simd::Float> mu_bar = (origin_to_center).dot(n);
             const simd::Vec<simd::Float> oc_sqnorm = origin_to_center.sqnorm();
             const simd::Vec<simd::Float> mb2 = mu_bar * mu_bar;
-            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * g_q.sigma * g_q.sigma);
             const simd::Vec<simd::Float> oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
             const simd::Vec<simd::Float> c_bar = g_q.magnitude * Exp(-(oc_sqnorm_diff_mb2 * inv_2_sigma2));
 
@@ -369,11 +369,11 @@ namespace vrt
                         } - simd_origin;
                         dir.normalize();
                         simd_vec4f_t color = broadcast_radiance<Exp, Erf>(simd_origin, dir, g);
-                        simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
+                        simd::Vec<simd::Int> A = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.w) * simd::set1(255.f));
                         simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.x) * simd::set1(255.f));
                         simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.y) * simd::set1(255.f));
                         simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.z) * simd::set1(255.f));
-                        simd::store(img + _i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
+                        simd::store(img + _i, (simd::slli<24>(A) | simd::slli<16>(R) | simd::slli<8>(G) | B));
                     }
                 };
                 if (tc == 1) {

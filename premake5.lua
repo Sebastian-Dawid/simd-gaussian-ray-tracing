@@ -41,6 +41,7 @@ workspace "ba-thesis"
     filter "configurations:debug"
         defines { "DEBUG" }
         symbols "On"
+        buildoptions { "-save-temps=obj" }
 
     filter "configurations:release"
         defines { "NDEBUG" }
@@ -79,7 +80,7 @@ workspace "ba-thesis"
         kind "SharedLib"
         language "C++"
         targetdir "build/lib/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
         includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
@@ -89,7 +90,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
         if SVML_AVAILABLE then
@@ -127,7 +128,7 @@ workspace "ba-thesis"
             kind "ConsoleApp"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
@@ -139,7 +140,7 @@ workspace "ba-thesis"
             kind "ConsoleApp"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
@@ -152,7 +153,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
 
         if SVML_AVAILABLE then
             filter { "options:with-svml" }
@@ -168,7 +169,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
 
         if SVML_AVAILABLE then
             filter { "options:with-svml" }
@@ -184,7 +185,7 @@ workspace "ba-thesis"
         kind "ConsoleApp"
         language "C++"
         targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
 
         if SVML_AVAILABLE then
             filter { "options:with-svml" }
@@ -201,7 +202,7 @@ workspace "ba-thesis"
             kind "ConsoleApp"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
@@ -214,7 +215,7 @@ workspace "ba-thesis"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
             -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj",  "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH,  "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
@@ -227,7 +228,7 @@ workspace "ba-thesis"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
             -- see svml-test on why -masm=intel is missing
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-save-temps=obj", "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
