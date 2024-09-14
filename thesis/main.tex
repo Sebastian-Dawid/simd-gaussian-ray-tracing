@@ -1301,12 +1301,12 @@ simd_render_image<vcl_exp, simd_abramowitz_stegun_erf>
     \chapter{Experiments}
     \label{ch:experiments}
     
-    All experiments were performed on a machine running Linux\footnote{Kernel version 6.10.9-arch1-1} with a Ryzen 9
+    All experiments were performed on a machine running Linux\footnote{Kernel version 6.10.9-arch1-2} with a Ryzen 9
     7950X CPU, which has 16 cores with hyperthreading and AVX512 support. For the duration of the experiments all cores
-    of the CPU were locked to a frequency of $3.0$GHz. I locked the frequency using the userspace frequency scaling
-    governor and \mintinline{sh}{cpupower}\footnote{The name of the tool appears to be distribution dependent.} utility.
-    A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions} and
-    were determined using the shell script given in Listing~\ref{lst:exts_script}.
+    of the CPU were locked to a frequency of $3.0$GHz. I locked the frequency using the \enquote{userspace} frequency
+    scaling governor and \mintinline{sh}{cpupower}\footnote{The name of the tool appears to be distribution dependent.}
+    utility. A list of all vector instruction set extensions the CPU provides can be found in Listing~\ref{lst:extensions}
+    and were determined using the shell script given in Listing~\ref{lst:exts_script}.
     \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{sh}
 #!/usr/bin/env sh
@@ -1323,7 +1323,7 @@ gcc -march=native -dM -E - < /dev/null \
     \section{Approximations}
     \label{sec:expr_approx}
     For the approximations I benchmarked the average cycle count per calculated value (\ref{sec:expr_average_cycles}) and
-    the accuracy on the intervals relevant to the application to ray tracing (\ref{sec:expr_accuracy}).
+    the accuracy on the intervals relevant to the application of ray tracing (\ref{sec:expr_accuracy}).
 
     \subsection{Average Cycles}
     \label{sec:expr_average_cycles}
@@ -1334,8 +1334,8 @@ gcc -march=native -dM -E - < /dev/null \
 
     To benchmark the individual functions I measure the CPU cycles it takes to execute the function $N$ times. I average
     this result over $1000$ runs, which yields the average CPU cycle count for $N$ executions. I repeat this for increasing
-    values for $N$. Finally, I write these measurements into a \mintinline{sh}{.csv} file along with the number of
-    executions $N$.
+    values for $N$. Finally, I write these measurements into a \mintinline{sh}{.csv} file along with the corresponding
+    number of executions $N$.
 
     The benchmark is implemented as a macro shown in Listing~\ref{lst:benchmark_macro}. The code to benchmark
     (\mintinline{c++}{FUNC}) is enclosed by memory barriers to ensure the compiler does not move parts of it out of the
@@ -1547,9 +1547,60 @@ $ hpcviewer hpctoolkit-<binary>-database
 
     The results of the experiments discussed in Chapter~\ref{ch:experiments} show
 
-    \section{Runtime}
+    \section{Approximations}
+    The results of the approximation benchmarks show that the optimal approximations to use, in terms of speed and
+    accuracy, are the approximation of the exponential function from the VCL (Vector Class Library) and the polynomial
+    approximation of the error function given by \citeauthor{AbraSteg72} in the \enquote{\citetitle{AbraSteg72}}.
 
-    \subsection{Approximations}
+    The approximation of the error function in Intel's SVML is the slowest of the considered approximations. This is
+    surprising because, the approximations using splines are ill-suited to the type of parallelism \gls{simd} provides.
+    This is because the \gls{simd} version of the spline always needs to consider all possible cases or incur some overhead
+    to determine when to return early. The sequential nature of the approximation reduce the possible gains from \gls{simd}
+    parallelism.
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/znver4_simd_erf_timing}
+        \caption{Average cycle count to calculate one value of $\erf$.}
+        \label{fig:cycles_erf}
+    \end{figure}
+
+    The polynomial approximation of the error function by \citeauthor{AbraSteg72} is both the fastest overall (see
+    Figure~\ref{fig:cycles_erf}), at $\sim0.73$ cycles per value, and has the largest speedup with respect to the
+    \gls{simd} version at $\sim15.3$ times faster than the sequential version (see Table~\ref{tab:abs_cycles_and_speedups_erf}).
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/cmp_erf_err}
+        \caption{$\erf$ Errors}
+        \label{fig:erf_errors}
+    \end{figure}
+
+    The Taylor approximation's maximum relative error is smaller than that of the approximation by \citeauthor{AbraSteg72}
+    (see Figure~\ref{fig:erf_errors}), but its errors appear at the borders to the constant parts of the function and
+    are bigger in absolute terms (see Figure~\ref{fig:erf_approx}). It is also worth noting, that the error of the
+    approximation by \citeauthor{AbraSteg72} happen close to zero where small errors appear larger, due to the small
+    size of the arguments.
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/znver4_simd_exp_timing}
+        \caption{Average cycle count to calculate one value of $\exp$.}
+        \label{fig:cycles_exp}
+    \end{figure}
+
+    That the usage of splines as approximations in \gls{simd} implementations does not work well becomes more apparent,
+    when looking at the performance of the spline used to approximate the exponential function. On average, it takes $6.04$
+    cycles to calculate a single value of the exponential function using the spline. This is only about $3.14$ times faster
+    than its sequential counterpart, as seen in Figure~\ref{fig:cycles_exp} and Table~\ref{tab:abs_cycles_and_speedups_exp}.
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/cmp_exp_err}
+        \caption{$\exp$ Errors}
+        \label{fig:exp_errors}
+    \end{figure}
+
     \begin{itemize}
         \item exp: \mintinline{c++}{approx::simd_fast_exp} is slightly faster than \mintinline{c++}{approx::vcl_exp},
             but a lot less accurate →  \mintinline{c++}{approx::vcl_exp} as default
@@ -1559,41 +1610,13 @@ $ hpcviewer hpctoolkit-<binary>-database
         \item svml: slowest error function →  beat by both splines which are ill-suited to simd parallelization
     \end{itemize}
 
-    \subsection{Full Render}
+    \section{Full Render}
+    \subsection{Runtimes}
     \begin{itemize}
-        \item GCC better at sequential and innermost loop SIMD
-        \item Clang Mode 8 w/ multithreading fastest overall
-        \item SVML always the slowest
+        \item GCC (14.2.1) better at sequential and innermost loop SIMD
+        \item Clang (18.1.8) Mode 8 fastest overall. beats gcc in modes 7 and 8
     \end{itemize}
-
-    Figure~\ref{fig:runtimes_st_simd_speedup} shows
-    the speedups gained from employing the \gls{simd} routines described in Chapter~\ref{ch:optimizations}
-    and Chapter~\ref{ch:implementation}. Showing a speedup of up to $25$ times when
-    parallelization over the images pixels.
-    \begin{figure}[t]
-        \centering
-        \input{plots/simd_speedup}
-        \caption{Single Threaded Speedups from using \gls{simd}}
-        \label{fig:runtimes_st_simd_speedup}
-    \end{figure}
-
-    While the SVML routines provide much higher accuracy using them is not worth the
-    performance trade-off as seen in Figure~\ref{fig:runtimes_st_svml_v_no}.
-    \begin{figure}[t]
-        \centering
-        \input{plots/runtimes_svml}
-        \caption{Single Threaded Runtimes using SVML and no SVML with Clang}
-        \label{fig:runtimes_st_svml_v_no}
-    \end{figure}
-
-    \begin{figure}[t]
-        \centering
-        \input{plots/speedup}
-        \caption{Speedup of Modes 6-8 relative to Mode 5}
-        \label{fig:runtimes_st_v_mt}
-    \end{figure}
-
-    \section{Waste and Efficiency}
+    \subsection{Waste and Efficiency}
 
     \chapter{Conclusion and Future Work}
     %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
@@ -1620,7 +1643,7 @@ $ hpcviewer hpctoolkit-<binary>-database
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c | c | c | c|}
             \hline
-            Mode & GCC               & Clang             & SVML\\\hline
+            Mode & GCC (v14.2.1)     & Clang (v18.1.8)   & SVML\\\hline
             1 st & $\sim1673.50$ sec & $\sim1367.64$ sec & - \\
             2 st & $\sim96.78$ sec   & $\sim80.93$ sec   & $\sim152.43$ sec\\
             3 st & $\sim69.46$ sec   & $\sim54.19$ sec   & $\sim135.71$ sec\\
@@ -1640,19 +1663,40 @@ $ hpcviewer hpctoolkit-<binary>-database
         \label{tab:perf_dense_cube_avx512}
     \end{table}
 
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Approximation & Sequential & \gls{simd} & Speedup\\\hline
+            SVML/STD & $44.90$ & $3.78$ & $11.87$\\
+            Spline & $16.95$ & $3.40$ & $4.99$\\
+            Spline Mirror & $13.69$ & $2.01$ & $6.81$\\
+            Taylor & $12.41$ & $1.16$ & $10.68$\\
+            Abramowitz and Stegun & $11.21$ & $0.73$ & $15.29$\\
+            \hline
+        \end{tabular}
+        \caption{Average cycles per value and speedup with respect to \gls{simd} for the approximations of the error function.}
+        \label{tab:abs_cycles_and_speedups_erf}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Approximation & Sequential & \gls{simd} & Speedup\\\hline
+            SVML/STD & $11.16$ & $1.15$ & $9.68$\\
+            Spline & $18.99$ & $6.04$ & $3.14$\\
+            Fast Exp & $9.55$ & $0.70$ & $13.65$\\
+            VCL & - & $0.91$ & -\\
+            \hline
+        \end{tabular}
+        \caption{Average cycles per value and speedup with respect to \gls{simd} for the approximations of the exponential function.}
+        \label{tab:abs_cycles_and_speedups_exp}
+    \end{table}
+
     \chapter{Figures}
-    \begin{figure}[t]
-        \centering
-        \input{plots/znver4_simd_erf_timing}
-        \caption{Average cycle count to calculate a value of $\erf$.}
-        \label{fig:cycles_erf}
-    \end{figure}
-    \begin{figure}[t]
-        \centering
-        \input{plots/znver4_simd_exp_timing}
-        \caption{Average cycle count to calculate a value of $\exp$.}
-        \label{fig:cycles_exp}
-    \end{figure}
     
     \begin{figure}[t]
         \centering
@@ -1660,24 +1704,12 @@ $ hpcviewer hpctoolkit-<binary>-database
         \caption{$\erf$ Approximations}
         \label{fig:erf_approx}
     \end{figure}
-    \begin{figure}[t]
-        \centering
-        \input{plots/cmp_erf_err}
-        \caption{$\erf$ Errors}
-        \label{fig:erf_errors}
-    \end{figure}
     
     \begin{figure}[t]
         \centering
         \input{plots/cmp_exp_approx}
         \caption{$\exp$ Approximations}
         \label{fig:exp_approx}
-    \end{figure}
-    \begin{figure}[t]
-        \centering
-        \input{plots/cmp_exp_err}
-        \caption{$\exp$ Errors}
-        \label{fig:exp_errors}
     \end{figure}
 
     \chapter{Listings}
