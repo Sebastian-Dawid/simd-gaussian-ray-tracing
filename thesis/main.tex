@@ -1545,9 +1545,13 @@ $ hpcviewer hpctoolkit-<binary>-database
     
     \chapter{Results and Discussion}
 
-    The results of the experiments discussed in Chapter~\ref{ch:experiments} show
+    The results of the experiments discussed in Chapter~\ref{ch:experiments} show that parallelized computation with
+    respect to the pixels performs the best (\ref{sec:res_full_render}) and that the approximation of the error function
+    by \citeauthor{AbraSteg72} and approximation of the exponential function from the VCL are best suited to the purpose
+    of \gls{simd} parallelized gaussian ray tracing (\ref{sec:res_approx}).
 
     \section{Approximations}
+    \label{sec:res_approx}
     The results of the approximation benchmarks show that the optimal approximations to use, in terms of speed and
     accuracy, are the approximation of the exponential function from the VCL (Vector Class Library) and the polynomial
     approximation of the error function given by \citeauthor{AbraSteg72} in the \enquote{\citetitle{AbraSteg72}}.
@@ -1611,11 +1615,19 @@ $ hpcviewer hpctoolkit-<binary>-database
     \end{itemize}
 
     \section{Full Render}
+    \label{sec:res_full_render}
     \subsection{Runtimes}
     \begin{itemize}
-        \item GCC (14.2.1) better at sequential and innermost loop SIMD
+        \item GCC (14.2.1) better at sequential and innermost loop SIMD, transmittance and radiance on par
         \item Clang (18.1.8) Mode 8 fastest overall. beats gcc in modes 7 and 8
     \end{itemize}
+    \begin{figure}[t]
+        \centering
+        \input{plots/speedups.tex}
+        \caption{Speedups of parallelizations relative to the slowest sequential baseline.}
+        \label{fig:speedups}
+    \end{figure}
+
     \subsection{Waste and Efficiency}
 
     \chapter{Conclusion and Future Work}
