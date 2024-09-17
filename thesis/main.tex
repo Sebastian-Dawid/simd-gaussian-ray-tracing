@@ -1332,53 +1332,65 @@ gcc -march=native -dM -E - < /dev/null \
     \href{https://github.com/andikleen/pmu-tools/tree/master/jevents}{jevents}\footnote{https://github.com/andikleen/pmu-tools/tree/master/jevents}
     library to query the \mintinline{c}{PERF_COUNT_HW_CPU_CYCLES} counter from the Linux kernels performance counters.
 
-    To benchmark the individual functions I measure the CPU cycles it takes to execute the function $N$ times. I average
-    this result over $1000$ runs, which yields the average CPU cycle count for $N$ executions. I repeat this for increasing
-    values for $N$. Finally, I write these measurements into a \mintinline{sh}{.csv} file along with the corresponding
-    number of executions $N$.
+    To benchmark the individual functions I measure the CPU cycles it takes to execute the function $2048$ times. I average
+    this result over $10000$ runs. Finally, I write these measurements into a \mintinline{sh}{.csv} file.
 
-    The benchmark is implemented as a macro shown in Listing~\ref{lst:benchmark_macro}. The code to benchmark
-    (\mintinline{c++}{FUNC}) is enclosed by memory barriers to ensure the compiler does not move parts of it out of the
+    The benchmark is implemented as a template function shown in Listing~\ref{lst:benchmark_macro}. The code to benchmark
+    (\mintinline{c++}{Fn}) is enclosed by memory barriers to ensure the compiler does not move parts of it out of the
     enclosing \mintinline{c}{rdpmc_read} calls.
 
-    The \mintinline{c++}{BENCHMARK} macro is used as shown in Listing~\ref{lst:benchmark_example}. Where \mintinline{c++}{t}
-    is initialized with pseudorandom values generated with \mintinline{c}{drand48} and the results are written back to
-    unique memory locations to ensure the calls are not optimized out by the compiler.
+    The \mintinline{c++}{benchmark} template function is used as shown in Listing~\ref{lst:benchmark_example}. Where
+    \mintinline{c++}{in} is initialized with pseudorandom values generated with \mintinline{c}{drand48} and the results
+    are printed to \mintinline{sh}{/dev/null} to ensure the calls are not optimized out by the compiler.
 
     \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
-#define BENCHMARK(CTX,START,END,ACC,FUNC)   \
-{                                           \
-    ACC = 0;                                \
-    for (u64 _ = 0; _ < ITER; ++_)          \
-    {                                       \
-        START = rdpmc_read(&(CTX));         \
-        asm volatile("":::"memory");        \
-        FUNC;                               \
-        asm volatile("":::"memory");        \
-        END = rdpmc_read(&(CTX));           \
-        ACC += END - START;                 \
-    }                                       \
+typedef simd_aligned_allocator<f32, SIMD_BYTES> alloc;
+template<u64 Iter, u64 Step, u64 Size, void (*Fn)(f32*, f32*)>
+inline u64 benchmark(struct rdpmc_ctx* ctx,
+    std::vector<f32, alloc> in)
+{
+    u64 start = 0, end = 0, acc = 0;
+    std::vector<f32, alloc> out(Step);
+    for (u64 i = 0; i < Iter; ++i)
+    {
+        for (u64 j = 0; j < in.size(); j += Step)
+        {
+            f32* _in = in.data() + j;
+            f32* _out = out.data();
+            start = rdpmc_read(ctx);
+            for (u64 k = 0; k < Step; k += Size)
+            {
+                asm volatile("":::"memory");
+                Fn(_in, _out);
+                asm volatile("":::"memory");
+            }
+            end = rdpmc_read(ctx);
+            for (u64 _ = 0; _ < Step; ++_)
+                fmt::println(dev_null, "{}", _out[_]);
+            acc += end - start;
+        }
+    }
+    return acc;
 }
         \end{minted}
-        \caption{Benchmark Macro}
+        \caption{Benchmark Template Function}
         \label{lst:benchmark_macro}
     \end{listing}
 
     \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
-BENCHMARK(ctx, start, end, acc, for (u64 j = 0;
-        j < SIMD_FLOATS * i; ++j)
-        s_abramowitz[j] = abramowitz_stegun_erf(t[j]););
-f32 ac_abramowitz = static_cast<f32>(acc)/ITER;
-
-BENCHMARK(ctx, start, end, acc, for (u64 j = 0;
-        j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-        simd::storeu(s_simd_abramowitz + j,
-        simd_abramowitz_stegun_erf(simd::loadu(t + j))););
-f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
+f32 ac_abramowitz = static_cast<f32>(benchmark<1000,
+    SIMD_FLOATS, 1, [](f32* in, f32* out) -> void {
+            *out = abramowitz_stegun_erf(*in);
+    }>(&ctx, in))/ITER;
+f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
+    SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void {
+        simd::store(out,
+            simd_abramowitz_stegun_erf(simd::load(in));
+    }>(&ctx, in))/ITER;
         \end{minted}
-        \caption{Example usage of the \mintinline{c++}{BENCHMARK} macro.}
+        \caption{Example usage of the \mintinline{c++}{benchmark} template function.}
         \label{lst:benchmark_example}
     \end{listing}
 
@@ -1401,6 +1413,7 @@ f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
     and the runtime of the program (\ref{sec:dense_cube}).
 
     \subsection{HPCToolkit}
+    \label{sec:hpctoolkit}
     %@TODO: Turn this into its own section maybe?
     For the purpose of evaluating \gls{simd} efficiency I will use a tool called HPCToolkit developed by
     \citeauthor{hpc_toolkit} and presented in \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
@@ -1442,20 +1455,6 @@ f32 ac_simd_abramowitz = static_cast<f32>(acc)/ITER;
     %@TODO: Paragraph on filters -> filtered out scopes count towards the parent scope in exclusive metrics
 
     The full workflow of evaluating an optimized binary using HPCToolkit is shown in Listing~\ref{lst:hpctoolkit_workflow}.
-    \begin{listing}[t]
-        \begin{minted}{bash}
-$ # profile binary
-$ hpcrun [event list] -- <binary>
-$ # analyse structure
-$ hpcstruct hpctoolkit-<binary>-measurements
-$ # link structure and profile
-$ hpcprof hpctoolkit-<binary>-measurements
-$ # view results
-$ hpcviewer hpctoolkit-<binary>-database
-        \end{minted}
-        \caption{Typical HPCToolkit Workflow}
-        \label{lst:hpctoolkit_workflow}
-    \end{listing}
 
     \subsubsection{Used Metrics}
     For the purpose of evaluating the efficiency of the \gls{simd} usage I recorded the metrics listed in Table~\ref{tab:metrics}.
@@ -1479,12 +1478,12 @@ $ hpcviewer hpctoolkit-<binary>-database
 
     Based on these metrics I defined metrics, to evaluate \gls{simd} efficiency, which are the vector instruction waste
     \begin{equation}
-        \text{waste}(\text{cycles}, \text{instructions}) = 2 \cdot \text{cycles} - \text{instructions},
+        \text{waste}(\text{peak}, \text{instructions}) = \text{peak} - \text{instructions},
         \label{eq:vec_waste}
     \end{equation}
     vector instruction efficiency
     \begin{equation}
-        \text{efficiency}(\text{cycles}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{2\cdot\text{cycles}}
+        \text{efficiency}(\text{peak}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{\text{peak}}
         \label{eq:vec_efficiency}
     \end{equation}
     and vector instructions per cycle
@@ -1493,8 +1492,9 @@ $ hpcviewer hpctoolkit-<binary>-database
         \label{eq:vpc}
     \end{equation}
 
-    Note that the two in the waste and efficiency formulas are based on the facts that most of the \gls{simd} operations
-    have a throughput of $0.5$ which means that two can be executed per cycle.
+    Note that the $\text{peak}$ parameter represents the theoretical maximum number of vector instructions per cycle. The
+    $\text{peak}$ depends on the \gls{latency} and \gls{throughput} of the instructions. If the $\text{peak}$ is the same
+    as the $\text{cycles}$ then $\text{efficiency} = 100 \cdot \text{vpc}$.
 
     Additionally, I defined the instruction cache miss ratio
     \begin{equation}
@@ -1552,6 +1552,7 @@ $ hpcviewer hpctoolkit-<binary>-database
 
     \section{Approximations}
     \label{sec:res_approx}
+    %@TODO: Update stats on speedup & cycles per value
     The results of the approximation benchmarks show that the optimal approximations to use, in terms of speed and
     accuracy, are the approximation of the exponential function from the VCL (Vector Class Library) and the polynomial
     approximation of the error function given by \citeauthor{AbraSteg72} in the \enquote{\citetitle{AbraSteg72}}.
@@ -1562,23 +1563,9 @@ $ hpcviewer hpctoolkit-<binary>-database
     to determine when to return early. The sequential nature of the approximation reduce the possible gains from \gls{simd}
     parallelism.
 
-    \begin{figure}[t]
-        \centering
-        \input{plots/znver4_simd_erf_timing}
-        \caption{Average cycle count to calculate one value of $\erf$.}
-        \label{fig:cycles_erf}
-    \end{figure}
-
     The polynomial approximation of the error function by \citeauthor{AbraSteg72} is both the fastest overall (see
     Figure~\ref{fig:cycles_erf}), at $\sim0.73$ cycles per value, and has the largest speedup with respect to the
     \gls{simd} version at $\sim15.3$ times faster than the sequential version (see Table~\ref{tab:abs_cycles_and_speedups_erf}).
-
-    \begin{figure}[t]
-        \centering
-        \input{plots/cmp_erf_err}
-        \caption{$\erf$ Errors}
-        \label{fig:erf_errors}
-    \end{figure}
 
     The Taylor approximation's maximum relative error is smaller than that of the approximation by \citeauthor{AbraSteg72}
     (see Figure~\ref{fig:erf_errors}), but its errors appear at the borders to the constant parts of the function and
@@ -1586,49 +1573,59 @@ $ hpcviewer hpctoolkit-<binary>-database
     approximation by \citeauthor{AbraSteg72} happen close to zero where small errors appear larger, due to the small
     size of the arguments.
 
-    \begin{figure}[t]
-        \centering
-        \input{plots/znver4_simd_exp_timing}
-        \caption{Average cycle count to calculate one value of $\exp$.}
-        \label{fig:cycles_exp}
-    \end{figure}
-
     That the usage of splines as approximations in \gls{simd} implementations does not work well becomes more apparent,
     when looking at the performance of the spline used to approximate the exponential function. On average, it takes $6.04$
     cycles to calculate a single value of the exponential function using the spline. This is only about $3.14$ times faster
     than its sequential counterpart, as seen in Figure~\ref{fig:cycles_exp} and Table~\ref{tab:abs_cycles_and_speedups_exp}.
 
-    \begin{figure}[t]
-        \centering
-        \input{plots/cmp_exp_err}
-        \caption{$\exp$ Errors}
-        \label{fig:exp_errors}
-    \end{figure}
-
-    \begin{itemize}
-        \item exp: \mintinline{c++}{approx::simd_fast_exp} is slightly faster than \mintinline{c++}{approx::vcl_exp},
-            but a lot less accurate →  \mintinline{c++}{approx::vcl_exp} as default
-        \item erf: \mintinline{c++}{approx::simd_abramowitz_stegun_erf} is significantly faster and accurate than the
-            runner-up \mintinline{c++}{approx::simd_spline_erf_mirror} →  \mintinline{c++}{approx::simd_abramowitz_stegun_erf}
-            as default.
-        \item svml: slowest error function →  beat by both splines which are ill-suited to simd parallelization
-    \end{itemize}
+    Other approximations like the \enquote{Fast Exponential Function} (\ref{sec:impl_fast_exp}) or the exponential
+    approximation from the VCL take as little as $0.70$ cycles per value (see Table~\ref{tab:abs_cycles_and_speedups_exp}).
+    While the VCL implementation, at $0.91$ cycles per value, is slightly slower than the \enquote{Fast Exponential Function}
+    it is much more accurate as seen in Figure~\ref{fig:exp_errors}. Therefore, it is the better choice overall.
 
     \section{Full Render}
     \label{sec:res_full_render}
+    The experiments for the full render show that the tiled parallelization over the pixels performs the best overall
+    regardless of the chosen compiler (\ref{sec:res_runtimes}) and that most opportunities for further optimization
+    with respect to the \gls{simd} usage arise in the implementation of the transmittance function (\ref{sec:res_waste}).
+
     \subsection{Runtimes}
+    \label{sec:res_runtimes}
+
     \begin{itemize}
         \item GCC (14.2.1) better at sequential and innermost loop SIMD, transmittance and radiance on par
         \item Clang (18.1.8) Mode 8 fastest overall. beats gcc in modes 7 and 8
     \end{itemize}
     \begin{figure}[t]
         \centering
-        \input{plots/speedups.tex}
+        \input{plots/speedups}
         \caption{Speedups of parallelizations relative to the slowest sequential baseline.}
         \label{fig:speedups}
     \end{figure}
 
     \subsection{Waste and Efficiency}
+    \label{sec:res_waste}
+    To make meaningful statements about the efficiency and waste of the \gls{simd} implementation it is important to know
+    the \gls{throughput} and \gls{latency} statistics of the involved instructions. These can be derived from the number
+    of ports that support the instruction, but it is more accurate to use measurements. I will use the measurements
+    provided at \href{https://uops.info/table.html?search=&cb_lat=on&cb_tp=on&cb_uops=on&cb_ports=on&cb_ZEN4=on&cb_measurements=on&cb_doc=on&cb_avx512=on&checkbox=on}{uops.info}
+    \footnote{https://uops.info/table.html?search=\&cb\_lat=on\&cb\_tp=on\&cb\_uops=on\&cb\_ports=on\&\\cb\_ZEN4=on\&cb\_measurements=on\&cb\_doc=on\&cb\_avx512=on\&checkbox=on}
+    \cite{Abel19a}.
+
+    The waste and efficiency metrics described in Section~\ref{sec:hpctoolkit} both rely on the peak number of instructions
+    per cycle. What the theoretical peak actually is depends on the involved instructions and how their results depend
+    on each other. I chose one instruction per cycle as the peak to work with, because most of the instructions
+    involved, \eg \mintinline{s}{vaddps}, \mintinline{s}{vmulps} or \mintinline{s}{vfmadd213ps}, have a measured
+    \gls{throughput} of one. Meaning that, even when ignoring all dependencies, only one instruction can be executed per
+    cycle.
+
+    %@TODO: rerun experiments with more frames to get more nuanced data
+
+    \begin{itemize}
+        \item max efficiency $47.5\%$ for radiance and $57.4\%$ for transmittance
+        \item exp efficiency at $65\%$ in modes  7 and 8 instead of $33\%$ in mode 6
+        \item big efficiency step with SIMD introduction small step with removal of loads
+    \end{itemize}
 
     \chapter{Conclusion and Future Work}
     %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
@@ -1638,8 +1635,9 @@ $ hpcviewer hpctoolkit-<binary>-database
     \end{itemize}
 
     \section{Future Work}
+    There are various ways to further improve the performance and functionality of the rendering method described above.
     \begin{itemize}
-        \item Memory/Cache Bottleneck?
+        \item Memory/Cache Bottleneck? - slight data cache bottleneck in parallel versions
         \item Anisotropic Gaussians
         \item Loading Scenes learned via Gaussian splatting
         \item More efficient tiling (SIMD, Threads)
@@ -1655,23 +1653,14 @@ $ hpcviewer hpctoolkit-<binary>-database
         \rowcolors{1}{white}{lightgray}
         \begin{tabular}{|c | c | c | c|}
             \hline
-            Mode & GCC (v14.2.1)     & Clang (v18.1.8)   & SVML\\\hline
-            1 st & $\sim1673.50$ sec & $\sim1367.64$ sec & - \\
-            2 st & $\sim96.78$ sec   & $\sim80.93$ sec   & $\sim152.43$ sec\\
-            3 st & $\sim69.46$ sec   & $\sim54.19$ sec   & $\sim135.71$ sec\\
-            4 st & $\sim67.39$ sec   & $\sim54.47$ sec   & $\sim137.09$ sec\\
-            5 st & $\sim210.41$ sec  & $\sim171.01$ sec  & - \\
-            6 st & $\sim14.84$ sec   & $\sim11.73$ sec   & $\sim23.29$ sec\\
-            7 st & $\sim9.32$ sec    & $\sim7.38$ sec    & $\sim18.59$ sec\\
-            8 st & $\sim8.79$ sec    & $\sim7.01$ sec    & $\sim18.99$ sec\\\hline\hline
-
-            5 mt & $\sim8.30$ sec    & $\sim7.24$ sec    & - \\
-            6 mt & $\sim0.77$ sec    & $\sim0.66$ sec    & $\sim1.19$ sec\\
-            7 mt & $\sim0.60$ sec    & $\sim0.49$ sec    & $\sim1.00$ sec\\
-            8 mt & $\sim0.56$ sec    & $\sim0.48$ sec    & $\sim0.97$ sec\\
+            Mode & GCC (v14.2.1)     & Clang (v18.1.8)\\\hline
+            5 mt & $\sim20.50$ sec   & $\sim21.20$ sec \\
+            6 mt & $\sim1.44$ sec    & $\sim1.71$ sec \\
+            7 mt & $\sim1.44$ sec    & $\sim1.29$ sec \\
+            8 mt & $\sim1.40$ sec    & $\sim1.24$ sec \\
             \hline
         \end{tabular}
-        \caption{Runtime of rendering the dense cube based on compiler, SVML usage, and mode using AVX512. Averaged over 10 Frames.}
+        \caption{Runtime of rendering the dense cube based on compiler and mode using AVX512. Averaged over 1000 Frames.}
         \label{tab:perf_dense_cube_avx512}
     \end{table}
 
@@ -1708,16 +1697,168 @@ $ hpcviewer hpctoolkit-<binary>-database
         \label{tab:abs_cycles_and_speedups_exp}
     \end{table}
 
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                        & Waste (\%)                       & Efficiency\\\hline
+            \mintinline{c++}{radiance}      & $3.09 \cdot 10^{10}$ ($98.64\%$) & $1.36\%$\\
+            \mintinline{c++}{transmittance} & $3.21 \cdot 10^{13}$ ($94.10\%$) & $5.90\%$ \\
+            \hline
+        \end{tabular}
+        \caption{Mode 5 MT(32) Waste and Efficiency using \mintinline{c}{erff} and \mintinline{c}{expf}}
+        \label{tab:mode_5_mt_wae}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                        & icmr     & dcmr\\\hline
+            \mintinline{c++}{radiance}      & $0.16\%$ & $2.90\%$\\
+            \mintinline{c++}{transmittance} & $0.02\%$ & $0.90\%$ \\
+            \hline
+        \end{tabular}
+        \caption{Mode 5 MT(32) Instruction and Data Cache Miss Rates}
+        \label{tab:mode_5_mt_cmr}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & Waste (\%)                       & Efficiency\\\hline
+            \mintinline{c++}{radiance}                   & $3.18 \cdot 10^{10}$ ($85.08\%$) & $14.92\%$\\
+            \mintinline{c++}{simd_transmittance}         & $1.69 \cdot 10^{12}$ ($53.73\%$) & $46.27\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $5.72 \cdot 10^{11}$ ($47.54\%$) & $52.46\%$\\
+            \mintinline{c++}{vcl_exp}                    & $1.14 \cdot 10^{12}$ ($66.47\%$) & $33.53\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 6 MT(32) Waste and Efficiency}
+        \label{tab:mode_6_mt_wae}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & icmr     & dcmr\\\hline
+            \mintinline{c++}{radiance}                   & $0.52\%$ & $5.03\%$\\
+            \mintinline{c++}{simd_transmittance}         & $0.13\%$ & $4.91\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $0.14\%$ & $3.40\%$\\
+            \mintinline{c++}{vcl_exp}                    & $0.21\%$ & $5.56\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 6 MT(32) Instruction and Data Cache Miss Rates}
+        \label{tab:mode_6_mt_cmr}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & Waste (\%)                       & Efficiency\\\hline
+            \mintinline{c++}{simd_radiance}              & $1.66 \cdot 10^{9}$ ($57.60\%$) & $42.40\%$\\
+            \mintinline{c++}{broadcast_transmittance}    & $7.96 \cdot 10^{11}$ ($42.60\%$) & $57.40\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $8.20 \cdot 10^{11}$ ($40.24\%$) & $59.76\%$\\
+            \mintinline{c++}{vcl_exp}                    & $4.56 \cdot 10^{11}$ ($34.29\%$) & $65.71\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 7 MT(32) Waste and Efficiency}
+        \label{tab:mode_7_mt_wae}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & icmr     & dcmr\\\hline
+            \mintinline{c++}{simd_radiance}              & $0.02\%$ & $22.57\%$\\
+            \mintinline{c++}{broadcast_transmittance}    & $0.25\%$ & $0.93\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $0.15\%$ & $0.35\%$\\
+            \mintinline{c++}{vcl_exp}                    & $0.07\%$ & $0.43\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 7 MT(32) Instruction and Data Cache Miss Rates}
+        \label{tab:mode_7_mt_cmr}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & Waste (\%)                       & Efficiency\\\hline
+            \mintinline{c++}{broadcast_radiance}         & $1.34 \cdot 10^{9}$ ($52.50\%$)  & $47.50\%$\\
+            \mintinline{c++}{broadcast_transmittance}    & $7.91 \cdot 10^{11}$ ($43.01\%$) & $56.99\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $8.11 \cdot 10^{11}$ ($40.09\%$) & $59.91\%$\\
+            \mintinline{c++}{vcl_exp}                    & $4.78 \cdot 10^{11}$ ($34.91\%$) & $65.09\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 8 MT(32) Waste and Efficiency}
+        \label{tab:mode_8_mt_wae}
+    \end{table}
+
+    \begin{table}[b]
+        \centering
+        \rowcolors{1}{white}{lightgray}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            Function                                     & icmr     & dcmr\\\hline
+            \mintinline{c++}{broadcast_radiance}         & $0.06\%$ & $11.00\%$\\
+            \mintinline{c++}{broadcast_transmittance}    & $0.20\%$ & $0.91\%$\\
+            \mintinline{c++}{simd_abramowitz_stegun_erf} & $0.13\%$ & $0.34\%$\\
+            \mintinline{c++}{vcl_exp}                    & $0.04\%$ & $0.43\%$\\
+            \hline
+        \end{tabular}
+        \caption{Mode 8 MT(32) Instruction and Data Cache Miss Rates}
+        \label{tab:mode_8_mt_cmr}
+    \end{table}
+
     \chapter{Figures}
-    
-    \begin{figure}[t]
+
+    \begin{figure}
+        \centering
+        \input{plots/znver4_simd_erf_timing}
+        \caption{Average cycle count to calculate one value of $\erf$.}
+        \label{fig:cycles_erf}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \input{plots/cmp_erf_err}
+        \caption{$\erf$ Errors}
+        \label{fig:erf_errors}
+    \end{figure}
+
+    \begin{figure}
         \centering
         \input{plots/cmp_erf_approx}
         \caption{$\erf$ Approximations}
         \label{fig:erf_approx}
     \end{figure}
+
+    \begin{figure}
+        \centering
+        \input{plots/znver4_simd_exp_timing}
+        \caption{Average cycle count to calculate one value of $\exp$.}
+        \label{fig:cycles_exp}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \input{plots/cmp_exp_err}
+        \caption{$\exp$ Errors}
+        \label{fig:exp_errors}
+    \end{figure}
     
-    \begin{figure}[t]
+    \begin{figure}
         \centering
         \input{plots/cmp_exp_approx}
         \caption{$\exp$ Approximations}
@@ -1944,6 +2085,21 @@ struct tiles_t {
         \end{minted}
         \caption{Types used for the implementation of the rendering functions.}
         \label{lst:types_vrt_full}
+    \end{listing}
+    
+    \begin{listing}[t]
+        \begin{minted}[frame=lines]{bash}
+$ # profile binary
+$ hpcrun [event list] -- <binary>
+$ # analyse structure
+$ hpcstruct hpctoolkit-<binary>-measurements
+$ # link structure and profile
+$ hpcprof hpctoolkit-<binary>-measurements
+$ # view results
+$ hpcviewer hpctoolkit-<binary>-database
+        \end{minted}
+        \caption{Typical HPCToolkit Workflow}
+        \label{lst:hpctoolkit_workflow}
     \end{listing}
 
     \backmatter

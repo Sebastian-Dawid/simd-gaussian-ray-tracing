@@ -1,6 +1,8 @@
 #include <include/definitions.h>
 #include <include/error_fmt.h>
 
+#include <vector>
+#define INLINE_VRT_APPROX
 #include <vrt/approx.h>
 
 #include <include/TimeMeasurement.H>
@@ -9,33 +11,47 @@
 #include <rdpmc.h>
 
 #ifndef ITER
-#define ITER 1000
+#define ITER 10000
 #endif
 
 #ifndef COUNT
-#define COUNT 200
+#define COUNT 2048
 #endif
 
 #ifndef SEED
 #define SEED 42
 #endif
 
-#define BENCHMARK(CTX,START,END,ACC,FUNC)   \
-{                                           \
-    ACC = 0;                                \
-    for (u64 _ = 0; _ < ITER; ++_)          \
-    {                                       \
-        START = rdpmc_read(&(CTX));         \
-        asm volatile("":::"memory");        \
-        FUNC;                               \
-        asm volatile("":::"memory");        \
-        END = rdpmc_read(&(CTX));           \
-        ACC += END - START;                 \
-    }                                       \
-}
-
 using namespace vrt;
 using namespace approx;
+
+FILE *dev_null = std::fopen("/dev/null", "wd");
+
+template<u64 Iter, u64 Step, u64 Size, void (*Fn)(f32*, f32*)>
+inline u64 benchmark(struct rdpmc_ctx* ctx, std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in)
+{
+    u64 start = 0, end = 0, acc = 0;
+    std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> out(Step);
+    for (u64 i = 0; i < Iter; ++i)
+    {
+        for (u64 j = 0; j < in.size(); j += Step)
+        {
+            f32* _in = in.data() + j;
+            f32* _out = out.data();
+            start = rdpmc_read(ctx);
+            for (u64 k = 0; k < Step; k += Size)
+            {
+                asm volatile("":::"memory");
+                Fn(_in + k, _out + k);
+                asm volatile("":::"memory");
+            }
+            end = rdpmc_read(ctx);
+            acc += end - start;
+            for (u64 _ = 0; _ < Step; ++_) fmt::println(dev_null, "{}", _out[_]);
+        }
+    }
+    return acc;
+}
 
 i32 main()
 {
@@ -44,122 +60,53 @@ i32 main()
     CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
     FILE *CSV = std::fopen("csv/simd_erf.csv", "wd");
-    FILE *dev_null = std::fopen("/dev/null", "wd");
     fmt::println(CSV, "count,t_simd_spline,t_simd_spline_mirror,t_simd_abramowitz,t_simd_taylor,t_svml,t_spline,t_spline_mirror,t_abramowitz,t_taylor,t_std");
     struct rdpmc_ctx ctx;
-    u64 start, end, acc;
 
     srand48(SEED);
 
     if (rdpmc_open(PERF_COUNT_HW_CPU_CYCLES, &ctx) < 0) exit(EXIT_FAILURE);
-    for (u64 i = 1; i <= COUNT; ++i)
     {
-        f32 t[SIMD_FLOATS * i];
-        f32 s_svml[SIMD_FLOATS * i];
-        f32 s_simd[SIMD_FLOATS * i];
-        f32 s_simd_mirror[SIMD_FLOATS * i];
-        f32 s_simd_abramowitz[SIMD_FLOATS * i];
-        f32 s_simd_taylor[SIMD_FLOATS * i];
-        f32 s_spline[SIMD_FLOATS * i];
-        f32 s_spline_mirror[SIMD_FLOATS * i];
-        f32 s_abramowitz[SIMD_FLOATS * i];
-        f32 s_taylor[SIMD_FLOATS * i];
-        f32 s_std[SIMD_FLOATS * i];
-        for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-            t[j] = -6.f + 12.f * drand48();
+        std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
+        for (u64 j = 0; j < SIMD_FLOATS * COUNT; ++j)
+            in[j] = -6.f + 12.f * drand48();
 
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j += SIMD_FLOATS)
-                simd::storeu(s_svml + j, svml_erf(simd::loadu(t + j))););
-        f32 t_svml = (f32)acc/ITER;
+        f32 t_svml            = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, svml_erf(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd            = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_spline_erf(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd_mirror     = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_spline_erf_mirror(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd_abramowitz = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_abramowitz_stegun_erf(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd_taylor     = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_taylor_erf(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
 
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd + j, simd_spline_erf(simd::loadu(t + j))););
-        f32 t_simd = (f32)acc/ITER;
+        f32 t_spline        = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = spline_erf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_spline_mirror = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = spline_erf_mirror(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_abramowitz    = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = abramowitz_stegun_erf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_taylor        = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = taylor_erf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_std           = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = erff(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
 
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd_mirror + j, simd_spline_erf_mirror(simd::loadu(t + j))););
-        f32 t_simd_mirror = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd_abramowitz + j, simd_abramowitz_stegun_erf(simd::loadu(t + j))););
-        f32 t_simd_abramowitz = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd_taylor + j, simd_taylor_erf(simd::loadu(t + j))););
-        f32 t_simd_taylor = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_spline[j] = spline_erf(t[j]););
-        f32 t_spline = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_spline_mirror[j] = spline_erf_mirror(t[j]););
-        f32 t_spline_mirror = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_abramowitz[j] = abramowitz_stegun_erf(t[j]););
-        f32 t_abramowitz = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_taylor[j] = taylor_erf(t[j]););
-        f32 t_taylor = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_std[j] = std::erf(t[j]););
-        f32 t_std = (f32)acc/ITER;
-
-        fmt::println(dev_null, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}", s_svml[0], s_simd[0], s_simd_mirror[0], s_simd_abramowitz[0], s_simd_taylor[0], s_spline[0], s_spline_mirror[0], s_abramowitz[0], s_taylor[0], s_std[0]);
-        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_simd, t_simd_mirror, t_simd_abramowitz, t_simd_taylor, t_svml, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std);
+        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * COUNT, t_simd, t_simd_mirror, t_simd_abramowitz, t_simd_taylor, t_svml, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std);
     }
     std::fclose(CSV);
 
     CSV = std::fopen("csv/simd_exp.csv", "wd");
-    fmt::println(CSV, "count,t_vcl,t_svml,t_simd,t_spline,t_fast,t_simd_fast,t_std");
-    for (u64 i = 1; i < 100; ++i)
+    fmt::println(CSV, "count,t_simd,t_simd_fast,t_svml,t_vcl,t_spline,t_fast,t_std");
     {
-        f32 t[SIMD_FLOATS * i];
-        f32 s_std[SIMD_FLOATS * i];
-        f32 s_vcl[SIMD_FLOATS * i];
-        f32 s_svml[SIMD_FLOATS * i];
-        f32 s_simd[SIMD_FLOATS * i];
-        f32 s_spline[SIMD_FLOATS * i];
-        f32 s_fast[SIMD_FLOATS * i];
-        f32 s_simd_fast[SIMD_FLOATS * i];
-        for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-            t[j] = -10.f + 10.f * drand48();
+        std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
+        for (u64 j = 0; j < SIMD_FLOATS * COUNT; ++j)
+            in[j] = -10.f + 10.f * drand48();
 
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_vcl + j, vcl_exp(simd::loadu(t + j))););
-        f32 t_vcl = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_svml + j, svml_exp(simd::loadu(t + j))););
-        f32 t_svml = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd + j, simd_spline_exp(simd::loadu(t + j))););
-        f32 t_simd = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_spline[j] = spline_exp(t[j]););
-        f32 t_spline = (f32)acc/ITER;
-
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_fast[j] = fast_exp(t[j]););
-        f32 t_fast = (f32)acc/ITER;
+        f32 t_svml      = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, svml_exp(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_vcl       = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, vcl_exp(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd      = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_spline_exp(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_simd_fast = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, SIMD_FLOATS, [](f32* in, f32* out) -> void { simd::store(out, simd_fast_exp(simd::load(in))); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
         
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; j+=SIMD_FLOATS)
-                simd::storeu(s_simd_fast + j, simd_fast_exp(simd::loadu(t + j))););
-        f32 t_simd_fast = (f32)acc/ITER;
+        f32 t_spline    = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = spline_exp(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_fast      = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = fast_exp(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
+        f32 t_std       = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = expf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
 
-        BENCHMARK(ctx, start, end, acc, for (u64 j = 0; j < SIMD_FLOATS * i; ++j)
-                s_std[j] = std::exp(t[j]););
-        f32 t_std = (f32)acc/ITER;
-
-        fmt::println(dev_null, "{}, {}, {}, {}, {}, {}, {}", s_vcl[0], s_svml[0], s_simd[0], s_spline[0], s_fast[0], s_simd_fast[0], s_std[0]);
-        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * i, t_simd, t_simd_fast, t_svml, t_vcl, t_spline, t_fast, t_std);
+        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * COUNT, t_simd, t_simd_fast, t_svml, t_vcl, t_spline, t_fast, t_std);
     }
     std::fclose(CSV);
+
     char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/simd_erf_timing.jl", NULL };
     execvp("./julia/wrapper.sh", args);
     fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));

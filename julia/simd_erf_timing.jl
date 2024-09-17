@@ -4,18 +4,16 @@ function load_data()
     data_path = "./"*dirname(relpath(@__FILE__))*"/"
     data = CSV.File(data_path*"../csv/simd_erf.csv") |> DataFrame
     name = repeat(["Spline", "Spline Mirror", "Abramowitz", "Taylor", "SVML/STD"], outer=2)
-    counts = Vector(data[:, 1])
-    tmp = sum(Matrix(data) ./ counts; dims=1)
-    res = reshape(tmp[2:end] ./ tmp[1], (5,2))
+    tmp = sum(Matrix(data); dims=1)
+    res = reshape(tmp[2:end], (5,2))
 
     plt_erf = groupedbar(name, res, groups=repeat(["SIMD", "Sequential"], inner=5), ylabel="avg. cycles",
                         legend=:topleft, dpi=300)
     
     data = CSV.File(data_path*"../csv/simd_exp.csv") |> DataFrame
     name = repeat(["Spline", "Fast", "SVML/STD", "VCL"], outer=2)
-    counts = Vector(data[:, 1])
-    tmp = sum(Matrix(data) ./ counts, dims=1)
-    res = tmp[2:end] ./ tmp[1]
+    tmp = sum(Matrix(data); dims=1)
+    res = tmp[2:end]
     append!(res, NaN)
     
     plt_exp = groupedbar(name, reshape(res, (4,2)), groups=repeat(["SIMD", "Sequential"], inner=4), ylabel="avg. cycles",

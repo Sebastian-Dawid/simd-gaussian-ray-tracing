@@ -3,7 +3,7 @@
 rm runtimes.log
 
 run_test () {
-    make clean
+    make clean &> /dev/null
     clang=""
     svml=""
     if [ "$2" = "true" ]; then
@@ -15,36 +15,40 @@ run_test () {
     if [ "$1" = "gcc" ]; then
         clang="--use-gcc"
     fi
-    make build -j32 ARGS="${clang} ${svml}"
-    for mode in $(seq 1 8); do
-        frames=10
+    make build -j32 ARGS="${clang} ${svml}" &> /dev/null
+    for mode in $(seq 5 8); do
+        frames=1000
         if [ "${mode}" -eq 5 ] || [ "${mode}" -eq 1 ]; then
             if [ "$2" = "true" ]; then
                 continue
             fi
-            frames=1
+            frames=100
         fi
-        printf "\tMODE %s ST: " "${mode}" >> runtimes.log
-        # warm-up
-        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t32 --tiles 16
-        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t1 --tiles 16 -m "${mode}" >> runtimes.log
-
-        if [ "${mode}" -gt 4 ]; then
-            printf "\tMODE %s MT(32): " "${mode}" >> runtimes.log
-            ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t32 --tiles 16 -m "${mode}" >> runtimes.log
-        fi
+        printf "\tMODE %s MT(32): " "${mode}" >> runtimes.log
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj --frames "${frames}" -t32 --tiles 16 -m "${mode}" >> runtimes.log
     done
+    {
+        printf "\tTILING BASELINE: "
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -t1 -m 5
+        printf "\tSEQ. BASELINE: "
+        ./build/bin/release/volumetric-ray-tracer -q -f ./test-objects/cube.obj -m 1
+    } >> runtimes.log
 }
 
-printf "START: "
-date >> runtimes.log
+{
+    printf "START: "
+    date
+} >> runtimes.log
 
 run_test gcc false
+run_test clang false
+
 if [ "$1" = "long" ]; then
     run_test gcc true
+    run_test clang true
 fi
-run_test clang false
-run_test clang true
 
-printf "END: "
-date >> runtimes.log
+{
+    printf "END: "
+    date
+} >> runtimes.log

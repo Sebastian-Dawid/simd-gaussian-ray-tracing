@@ -19,10 +19,18 @@ workspace "ba-thesis"
         trigger = "with-svml",
         description = "link intels svml library"
     }
+    newoption {
+        trigger = "save-temps",
+        description = "compile with the -save-temps flag"
+    }
     filter { "options:use-gcc" }
         toolset "gcc"
     filter { "not options:use-gcc" }
         toolset "clang"
+    filter {}
+
+    filter { "options:save-temps" }
+        buildoptions { "-save-temps=obj" }
     filter {}
 
     cppdialect "c++20"
@@ -128,7 +136,7 @@ workspace "ba-thesis"
             kind "ConsoleApp"
             language "C++"
             targetdir "build/bin/%{cfg.buildcfg}"
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
+            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math", "-fno-unroll-loops" }
             defines { "WITH_SVML" }
 
             libdirs { svml_path }
