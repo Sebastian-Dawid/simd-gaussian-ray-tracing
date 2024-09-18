@@ -76,12 +76,29 @@
 
     \mainmatter
     \chapter{Introduction}
-    \begin{itemize}
-        \item Gaussian image representations are widely used in CG/CV
-        \item ray tracing is more accurate than e.g. splatting →  accurate intersections
-        \item CPU ray tracing is slow
-        \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
-    \end{itemize}
+    Gaussian based image representations are widely used in the computer graphics and computer vision spaces. Most of
+    the methods in use right now use a rasterization approach for rendering. This is approach performs well, but has no
+    way of properly representing intersecting Gaussians. An alternative approach to render Gaussians is to use Gaussian
+    ray tracing, this however is much slower due to the more involved computations that are necessary. An advantage of
+    Gaussian ray tracing is its ability to accurately render intersecting Gaussians.
+
+    These methods can be implemented on dedicated GPUs to yield reasonable performance. Relying on GPUs to make a method
+    usable however will make it difficult for that method to find widespread adoption since many devices do not have
+    access to dedicated GPUs. Therefore, it would be useful to have access to a CPU based implementation in case no reasonably
+    powerful GPU is available, for example in a laptop with an integrated GPU only.
+
+    In this thesis I will discuss ways to optimize a Gaussian ray tracing method on the CPU. For this purpose I will
+    introduce the method I will optimize and contrast it against a rasterization based alternative (\ref{ch:background}),
+    discuss how the method can be optimized using vectorization and tiling from a mathematical perspective
+    (\ref{ch:optimizations}), describe how these optimizations translate into an implementation (\ref{ch:implementation})
+    and show the improvements that the optimizations yield (\ref{ch:results}).
+
+    % \begin{itemize}
+    %     \item Gaussian image representations are widely used in CG/CV
+    %     \item ray tracing is more accurate than e.g. splatting →  accurate intersections
+    %     \item CPU ray tracing is slow
+    %     \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
+    % \end{itemize}
 
     \chapter{Background}
     \label{ch:background}
@@ -158,7 +175,6 @@
 
     \section{Gaussian Splatting}
     \label{sec:splatting}
-    %@TODO: describe image formation model (splatting) as laid out in the following papers
     Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
     (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
     Gaussians, ordered by their depth, onto the image plane. Derivatives of the method are still used in computer vision
@@ -478,7 +494,6 @@
 
     \chapter{Approximations}
     \label{ch:approximations}
-    %@TODO: Explain why it is necessary to approximate functions / implement own approximations
     Gaussian ray tracing relies on the exponential and error functions. Usually standard implementations of these
     functions are optimized for accuracy first and speed second and are not easily vectorized. In the case of ray
     tracing accuracy is only important to a certain degree since the visual artifacts caused by errors smaller than
@@ -618,7 +633,6 @@
     
     \chapter{Implementation}
     \label{ch:implementation}
-    %@TODO: details TBD
     I implemented Gaussian ray tracing as described in Section~\ref{sec:int_grt} with the optimizations described in
     Chapter~\ref{ch:optimizations} in C++. For this I utilized the \gls{simd} instructions provided by modern x64 CPUs
     (\ref{sec:simd}) to implement vectorization (\ref{sec:vectorization}) along with a thread pool
@@ -705,7 +719,6 @@ template<typename T, size_t SIMD_WIDTH> class Vec;
 
     \section{Library}
     \label{sec:library}
-    %@TODO: Description of the functionality of the library
     The library has two primary components (1) the implementations of the approximations (\ref{sec:impl_approx})
     discussed in Chapter~\ref{ch:approximations} and (2) implementations of the rendering functions and tiling
     algorithm (\ref{sec:rendering_functions}) described in Chapter~\ref{ch:optimizations}. Additionally, the library
@@ -969,7 +982,8 @@ struct thread_pool_t
     \subsubsection{Types}
     The implementation relies on various types representing the mathematical objects used for Gaussian ray tracing. They
     are listed in Listing~\ref{lst:types_vrt}. Since most of the functions implemented on the structures are not essential
-    to the implementation I have omitted them here for the sake of brevity. The full interfaces are shown in Listing~\ref{lst:types_vrt_full}.
+    to the implementation I have omitted them here for the sake of brevity. The full interfaces are shown in
+    Listing~\ref{lst:vec_types_vrt_full} and Listing~\ref{lst:gaussian_types_vrt_full}.
     \begin{listing}[t]
         \begin{minted}[linenos, frame=lines]{c++}
 struct vec4f_t { f32 x, y, z, w; };
@@ -1414,7 +1428,6 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
 
     \subsection{HPCToolkit}
     \label{sec:hpctoolkit}
-    %@TODO: Turn this into its own section maybe?
     For the purpose of evaluating \gls{simd} efficiency I will use a tool called HPCToolkit developed by
     \citeauthor{hpc_toolkit} and presented in \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
 
@@ -1544,6 +1557,7 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     \end{figure}
     
     \chapter{Results and Discussion}
+    \label{ch:results}
 
     The results of the experiments discussed in Chapter~\ref{ch:experiments} show that parallelized computation with
     respect to the pixels performs the best (\ref{sec:res_full_render}) and that the approximation of the error function
@@ -1627,23 +1641,58 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
         \item big efficiency step with SIMD introduction small step with removal of loads
     \end{itemize}
 
+    \subsection{Cache Effects}
+    \label{sec:res_cache}
+    \begin{itemize}
+        \item instruction cache has no effect: miss rage $<1\%$
+        \item data cache relevant high miss rates on the parallel part of the pipeline
+    \end{itemize}
+
     \chapter{Conclusion and Future Work}
     %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
+    In this thesis I discussed the implementation of CPU oriented optimizations of the Gaussian ray tracing method described
+    by \citeauthor{Rhodin:2015} in \cite{Rhodin:2015}. For the optimizations I used the \gls{simd} instructions provided
+    by modern x64 CPUs as well as tiling in conjunction with threading. Now I will discuss the conclusions (\ref{sec:conclusions})
+    and potential improvements (\ref{sec:future_work}) of the work presented in the thesis.
+
     \section{Conclusion}
+    \label{sec:conclusions}
     \begin{itemize}
         \item SIMD + Tiling lead to massive performance improvements
     \end{itemize}
 
     \section{Future Work}
+    \label{sec:future_work}
     There are various ways to further improve the performance and functionality of the rendering method described above.
-    \begin{itemize}
-        \item Memory/Cache Bottleneck? - slight data cache bottleneck in parallel versions
-        \item Anisotropic Gaussians
-        \item Loading Scenes learned via Gaussian splatting
-        \item More efficient tiling (SIMD, Threads)
-        \item Combining Splatting and Ray Tracing
-        \item GPU Implementation
-    \end{itemize}
+
+    The functionality may be extended by allowing for anisotropic Gaussians. This would require slight alterations in the
+    implementations of the density, \gls{radiance} and \gls{transmittance} functions, since anisotropic Gaussians are
+    based on a covariance matrix instead of a scalar value for their standard deviation.
+
+    Given the support for anisotropic Gaussians it would be a good addition to provide a way to load Gaussian based scenes,
+    such as the ones generated using Gaussian Splatting (\ref{sec:splatting}).
+
+    The performance of the optimizations as they are right now is reduced by the high data cache miss rates in the parallel
+    versions of the \gls{radiance} and \gls{transmittance} functions (\ref{sec:res_cache}). These may be improved by
+    finding more efficient ways of representing and loading p-vectors of Gaussians.
+
+    The implementation and tiling method presented in this thesis are a naive approach to the problem. It should be possible
+    to improve the method by utilizing \gls{simd} instructions and threading. For the method implemented here the number
+    of allocations required grows linearly with the number of tiles with a high likelihood of duplicate data across the
+    allocations, since Gaussians at tile borders will inhabit at least two tiles. This high memory overhead may be solved
+    using more sophisticated methods to associate the Gaussians with the tiles. Furthermore, there should be ways to
+    improve the tiling process at the algorithmic level.
+
+    This thesis focused on the viability and implementation of the method on the CPU, but further meaningful improvements
+    to the performance may be made by reimplementing the method on the GPU either as a compute shader or directly via
+    Nvidia's CUDA or AMD's HIP. In terms of portability HIP would be the better choice since it is available on both AMD
+    and Nvidia GPUs, but its performance on Nvidia GPUs might not match that of a native CUDA implementation.
+
+    Gaussian splatting, described in Section~\ref{sec:splatting}, is a lot more efficient than ray tracing at the cost
+    of accurate intersections. Both methods could be combined to leverage the efficiency of splatting for Guassians
+    without intersections while also allowing for the accurate modeling of intersecting Gaussians through ray tracing.
+    Note that some alterations would have to be made to the ray tracing method to ensure that perspective effects are
+    consistent across both methods.
 
     \appendix
     \chapter{Tables}
@@ -2055,15 +2104,38 @@ vcl_exp(simd::Vec<simd::Float, 64> x)
         \begin{minted}[linenos, frame=lines]{c++}
 struct vec4f_t {
     f32 x, y, z, w;
+    inline vec4f_t operator+(const vec4f_t &other) const;
+    inline vec4f_t operator-(const vec4f_t &other) const;
+    inline vec4f_t operator*(const vec4f_t &other) const;
+    inline vec4f_t operator/(const vec4f_t &other) const;
+    inline f32 dot(const vec4f_t &other) const;
+    inline f32 sqnorm() const;
+    inline vec4f_t max(const vec4f_t &other) const;
+    void normalize();
 };
-struct simd_vec4f_t { simd::Vec<simd::Float> x, y, z, w; };
+struct simd_vec4f_t {
+    simd::Vec<simd::Float> x, y, z, w;
+    inline simd_vec4f_t operator+(const simd_vec4f_t &other) const;
+    inline simd_vec4f_t operator-(const simd_vec4f_t &other) const;
+    inline simd_vec4f_t operator*(const simd_vec4f_t &other) const;
+    inline simd_vec4f_t operator/(const simd_vec4f_t &other) const;
+    inline simd::Vec<simd::Float> dot(const simd_vec4f_t &other) const;
+    inline simd::Vec<simd::Float> sqnorm() const;
+    inline simd_vec4f_t max(const simd_vec4f_t &other) const;
+    inline vec4f_t hadds() const;
+    void normalize();
+    inline static simd_vec4f_t from_vec4f_t(const vec4f_t& other);
+};
+        \end{minted}
+        \caption{Vector types used for the implementation of the rendering functions.}
+        \label{lst:vec_types_vrt_full}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[frame=lines, linenos]{c++}
 struct gaussian_t {
     vec4f_t albedo, mu;
     f32 sigma, magnitude;
-};
-struct simd_gaussian_t {
-    simd_vec4f_t albedo, mu;
-    simd::Vec<simd::Float> sigma, magnitude;
+    template<f32_func_t Exp> f32 pdf(vec4f_t x) const;
 };
 struct gaussian_vec_t {
     // all pointers aligned to SIMD_WIDTH
@@ -2072,6 +2144,12 @@ struct gaussian_vec_t {
     f32 *sigma;
     f32 *magnitude;
     u64 size = 0;
+    void load_gaussians(const std::vector<gaussian_t> &gaussians);
+    static gaussian_vec_t *from_gaussians(
+            const std::vector<gaussian_t> &gaussians);
+    gaussian_vec_t();
+    gaussian_vec_t(gaussian_vec_t &other);
+    ~gaussian_vec_t();
 };
 struct gaussians_t {
     std::vector<gaussian_t> gaussians;
@@ -2081,10 +2159,20 @@ struct tiles_t {
     const std::vector<gaussians_t> tiles;
     const f32 tw, th;
     const u64 w, h;
+    tiles_t(const std::vector<gaussians_t> &gaussians,
+            const f32 tw, const f32 th);
+    ~tiles_t();
+};
+struct simd_gaussian_t {
+    simd_vec4f_t albedo, mu;
+    simd::Vec<simd::Float> sigma, magnitude;
+    template<simd_f32_func_t Exp>
+    simd::Vec<simd::Float> pdf(const simd_vec4f_t x) const;
+    static simd_gaussian_t from_gaussian_t(const gaussian_t &other);
 };
         \end{minted}
-        \caption{Types used for the implementation of the rendering functions.}
-        \label{lst:types_vrt_full}
+        \caption{Gaussian types used for the implementation of the rendering functions.}
+        \label{lst:gaussian_types_vrt_full}
     \end{listing}
     
     \begin{listing}[t]
