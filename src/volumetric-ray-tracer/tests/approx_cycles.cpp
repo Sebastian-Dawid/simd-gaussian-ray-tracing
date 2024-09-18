@@ -38,15 +38,16 @@ inline u64 benchmark(struct rdpmc_ctx* ctx, std::vector<f32, simd_aligned_alloca
         {
             f32* _in = in.data() + j;
             f32* _out = out.data();
-            start = rdpmc_read(ctx);
             for (u64 k = 0; k < Step; k += Size)
             {
+                start = rdpmc_read(ctx);
                 asm volatile("":::"memory");
                 Fn(_in + k, _out + k);
                 asm volatile("":::"memory");
+                end = rdpmc_read(ctx);
+                acc += end - start;
+                fmt::println(dev_null, "{}", _out[k]);
             }
-            end = rdpmc_read(ctx);
-            acc += end - start;
             for (u64 _ = 0; _ < Step; ++_) fmt::println(dev_null, "{}", _out[_]);
         }
     }
