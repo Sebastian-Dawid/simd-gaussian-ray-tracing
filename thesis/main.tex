@@ -71,7 +71,26 @@
     \thispagestyle{abs}
     \abstractintoc
     \begin{abstract}
-        \lipsum[1]
+% Sentence 1: CONTEXT - why now?
+        Gaussian based image formation models, like Gaussian splatting or Gaussian ray tracing, are becoming more
+        widespread in the computer vision and computer graphics fields.
+% Sentence 2: NEED - why does the reader care?
+        These models mostly rely on GPUs to make rendering performant, which reduces their applicability.
+% Sentence 3: TASK - what do we do?
+        I use modern x64 CPUs \gls{simd} instructions along with other optimizations to increase the performance of
+        Gaussian ray tracing on CPUs.
+% Sentence 4: OBJECT - what does this document do?
+        In this thesis I describe the mathematical basis for the implemented optimizations and evaluate their effect on
+        rendering times and efficiency with respect to \gls{simd} and cache usage.
+% Sentence 5: FINDINGS - what did we discover?
+        I found that the optimizations I implemented can speed up rendering times by a factor up to $1689.3$ with a high
+        utilization of \gls{simd} instructions and low cache miss rates.
+% Sentence 6: CONCLUSIONS - so what?
+        This shows that Gaussian ray tracing on the CPU can perform well and even deliver close to real time rendering
+        on small or sparse scenes.
+% Sentence 7: PERSPECTIVES - what now?
+        Since other Gaussian image formation models do not model intersection Gaussians properly it would be worth exploring
+        how to integrate Gaussian ray tracing with these models.
     \end{abstract}
 
     \mainmatter
@@ -91,7 +110,8 @@
     introduce the method I will optimize and contrast it against a rasterization based alternative (\ref{ch:background}),
     discuss how the method can be optimized using vectorization and tiling from a mathematical perspective
     (\ref{ch:optimizations}), describe how these optimizations translate into an implementation (\ref{ch:implementation})
-    and show the improvements that the optimizations yield (\ref{ch:results}).
+    and show the improvements that the optimizations yield (\ref{ch:results}). Finally, I will recap the conclusions and
+    discuss opportunities for future work (\ref{ch:conclusions}).
 
     % \begin{itemize}
     %     \item Gaussian image representations are widely used in CG/CV
@@ -1172,8 +1192,12 @@ simd_vec4f_t broadcast_radiance(const simd_vec4f_t o,
     \subsubsection{Full Render}
     %@TODO: This section needs more detail
     In addition to the radiance function that calculates the color for an individual ray I also provide functions to
-    render entire images. The images are rendered based on a passed set of gaussians, camera configuration, camera position,
+    render entire images. The images are rendered based on a passed set of Gaussians, camera configuration, camera position,
     width and height.
+
+    The functions in this family render a full image by iterating over the rays defined by the given camera and calculating
+    the color of the corresponding pixel using a \gls{radiance} given either as a template argument or predefined by
+    the type of parallelism.
 
     There are two functions that do not allow for parallel processing of the pixels. These take the used \gls{radiance}
     function as a template argument. Their signatures are given in Listing~\ref{lst:seq_pixels_render}.
@@ -1465,11 +1489,14 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     derived metrics. These derived metrics are defined by a formular operating on the point-wise or aggregate values of
     the other metrics and can be assigned a custom format for presentation.
 
-    %@TODO: Paragraph on filters -> filtered out scopes count towards the parent scope in exclusive metrics
+    \mintinline{sh}{hpcviewer} allows filtering out nodes based on the name associated to the scope they represent. The
+    filter can be applied to that node only, ignoring its descendants, its descendants only or both. When a node is filtered
+    out the value of the exclusive metrics of its parent scope are adjusted according to the filtered out nodes exclusive
+    metrics.
 
     The full workflow of evaluating an optimized binary using HPCToolkit is shown in Listing~\ref{lst:hpctoolkit_workflow}.
 
-    \subsubsection{Used Metrics}
+    \subsubsection{Used Metrics and Filters}
     For the purpose of evaluating the efficiency of the \gls{simd} usage I recorded the metrics listed in Table~\ref{tab:metrics}.
     \begin{table}[b]
         \centering
@@ -1494,20 +1521,14 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
         \text{waste}(\text{peak}, \text{instructions}) = \text{peak} - \text{instructions},
         \label{eq:vec_waste}
     \end{equation}
-    vector instruction efficiency
+    and vector instruction efficiency
     \begin{equation}
-        \text{efficiency}(\text{peak}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{\text{peak}}
+        \text{efficiency}(\text{peak}, \text{instructions}) = 100 \cdot \frac{\text{instructions}}{\text{peak}}.
         \label{eq:vec_efficiency}
-    \end{equation}
-    and vector instructions per cycle
-    \begin{equation}
-        \text{vpc}(\text{cycles}, \text{instructions}) = \frac{\text{instructions}}{\text{cycles}}.
-        \label{eq:vpc}
     \end{equation}
 
     Note that the $\text{peak}$ parameter represents the theoretical maximum number of vector instructions per cycle. The
-    $\text{peak}$ depends on the \gls{latency} and \gls{throughput} of the instructions. If the $\text{peak}$ is the same
-    as the $\text{cycles}$ then $\text{efficiency} = 100 \cdot \text{vpc}$.
+    $\text{peak}$ depends on the \gls{latency} and \gls{throughput} of the instructions.
 
     Additionally, I defined the instruction cache miss ratio
     \begin{equation}
@@ -1521,9 +1542,12 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     with $ca$ the data cache accesses and $cm$ the data cache misses. Both of these cache related metrics are defined
     for the L1 cache.
 
+    To make the exclusive metrics of the relevant scopes more meaningful I filtered out nodes associated with operators
+    and most T-SIMD functions, since they should be counted towards the corresponding enclosing scope. A full list of the
+    applied filters is given in Figure~\ref{fig:hpc_filters}.
+
     \subsection{Utah/Newell Teapot}
     \label{sec:utah_teapot}
-    %@TODO: Rerun HPCTOOLKIT tests using Utah Newell Teapot instead of Dense Cube
     I used the \href{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj}{Newell Teapot Model}
     \footnote{https://graphics.stanford.edu/courses/cs148-10-summer/as3/code/as3/teapot.obj} to measure various metrics
     related to the efficiency of the \gls{simd} implementation of the rendering functions (\ref{sec:rendering_functions}).
@@ -1608,6 +1632,8 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     regardless of the chosen compiler (\ref{sec:res_runtimes}) and that most opportunities for further optimization
     with respect to the \gls{simd} usage arise in the implementation of the transmittance function (\ref{sec:res_waste}).
 
+    In this section I will use \enquote{parallel} to refer to the non-broadcast functions parallelized using \gls{simd}.
+
     \subsection{Runtimes}
     \label{sec:res_runtimes}
     The experiments regarding the runtime of the different rendering modes, described in Section~\ref{sec:dense_cube},
@@ -1653,21 +1679,58 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     \gls{throughput} of one. Meaning that, even when ignoring all dependencies, only one instruction can be executed per
     cycle.
 
-    \begin{itemize}
-        \item max efficiency $47.5\%$ for radiance and $57.4\%$ for transmittance
-        \item exp efficiency at $65\%$ in modes  7 and 8 instead of $33\%$ in mode 6
-        \item big efficiency step with SIMD introduction small step with removal of loads
-    \end{itemize}
+    The results of the experiments described in Section~\ref{sec:utah_teapot} show that the efficiency of the rendering
+    functions rises with the level of \gls{simd} usage. While the sequential \gls{radiance} function in mode five has
+    an efficiency of $1.74\%$ (Table~\ref{tab:mode_5_mt_wae}) the fully parallelized version has an efficiency of $49.35\%$
+    (Table~\ref{tab:mode_8_mt_wae}). However, the measured efficiency already rises to $15.16\%$ (Table~\ref{tab:mode_6_mt_wae})
+    in mode six, which uses the same sequential radiance function as mode five. This is likely a difference in the code
+    generated by the compiler for the two instantiations of the \mintinline{c++}{radiance} template function.
+
+    The efficiency of the \gls{transmittance} behaves similarly. The sequential version of the function has an efficiency
+    of $7.43\%$ (Table~\ref{tab:mode_5_mt_wae}) and the broadcast version reaches the highest level of efficiency at
+    $57.63\%$ (Table~\ref{tab:mode_8_mt_wae}).
+
+    For both the \gls{transmittance} and \gls{radiance} the first stage of \gls{simd} parallelization performs slightly
+    worse than the fully broadcast versions of the functions. This effect can be observed in Figure~\ref{fig:efficiency}.
+    There is a large initial step from a non \gls{simd} to a \gls{simd} implementation and a second smaller step from
+    the \enquote{parallel} version to the broadcast versions of the functions. This is step can be explained by the
+    conversions to and from the sequential types at the beginning and end of the \enquote{parallel} versions of the
+    functions.
+
+    \begin{figure}[t]
+        \centering
+        \input{plots/efficiency}
+        \caption{\gls{simd} efficiency of the \gls{transmittance} and \gls{radiance} functions across modes.}
+        \label{fig:efficiency}
+    \end{figure}
+
+    Another effect worth noting is the difference in the efficiency of the \gls{simd} approximation of the exponential
+    function between modes six and seven and eight. In mode six it only has an efficiency of $33.67\%$
+    (Table~\ref{tab:mode_6_mt_wae}) while its efficiency is at $65.67\%$ (Table~\ref{tab:mode_7_mt_wae}) and $64.86\%$
+    (Table~\ref{tab:mode_8_mt_wae}) in modes seven and eight respectively.
+
+    Mode five uses the \gls{simd} approximation of the exponential function less often as the final call in the
+    \gls{transmittance} function is done by a sequential approximation and the call to the density function in the
+    \gls{radiance} function is a sequential approximation as well. A possible explanation for this effect can be found
+    in the next section.
 
     \subsection{Cache Effects}
     \label{sec:res_cache}
+    Data cache miss rates of up to $21.2\%$ (Table~\ref{tab:mode_7_mt_cmr}) can be observed when looking at the
+    \enquote{parallel} functions. These increased data cache miss rates are probably caused by the loads generated by the
+    conversion from sequential to \gls{simd} types. An additional effect that can be observed in modes six and eight is
+    the propagation of the increased data cache miss rate to function one scope down from the \enquote{parallel} function.
+    In the case of mode eight this is the \mintinline{c++}{broadcast_transmittance} function with a data cache miss rate
+    of $11.73\%$ (Table~\ref{tab:mode_8_mt_cmr}). In mode six the affected functions are the \gls{simd} approximations
+    of the error and exponential functions with data cache miss rates of $3.42\%$ and $5.59\%$ respectively.
+
+    The increased data cache miss rate of the \gls{simd} approximation of the exponential function in mode six might be
+    the reason for the decrease in the functions' efficiency in that mode.
+
     The instruction cache does not appear to be a bottleneck, since its miss rate never passes the $1\%$ mark.
-    \begin{itemize}
-        \item data cache relevant high miss rates on the parallel function + lower but still significant rates on the functions one level down
-    \end{itemize}
 
     \chapter{Conclusion and Future Work}
-    %@TODO: Short recap + what can still be done: anisotropic Gaussians, loading models learned via Gaussian splatting, more efficient tiling method using SIMD, performance left on the table TBD (see results)
+    \label{ch:conclusions}
     In this thesis I discussed the implementation of CPU oriented optimizations of the Gaussian ray tracing method described
     by \citeauthor{Rhodin:2015} in \cite{Rhodin:2015}. For the optimizations I used the \gls{simd} instructions provided
     by modern x64 CPUs as well as tiling in conjunction with threading. Now I will discuss the conclusions (\ref{sec:conclusions})
@@ -1675,9 +1738,14 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
 
     \section{Conclusion}
     \label{sec:conclusions}
-    \begin{itemize}
-        \item SIMD + Tiling lead to massive performance improvements
-    \end{itemize}
+    The results of the experiments I ran show that using \gls{simd} in conjunction with other methods of optimization such
+    as multithreading and tiling leads to performance improvements of up to $1689.3$ times. Exploiting the clang compilers
+    bias for \gls{simd} parallelization in the outer loop can further improve performance.
+
+    I was unable to implement the \gls{simd} variants of the ray tracing method in a way that could reach the
+    theoretical peak performance of one vector instruction per cycle. This was caused by the dependencies present in the
+    computations of the method. Therefore, it seems unlikely that further significant improvements to this approach are
+    possible without reducing the number of dependencies in the computations of the method.
 
     \section{Future Work}
     \label{sec:future_work}
