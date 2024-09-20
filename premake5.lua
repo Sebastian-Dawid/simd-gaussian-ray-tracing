@@ -2,7 +2,6 @@ ARCH = os.getenv("ARCH")
 if ARCH == nil then
     ARCH = "native"
 end
-NVIDIA = os.getenv("NVIDIA")
 local svml_path = os.findlib("svml")
 SVML_AVAILABLE = svml_path~=nil
 
@@ -12,7 +11,7 @@ workspace "ba-thesis"
         description = "compile using the gcc toolset"
     }
     newoption {
-        trigger = "with-rocm",
+        trigger = "with-hip",
         description = "compile gpu version of the software"
     }
     newoption {
@@ -37,10 +36,6 @@ workspace "ba-thesis"
     configurations { "debug", "release" }
     location "build"
 
-    if NVIDIA ~= nil then
-        defines { "NVIDIA" }
-    end
-
     if SVML_AVAILABLE then
         filter "options:with-svml"
             defines { "WITH_SVML" }
@@ -59,7 +54,7 @@ workspace "ba-thesis"
     project "imgui"
         kind "StaticLib"
         language "C++"
-        targetdir "build/lib/%{cfg.buildcfg}"
+        targetdir "build/lib"
 
         includedirs { "./src/external/imgui", "./src/external/imgui/backend" }
         files { "./src/external/imgui/**.cpp" }
@@ -67,37 +62,37 @@ workspace "ba-thesis"
     project "jevents"
         kind "StaticLib"
         language "C"
-        targetdir "build/lib/%{cfg.buildcfg}"
+        targetdir "build/lib"
 
         files { "./src/jevents/*.c" }
 
     project "vk-renderer"
         kind "StaticLib"
         language "C++"
-        targetdir "build/lib/%{cfg.buildcfg}"
+        targetdir "build/lib"
         buildoptions { "-Wall", "-Wextra", "-Werror" }
         defines { "VULKAN_HPP_NO_EXCEPTIONS" }
 
         filter "files:src/vk-renderer/vk-mem-alloc/vk_mem_alloc.cpp"
             buildoptions { "-w" }
         filter {}
-        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
+        includedirs { "./src", "./src/external/imgui/" }
         files { "./src/vk-renderer/**.cpp" }
 
     project "vrt"
         kind "SharedLib"
         language "C++"
-        targetdir "build/lib/%{cfg.buildcfg}"
+        targetdir "build/lib"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
-        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
+        includedirs { "./src", "./src/external/imgui/" }
         files { "./src/vrt/*.cpp" }
 
     project "volumetric-ray-tracer"
         kind "ConsoleApp"
         language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
+        targetdir "build/bin"
         buildoptions { "-Wall", "-Wextra", "-Werror", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
         defines { "INCLUDE_IMGUI" }
 
@@ -107,26 +102,22 @@ workspace "ba-thesis"
                 links { "svml" }
             filter {}
         end
-        includedirs { "./src", "./src/external/imgui/", "./src/external/fmt/include/" }
+        includedirs { "./src", "./src/external/imgui/" }
         files { "./src/volumetric-ray-tracer/*.cpp" }
         links { "fmt", "glfw", "vulkan", "vk-renderer", "imgui", "vrt" }
 
     project "hip-volumetric-ray-tracer"
         kind "None"
-        filter { "options:with-rocm" }
+        filter { "options:with-hip" }
             kind "Utility" -- I can't force premake to use hipcc and Makefile projects are only supported for VS according to the docs
         filter {}
-        targetdir "build/bin/%{cfg.buildcfg}"
+        targetdir "build/bin"
         dependson { "imgui", "vk-renderer" }
 
         filter "files:**.hip"
             buildmessage 'BUILDING %{file.name}'
-            if NVIDIA == nil then
-                buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -I../src/external/imgui -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -lfmt -lglfw -lvulkan "-L./lib/%{cfg.buildcfg}" -lvk-renderer -limgui -DGRID -DWITH_RENDERER' }
-            else
-                buildcommands { 'mkdir -p bin/%{cfg.buildcfg}', 'hipcc -std=c++20 -I../src -o "bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -DGRID' }
-            end
-            buildoutputs { 'bin/%{cfg.buildcfg}/%{file.name:match("(.+)%..+$")}' }
+            buildcommands { 'mkdir -p bin', 'hipcc -std=c++20 -I../src -I../src/external/imgui -o "bin/%{file.name:match("(.+)%..+$")}" "%{file.relpath}" -lfmt -lglfw -lvulkan "-L./lib" -lvk-renderer -limgui -DGRID -DWITH_RENDERER' }
+            buildoutputs { 'bin/%{file.name:match("(.+)%..+$")}' }
         filter {}
 
         files { "./src/volumetric-ray-tracer/rocm-rt.hip" }
@@ -135,7 +126,7 @@ workspace "ba-thesis"
         project "cycles-test"
             kind "ConsoleApp"
             language "C++"
-            targetdir "build/bin/%{cfg.buildcfg}"
+            targetdir "build/bin"
             buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math", "-fno-unroll-loops" }
             defines { "WITH_SVML" }
 
@@ -147,7 +138,7 @@ workspace "ba-thesis"
         project "accuracy-test"
             kind "ConsoleApp"
             language "C++"
-            targetdir "build/bin/%{cfg.buildcfg}"
+            targetdir "build/bin"
             buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 
@@ -160,7 +151,7 @@ workspace "ba-thesis"
     project "transmittance-test"
         kind "ConsoleApp"
         language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
+        targetdir "build/bin"
         buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
 
         if SVML_AVAILABLE then
@@ -173,69 +164,11 @@ workspace "ba-thesis"
         files { "./src/volumetric-ray-tracer/tests/transmittance.cpp" }
         links { "fmt", "vrt" }
 
-    project "timing-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
-
-        if SVML_AVAILABLE then
-            filter { "options:with-svml" }
-                libdirs { svml_path }
-                links { "svml" }
-            filter {}
-        end
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/timing.cpp" }
-        links { "fmt", "vrt" }
-
-    project "image-timing-test"
-        kind "ConsoleApp"
-        language "C++"
-        targetdir "build/bin/%{cfg.buildcfg}"
-        buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
-
-        if SVML_AVAILABLE then
-            filter { "options:with-svml" }
-                libdirs { svml_path }
-                links { "svml" }
-            filter {}
-        end
-        includedirs { "./src" }
-        files { "./src/volumetric-ray-tracer/tests/image-timing.cpp" }
-        links { "fmt", "vrt" }
-
     if SVML_AVAILABLE then
-        project "perf-test"
-            kind "ConsoleApp"
-            language "C++"
-            targetdir "build/bin/%{cfg.buildcfg}"
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
-            defines { "WITH_SVML" }
-
-            libdirs { svml_path }
-            includedirs { "./src" }
-            files { "./src/volumetric-ray-tracer/tests/perf-test.cpp" }
-            links { "fmt", "svml", "vrt" }
-
-        project "svml-test"
-            kind "ConsoleApp"
-            language "C++"
-            targetdir "build/bin/%{cfg.buildcfg}"
-            -- compiling fogs avx2 exp implementation uses inline assemby that breaks when using -masm=intel 
-            buildoptions { "-Wall", "-Wextra", "-march="..ARCH,  "-fverbose-asm", "-ffast-math" }
-            defines { "WITH_SVML" }
-
-            libdirs { svml_path }
-            includedirs { "./src" }
-            files { "./src/volumetric-ray-tracer/tests/svml-test.cpp" }
-            links { "fmt", "svml", "vrt" }
-
         project "img-error-test"
             kind "ConsoleApp"
             language "C++"
-            targetdir "build/bin/%{cfg.buildcfg}"
-            -- see svml-test on why -masm=intel is missing
+            targetdir "build/bin"
             buildoptions { "-Wall", "-Wextra", "-march="..ARCH, "-fverbose-asm", "-ffast-math" }
             defines { "WITH_SVML" }
 

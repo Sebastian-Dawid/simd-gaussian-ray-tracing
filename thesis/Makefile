@@ -1,6 +1,6 @@
 # source: https://scaron.info/blog/makefiles-for-latex.html
 
-SHELL := zsh
+SHELL := sh
 .DEFAULT_GOAL := help
 .PHONY: help
 
@@ -15,16 +15,18 @@ TODO_AVAILABLE := $(shell command -v todo-manager 2> /dev/null)
 
 all: $(FIGURES) ## Build full thesis
 ifdef TODO_AVAILABLE
-	todo-manager -o TODOs.md -i main.tex
+	@if [ $$(ls TODOs.md 2> /dev/null) ]; then \
+		todo-manager -o TODOs.md -i main.tex; \
+	fi
 endif
-	mkdir -p target
+	@mkdir -p target
 	$(LATEX) $(PAPER)
 
 clean:	## Clean LaTeX output
-	rm -rf target
+	@rm -rf target
 
 watch:	## Recompile when source changes
-	@while [ 1 ]; do;				 \
+	@while [ 1 ]; do				 \
 		inotifywait $(FILES);		 \
 		sleep 0.01;					 \
 		make all;					 \
