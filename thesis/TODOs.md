@@ -1,11 +1,10 @@
 # TODOs
 <!---@TODO-List-Start--->
-- [ ] • This is not part of the paper technically -> how do I cite this? [See in file](main.tex#L219)
-- [ ] • Wording seems iffy, should rework this [See in file](main.tex#L220)
-- [ ] • should I mention wasted pipelining opportunities here? [See in file](main.tex#L826)
-- [ ] • wording w.r.t color arithmetic seems weird? [See in file](main.tex#L1164)
-- [ ] • This section needs more detail [See in file](main.tex#L1193)
-- [ ] • This conclusion does not make sense given the data [See in file](main.tex#L1618)
+- [ ] • Should I keep citing the full name of papers upon introduction? [See in file](main.tex#L66)
+- [ ] • Move this to the implementation section entirely since it is too implementation oriented? [See in file](main.tex#L551)
+- [ ] • Create figure to show this if there is enough time [See in file](main.tex#L817)
+- [ ] • Do I need a reason here? [See in file](main.tex#L873)
+- [ ] • Move at least part of this to the appendix? Would I need a new appendix chapter for this? [See in file](main.tex#L1498)
 <!---@TODO-List-End--->
 
 Generated using [todo-manager](https://github.com/dwd31415/todo-manager).

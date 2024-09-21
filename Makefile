@@ -10,7 +10,7 @@ PREMAKE_AVAILABLE := $(shell command -v premake5 2> /dev/null)
 HPC_AVAILABLE := $(shell command -v hpcrun 2> /dev/null)
 
 THESIS_FILES := ./thesis/main.tex ./thesis/main.bib ./thesis/glossary.tex ./thesis/Makefile ./thesis/latexmkrc ./thesis/images ./thesis/plots ./thesis/smart-thesis ./thesis/README.md
-SOURCE_FILES := $(THESIS_FILES) src test-objects Makefile fallback.mak premake5.lua julia README.md
+SOURCE_FILES := src test-objects Makefile fallback.mak premake5.lua julia README.md
 
 ifndef CONFIG
 CONFIG=release
