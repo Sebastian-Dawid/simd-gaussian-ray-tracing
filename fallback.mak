@@ -11,7 +11,23 @@ VRT_SRCS=$(shell find $(SRC_DIR)/vrt -name '*.cpp')
 VRT_OBJS=$(VRT_SRCS:$(SRC_DIR)/%=build/obj/%.o)
 
 INC_DIRS = -I$(SRC_DIR)/external/imgui -I$(SRC_DIR)
-CFLAGS = -O3 -g $(WARN) -march=native -save-temps=obj -fverbose-asm -ffast-math -std=c++20 $(INC_DIRS)
+CFLAGS = -O3 -g -Wall -march=native -fverbose-asm -ffast-math -std=c++20 $(INC_DIRS)
+LD_FLAGS = -Lbuild/lib -lfmt -lvulkan -lglfw -lvk-renderer -limgui -Wl,-rpath -Wl,$(CWD)/build/lib -lvrt
+
+SVML_PATH:=$(shell dirname $$(ldconfig -p | grep libsvml.so | tr ' ' '\n' | grep /))
+SVML_REQUESTED:=$(shell echo "$ARGS" | grep -E "\--with-svml" 2> /dev/null)
+TEMPS_REQUESTED:=$(shell echo "$ARGS" | grep -E "\--save-temps" 2> /dev/null)
+
+ifdef SVML_REQUESTED
+ifdef SVML_PATH
+	CFLAGS += -DWITH_SVML
+	LD_FLAGS += -L$(SVML_PATH) -lsvml
+endif
+endif
+
+ifdef TEMPS_REQUESTED
+	CFLAGS += -save-temps=obj
+endif
 
 .PHONY: all clean
 
@@ -46,4 +62,4 @@ vrt: $(VRT_OBJS)
 
 volumetric-ray-tracer: vk-renderer vrt imgui
 	@mkdir -p build/bin
-	$(CXX) $(CFLAGS) -DINCLUDE_IMGUI $(SRC_DIR)/volumetric-ray-tracer/main.cpp -o build/bin/volumetric-ray-tracer -Llib  -lfmt -lvulkan -lglfw -lvk-renderer -limgui -Wl,-rpath -Wl,$(CWD)/build/lib -lvrt
+	$(CXX) $(CFLAGS) -DINCLUDE_IMGUI $(SRC_DIR)/volumetric-ray-tracer/main.cpp -o build/bin/volumetric-ray-tracer $(LD_FLAGS)

@@ -15,20 +15,22 @@ All components require `make` and `gcc` version 14 or `clang` version 18. Earlie
 
 ## Compiling
 The external dependencies needed for compilation are:
-* GLFW (`vk-renderer`)
-* FMT (all)
-* Vulkan (`vk-renderer`)
-* SVML (`vrt`, optional)
+* GLFW (`vk-renderer`, `libglfw3-dev` on Debian)
+* FMT (all, `libfmt-dev` on Debian)
+* Vulkan (`vk-renderer`, `libvulkan-dev`, `vulkan-validationlayers-dev` and `spirv-tools` on Debian)
+* SVML (`vrt`, optional, distributed through Intel's compiler)
 
 [Premake](https://premake.github.io/) can be used for compilation, but there is a fallback Makefile in case premake is not available.
 A list of all targets available in the Makefile can be accessed using `make help` or just `make`.
 
 ```sh
-make <target>  # ARGS=[additional args] (only when using premake)
+make <target>  # ARGS=[additional args]
                #   --use-gcc    use gcc instead of clang
                #   --with-svml  use SVML routines as defaults
                #   --save-temps save temporary files (e.g. generated assembly)
 ```
+
+Note that the compiler has to be set using the `CXX` environment variable if the fallback Makefile is used. For premake `clang` is the default.
 
 # Used Libraries
 * [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)

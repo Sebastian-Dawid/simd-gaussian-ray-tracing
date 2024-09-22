@@ -63,8 +63,6 @@
 \makeevenfoot{abs}{\thepage}{}{}
 \makeoddfoot{abs}{}{}{\thepage}
 
-%@TODO: Should I keep citing the full name of papers upon introduction?
-
 \begin{document}
     \frontmatter
     \smarttitle
@@ -135,13 +133,6 @@
     and show the improvements that the optimizations yield (\ref{ch:results}). Finally, I will recap the conclusions and
     discuss opportunities for future work (\ref{ch:conclusions}).
 
-    % \begin{itemize}
-    %     \item Gaussian image representations are widely used in CG/CV
-    %     \item ray tracing is more accurate than e.g. splatting →  accurate intersections
-    %     \item CPU ray tracing is slow
-    %     \item Some machines have stronger CPUs than GPUs (e.g. integrated GPU only)
-    % \end{itemize}
-
     \chapter{Background}
     \label{ch:background}
     In volumetric image formation models objects are represented as functions yielding their densities in space. As such the
@@ -157,7 +148,7 @@
 
     \section{Gaussian Ray Tracing}
     \label{sec:int_grt}
-    In their 2015 Paper \citetitle{Rhodin:2015} \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
+    In their 2015 Paper \cite{Rhodin:2015} Rhodin \etal describe a volumetric image formation
     model based on a parametric density representation $D(\mathbf{x})$, where $\mathbf{x}$ is a position in space,
     defined by a sum of scaled \gls{isotropic}s $\mathcal{G} = \{ G_q \}_q$. The density $D$ is then given as
     \begin{align}
@@ -224,20 +215,20 @@
 
     \section{Gaussian Splatting}
     \label{sec:splatting}
-    Gaussian splatting is an image formation model first described by \citeauthor{splatting} in \enquote{\citetitle{splatting}}
+    Gaussian splatting is an image formation model first described by \citeauthor{splatting} in 
     (\citeyear{splatting}) \cite{splatting}. The method works, like classic mesh based rasterization methods, by projecting
     Gaussians, ordered by the depth of their means, onto the image plane. Derivatives of the method are still used in computer vision
     and graphics contexts, since it is fully differentiable and can be applied in real time contexts.
 
     One of these derived methods is called 3D Gaussian splatting and was introduced by \citeauthor{kerbl3Dgaussians} in
-    their \citeyear{kerbl3Dgaussians} paper \citetitle{kerbl3Dgaussians}\cite{kerbl3Dgaussians}. \citeauthor{kerbl3Dgaussians}
+    their \citeyear{kerbl3Dgaussians} paper \cite{kerbl3Dgaussians}. \citeauthor{kerbl3Dgaussians}
     define their Gaussians as 4-tuples $(\mu, \Sigma, \mathbf{a}, \alpha)$, where $\mu \in \R^3$ is the mean of the
     Gaussian, $\Sigma \in \R^{3\times 3}$ its 3D covariance Matrix, $\mathbf{a} \in [0, 1]^3$ its albedo and
     $\alpha \in [0, 1]$ its opacity. The camera is defined as a tuple $(W, P)$, where $W$ is the viewing transformation
     and $P$ is the affine projective transformation.
 
     To project the 3D covariance matrix to a 2D covariance matrix they employ a method described by \citeauthor{volume_splatting}
-    in \citetitle{volume_splatting}\cite{volume_splatting}. A covariance matrix
+    in \cite{volume_splatting}. A covariance matrix
     \begin{equation}
         \Sigma' = JW\Sigma W^TJ^T
     \end{equation}
@@ -548,17 +539,9 @@
 
     The implementation of the approximations will be discussed in Section~\ref{sec:impl_approx}.
 
-    %@TODO: Move this to the implementation section entirely since it is too implementation oriented?
     \section{Fast Exponential Function}
     \label{sec:fast_exp}
-    The approximation of the exponential function described by \citeauthor{fast_exp} in \citetitle{fast_exp}
-    \cite{fast_exp} is based on the representation
-    \begin{equation}
-        \exp{(x)} = 2^{\frac{x}{\ln{(2)}}}.
-        \label{eq:exp_ident}
-    \end{equation}
-    The rest of the approximation relies on the structure of floating point numbers under the IEEE-754 standard and
-    will be discussed in Section~\ref{sec:impl_fast_exp}.
+    The details of this approximation are implementation oriented and will be discussed in Section~\ref{sec:impl_fast_exp}.
     
     \section{Polynomial Approximations}
     \label{sec:poly_approx}
@@ -650,7 +633,7 @@
     \subsection{Abramowitz and Stegun}
     \label{sec:abrasteg}
     \citeauthor{AbraSteg72} give a polynomial approximation of the error function in Section 7.1.27 of their
-    \enquote{\citetitle{AbraSteg72}}\cite{AbraSteg72} as
+    \cite{AbraSteg72} as
     \begin{equation}
         \erf{(x)} = 1 - \frac{1}{(1 + ax + bx^2 + cx^3 + dx^4)^4}
         \label{eq:abrasteg_positive}
@@ -725,7 +708,7 @@
     \subsection{T-SIMD}
     \label{sec:tsimd}
     A simple way to make the code compatible with different \gls{simd} extensions is the T-SIMD library described in
-    \enquote{\citetitle{own_moeller_16_2}} \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
+    \cite{own_moeller_16_2} by \citeauthor{own_moeller_16_2}.
 
     The library provides a template vector class
     \begin{minted}{c++}
@@ -790,8 +773,13 @@ Vec<f32, 32> mul(const Vec<f32, 32> &a,
 
     \subsubsection{Fast Exponential Function}
     \label{sec:impl_fast_exp}
-    As described in Section~\ref{sec:fast_exp} this approximation of the exponential function relies on the structure of
-    floating point numbers defined by the IEEE-754 standard.
+    The approximation of the exponential function described by \citeauthor{fast_exp} in 
+    \cite{fast_exp} is based on the representation
+    \begin{equation}
+        \exp{(x)} = 2^{\frac{x}{\ln{(2)}}}.
+        \label{eq:exp_ident}
+    \end{equation}
+    The rest of the approximation relies on the structure of floating point numbers under the IEEE-754 standard.
 
     The IEEE-754 standard defines a double precision floating point number to consist of a sign bit $s \in \{ 0, 1 \}$,
     a 52-bit mantissa $m \in [0, 1)$ and an 11-bit exponent $x \in [1, 2046] \cap \N$ and is calculated as
@@ -814,9 +802,8 @@ Vec<f32, 32> mul(const Vec<f32, 32> &a,
     the most significant bits of the mantissa provides a linear interpolation between $\lfloor x \rfloor$ and $\lceil x
     \rceil$, under IEEE-754.
 
-    %@TODO: Create figure to show this if there is enough time
-    This works by casting the floating point result of the computation to an integer type and reinterpreting the bit
-    representation of that integer as a float.
+    This works by casting the floating point result of the computation to an integer and reinterpreting the bit
+    representation of that integer as a float. See Appendix~\ref{sec:fast_exp_explanation} for a more detailed description.
 
     The final approximation of $\exp{(x)}$ can now be computed as
     \begin{equation}
@@ -869,8 +856,7 @@ f32 fast_exp(f32 x)
     the algorithm for determining the coefficients (see Listing~\ref{lst:jl_cubic_spline}) along with two functions for
     generating sequential (Listing~\ref{lst:jl_code_gen}) and \gls{simd} (Listing~\ref{lst:jl_code_gen_simd}) code. I used
     the \href{https://julialang.org}{Julia}\footnote{\href{https://julialang.org}{https://julialang.org}} programming
-    language to implement these functions.
-    %@TODO: Do I need a reason here?
+    language to implement these functions for convenience.
     
     The generated code chooses a polynomial $P_i$ from the spline based on the passed parameter. The chosen polynomial
     $P_i$ is then evaluated using Horner's method \eqref{eq:horners_method}.
@@ -1495,50 +1481,15 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
 
     \subsection{HPCToolkit}
     \label{sec:hpctoolkit}
-    %@TODO: Move at least part of this to the appendix? Would I need a new appendix chapter for this?
     For the purpose of evaluating \gls{simd} efficiency I will use a tool called HPCToolkit developed by
-    \citeauthor{hpc_toolkit} and presented in \citetitle{hpc_toolkit} \cite{hpc_toolkit}.
+    \citeauthor{hpc_toolkit} and presented in \cite{hpc_toolkit}.
 
     The tool is able to measure many different metrics such as the Linux kernels performance counters or the events
-    provided by the PAPI (Performance Application Programming Interface) developed by \citeauthor{papi}and first published
-    in \citetitle{papi} \cite{papi}.
+    provided by the PAPI (Performance Application Programming Interface) developed by \citeauthor{papi} and first published
+    in \cite{papi}. The recorded metrics are associated to the scopes they were recorded in and can be combined to define
+    new \enquote{derived} metrics. Scopes can be filtered out adjusting the values of the metrics of their parent scopes.
 
-    Instead of instrumenting the binary, the tool takes a statistical sample of the program contexts. Given that the number
-    of samples taken is sufficiently large this is expected to be representative. The samples are taken by sending a signal
-    to the program that triggers a signal handler which records the current context.
-
-    It uses synchronous and asynchronous event triggers to measure various types of program performance. Asynchronous
-    event triggers correspond to events like cache misses or cycles executed and are sampled based on either an interval
-    timer or hardware performance counter event. Synchronous triggers are related directly to actions in the program such
-    as allocations or IO.
-
-    HPCToolkit preloads its profiling library when an application is launched. During the library's initialization it
-    allocates and sets up the profiler state, signal handlers and asynchronous event triggers, then it initiates profiling.
-    The results are written to disk at the end of the process' lifetime.
-
-    The recorded data can be viewed using the \mintinline{sh}{hpcviewer} tool, which provides different views of the
-    program's callstack. It presents the recorded metrics in a tabular format next to the associated scope or function
-    call. The \enquote{top-down} view presents the call stack as a tree starting at the program root. The \enquote{bottom-up}
-    view presents all functions that are called in the program. Expanding the function shows all contexts from which the
-    expanded function was called associated with the fraction of the total quantity of the functions metrics caused by
-    that context. The \enquote{flat} view presents the program divided into its components, like the binary and dynamically
-    linked libraries.
-
-    The metrics presented in \mintinline{sh}{hpcviewer} are divided into inclusive, marked \enquote{(I)}, and exclusive,
-    marked \enquote{(E)}, metrics. The difference between the two types is the scope they encompass. Inclusive metrics
-    encompass the current and all enclosed scopes such as loops and function calls. Exclusive metrics disregard nested
-    scopes.
-
-    \mintinline{sh}{hpcviewer} allows the user to define \enquote{derived metrics} based on the recorded metrics and other
-    derived metrics. These derived metrics are defined by a formular operating on the point-wise or aggregate values of
-    the other metrics and can be assigned a custom format for presentation.
-
-    \mintinline{sh}{hpcviewer} allows filtering out nodes based on the name associated to the scope they represent. The
-    filter can be applied to that node only, ignoring its descendants, its descendants only or both. When a node is filtered
-    out, the values of the exclusive metrics of its parent scope are adjusted according to the filtered out nodes exclusive
-    metrics.
-
-    The full workflow of evaluating an optimized binary using HPCToolkit is shown in Listing~\ref{lst:hpctoolkit_workflow}.
+    A more in depth explanation of the way the tool functions can be found in Appendix~\ref{sec:hpctoolkit_explanation}.
 
     \subsubsection{Used Metrics and Filters}
     For the purpose of evaluating the efficiency of the \gls{simd} usage I recorded the metrics listed in Table~\ref{tab:metrics}.
@@ -1637,7 +1588,7 @@ f32 ac_simd_abramowitz = static_cast<f32>(benchmark<1000,
     \label{sec:res_approx}
     The results of the approximation benchmarks show that the optimal approximations to use, in terms of speed and
     accuracy, are the approximation of the exponential function from the VCL (Vector Class Library) and the polynomial
-    approximation of the error function given by \citeauthor{AbraSteg72} in the \enquote{\citetitle{AbraSteg72}}.
+    approximation of the error function given by \citeauthor{AbraSteg72} (see Section~\ref{sec:abrasteg}).
 
     The approximation of the error function in Intel's SVML is the slowest of the considered approximations. This is
     surprising because the approximations using splines are ill-suited to the type of parallelism \gls{simd} provides.
@@ -2379,6 +2330,92 @@ $ hpcviewer hpctoolkit-<binary>-database
         \caption{Typical HPCToolkit Workflow}
         \label{lst:hpctoolkit_workflow}
     \end{listing}
+
+    \chapter{Additional Notes}
+    \section{Fast Exponential Function}
+    \label{sec:fast_exp_explanation}
+    Take the bit representation of a single precision floating point number under IEEE-754
+    \begin{equation}
+        \underbrace{0}_{\text{sign bit}}\underbrace{00000000}_{\text{exponent}}\underbrace{00000000000000000000000}_{\text{mantissa}}.
+    \end{equation}
+    Now consider the bit representation
+    \begin{equation}
+        00000000100000000000000000000000
+    \end{equation}
+    of an integer with the value $2^{23}$. If I now multiply this value with some other value (\eg $3$) I get
+    \begin{equation}
+        00000001100000000000000000000000
+    \end{equation}
+    as the corresponding bit representation. Multiplying an integer with $2^n$ is the same as shifting the bits of that
+    integer to the left by $n$ bits. If I reinterpret these bits as a single precision floating point number under
+    IEEE-754 I get
+    \begin{equation}
+        (-1)^0 \cdot (1 + 0) \cdot 2^{3 - 127} = 2^{-124}.
+    \end{equation}
+    Due to the floating point numbers bias the exponent of the resulting number if $-124$ instead of the desired $3$. To
+    offset this I can shift $3 + 127$ into the floating point numbers exponent instead by computing the integer
+    representation
+    \begin{equation}
+        01000001000000000000000000000000
+    \end{equation}
+    of $2^{23}\cdot(3 + 127) = 1090519040$. Reinterpreting these bits as a floating point number I get
+    \begin{equation}
+        (-1)^0 \cdot (1 + 0) \cdot 2^{3 + 127 - 127} = 2^3.
+    \end{equation}
+    This shows that for values $x \in \Z$, $2^{23}\cdot(x + 127)$ is an integer whose bit representation reinterpreted
+    as a single precision floating point number gives $2^x$ exactly.
+
+    For non integer arguments $x$ the result of $2^{23}\cdot(x + 127)$ spills over into the bits representing the mantissa.
+    Take, as an example, $x = 3.4$. This gives $2^{23} \cdot (3.4 + 127) = 1093874483.2$ which when cast to an integer
+    yields the bit representation
+    \begin{equation}
+        010000010\underbrace{01100110011001100110011}_{\text{mantissa in a float}}.
+    \end{equation}
+    Reinterpreting these bits as a floating point number gives
+    \begin{equation}
+        (-1)^0 \cdot (1 + 0.2547) \cdot 2^{3 + 127 - 127} \approx 1.2547 \cdot 2^3 \approx 10.0375.
+    \end{equation}
+    The actual value of $2^{3.4}$ is approximately $10.5561$. This means for $x = 3.4$ the approximation has an absolute
+    error of $0.5186$ and an error relative to the size of the expected value of $4.9125\%$.
+
+    \section{HPCToolkit}
+    \label{sec:hpctoolkit_explanation}
+    Instead of instrumenting the binary, the tool takes a statistical sample of the program contexts. Given that the number
+    of samples taken is sufficiently large this is expected to be representative. The samples are taken by sending a signal
+    to the program that triggers a signal handler which records the current context.
+
+    It uses synchronous and asynchronous event triggers to measure various types of program performance. Asynchronous
+    event triggers correspond to events like cache misses or cycles executed and are sampled based on either an interval
+    timer or hardware performance counter event. Synchronous triggers are related directly to actions in the program such
+    as allocations or IO.
+
+    HPCToolkit preloads its profiling library when an application is launched. During the library's initialization it
+    allocates and sets up the profiler state, signal handlers and asynchronous event triggers, then it initiates profiling.
+    The results are written to disk at the end of the process' lifetime.
+
+    The recorded data can be viewed using the \mintinline{sh}{hpcviewer} tool, which provides different views of the
+    program's callstack. It presents the recorded metrics in a tabular format next to the associated scope or function
+    call. The \enquote{top-down} view presents the call stack as a tree starting at the program root. The \enquote{bottom-up}
+    view presents all functions that are called in the program. Expanding the function shows all contexts from which the
+    expanded function was called associated with the fraction of the total quantity of the functions metrics caused by
+    that context. The \enquote{flat} view presents the program divided into its components, like the binary and dynamically
+    linked libraries.
+
+    The metrics presented in \mintinline{sh}{hpcviewer} are divided into inclusive, marked \enquote{(I)}, and exclusive,
+    marked \enquote{(E)}, metrics. The difference between the two types is the scope they encompass. Inclusive metrics
+    encompass the current and all enclosed scopes such as loops and function calls. Exclusive metrics disregard nested
+    scopes.
+
+    \mintinline{sh}{hpcviewer} allows the user to define \enquote{derived metrics} based on the recorded metrics and other
+    derived metrics. These derived metrics are defined by a formular operating on the point-wise or aggregate values of
+    the other metrics and can be assigned a custom format for presentation.
+
+    \mintinline{sh}{hpcviewer} allows filtering out nodes based on the name associated to the scope they represent. The
+    filter can be applied to that node only, ignoring its descendants, its descendants only or both. When a node is filtered
+    out, the values of the exclusive metrics of its parent scope are adjusted according to the filtered out nodes exclusive
+    metrics.
+
+    The full workflow of evaluating an optimized binary using HPCToolkit is shown in Listing~\ref{lst:hpctoolkit_workflow}.
 
     \backmatter
     \printglossaries
