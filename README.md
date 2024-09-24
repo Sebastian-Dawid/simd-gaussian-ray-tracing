@@ -17,6 +17,7 @@ All components require `make` and `gcc` version 14 or `clang` version 18. Earlie
 The external dependencies needed for compilation are:
 * GLFW (`vk-renderer`, `libglfw3-dev` on Debian)
 * FMT (all, `libfmt-dev` on Debian)
+* GLM (`vrt`, `vk-renderer`, `libglm-dev` on Debian)
 * Vulkan (`vk-renderer`, `libvulkan-dev`, `vulkan-validationlayers-dev` and `spirv-tools` on Debian)
 * SVML (`vrt`, optional, distributed through Intel's compiler)
 
@@ -35,10 +36,11 @@ Note that the compiler has to be set using the `CXX` environment variable if the
 # Used Libraries
 * [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)
 * [GLFW](https://github.com/glfw/glfw)
+* [GLM](https://github.com/g-truc/glm)
 * [ImGui](https://github.com/ocornut/imgui)
 * [fmt](https://github.com/fmtlib/fmt)
 * [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp)
-* [Vk-Bootsrap](https://github.com/charles-lunarg/vk-bootstrap)
+* [Vk-Bootstrap](https://github.com/charles-lunarg/vk-bootstrap)
 * [VMA](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
 * [stb](https://github.com/nothings/stb)
 * [jevents (pmu-tools)](https://github.com/andikleen/pmu-tools/tree/master/jevents)
