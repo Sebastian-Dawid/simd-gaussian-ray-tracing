@@ -11,14 +11,14 @@ std::vector<vrt::gaussian_t> read_from_obj(const char *const filename)
     {
         if (!reader.Error().empty())
         {
-            fmt::println(stderr, "[ {} ]\tTinyObjReader: {}", ERROR_FMT("ERROR"), reader.Error());
+            fmt::print(stderr, "[ {} ]\tTinyObjReader: {}\n", ERROR_FMT("ERROR"), reader.Error());
         }
         exit(EXIT_FAILURE);
     }
 
     if (!reader.Warning().empty())
     {
-        fmt::println("[ {} ]\tTinyObjReader: {}", WARN_FMT("WARNING"), reader.Warning());
+        fmt::print("[ {} ]\tTinyObjReader: {}\n", WARN_FMT("WARNING"), reader.Warning());
     }
 
     const tinyobj::attrib_t &attrib = reader.GetAttrib();

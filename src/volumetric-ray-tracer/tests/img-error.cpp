@@ -30,10 +30,10 @@ i32 main()
     const camera_t cam(camera_create_info_t{});
 
     const vec4f_t origin{0.f, 0.f, 0.f};
-    fmt::println("[ {} ]\tGenerating Reference Image", INFO_FMT("INFO"));
+    fmt::print("[ {} ]\tGenerating Reference Image\n", INFO_FMT("INFO"));
     render_image<radiance<transmittance>>(256, 256, ref_image, cam, origin, tiles, true, 16);
 
-    fmt::println("[ {} ]\tGenerating Test Images", INFO_FMT("INFO"));
+    fmt::print("[ {} ]\tGenerating Test Images\n", INFO_FMT("INFO"));
     u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
@@ -57,7 +57,7 @@ i32 main()
     fog_err /= 256*256;
     my_err /= 256*256;
 
-    fmt::println("SVML: {}\nFOG:  {}\nMINE: {}", svml_err, fog_err, my_err);
+    fmt::print("SVML: {}\nFOG:  {}\nMINE: {}\n", svml_err, fog_err, my_err);
 
     return EXIT_SUCCESS;
 }

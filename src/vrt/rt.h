@@ -10,7 +10,7 @@
 #include <include/tsimd_sh.H>
 #include <glm/glm.hpp>
 
-#define PRINT_MAT(V) fmt::println("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}", V[0].x, V[1].x, V[2].x, V[3].x, V[0].y, V[1].y, V[2].y, V[3].y, V[0].z, V[1].z, V[2].z, V[3].z, V[0].w, V[1].w, V[2].w, V[3].w);
+#define PRINT_MAT(V) fmt::print("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n", V[0].x, V[1].x, V[2].x, V[3].x, V[0].y, V[1].y, V[2].y, V[3].y, V[0].z, V[1].z, V[2].z, V[3].z, V[0].w, V[1].w, V[2].w, V[3].w);
 
 namespace vrt
 {

@@ -46,9 +46,9 @@ inline u64 benchmark(struct rdpmc_ctx* ctx, std::vector<f32, simd_aligned_alloca
                 asm volatile("":::"memory");
                 end = rdpmc_read(ctx);
                 acc += end - start;
-                fmt::println(dev_null, "{}", _out[k]);
+                fmt::print(dev_null, "{}\n", _out[k]);
             }
-            for (u64 _ = 0; _ < Step; ++_) fmt::println(dev_null, "{}", _out[_]);
+            for (u64 _ = 0; _ < Step; ++_) fmt::print(dev_null, "{}\n", _out[_]);
         }
     }
     return acc;
@@ -61,7 +61,7 @@ i32 main()
     CPU_SET(2, &mask);
     sched_setaffinity(0, sizeof(mask), &mask);
     FILE *CSV = std::fopen("csv/simd_erf.csv", "wd");
-    fmt::println(CSV, "count,t_simd_spline,t_simd_spline_mirror,t_simd_abramowitz,t_simd_taylor,t_svml,t_spline,t_spline_mirror,t_abramowitz,t_taylor,t_std");
+    fmt::print(CSV, "count,t_simd_spline,t_simd_spline_mirror,t_simd_abramowitz,t_simd_taylor,t_svml,t_spline,t_spline_mirror,t_abramowitz,t_taylor,t_std\n");
     struct rdpmc_ctx ctx;
 
     srand48(SEED);
@@ -84,12 +84,12 @@ i32 main()
         f32 t_taylor        = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = taylor_erf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
         f32 t_std           = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = erff(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
 
-        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * COUNT, t_simd, t_simd_mirror, t_simd_abramowitz, t_simd_taylor, t_svml, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std);
+        fmt::print(CSV, "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n", SIMD_FLOATS * COUNT, t_simd, t_simd_mirror, t_simd_abramowitz, t_simd_taylor, t_svml, t_spline, t_spline_mirror, t_abramowitz, t_taylor, t_std);
     }
     std::fclose(CSV);
 
     CSV = std::fopen("csv/simd_exp.csv", "wd");
-    fmt::println(CSV, "count,t_simd,t_simd_fast,t_svml,t_vcl,t_spline,t_fast,t_std");
+    fmt::print(CSV, "count,t_simd,t_simd_fast,t_svml,t_vcl,t_spline,t_fast,t_std\n");
     {
         std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
         for (u64 j = 0; j < SIMD_FLOATS * COUNT; ++j)
@@ -104,12 +104,12 @@ i32 main()
         f32 t_fast      = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = fast_exp(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
         f32 t_std       = static_cast<f32>(benchmark<ITER, SIMD_FLOATS, 1, [](f32* in, f32* out) -> void { *out = expf(*in); }>(&ctx, in))/(ITER * COUNT * SIMD_FLOATS);
 
-        fmt::println(CSV, "{}, {}, {}, {}, {}, {}, {}, {}", SIMD_FLOATS * COUNT, t_simd, t_simd_fast, t_svml, t_vcl, t_spline, t_fast, t_std);
+        fmt::print(CSV, "{}, {}, {}, {}, {}, {}, {}, {}\n", SIMD_FLOATS * COUNT, t_simd, t_simd_fast, t_svml, t_vcl, t_spline, t_fast, t_std);
     }
     std::fclose(CSV);
 
     char *args[] = { (char*)"./julia/wrapper.sh", (char*)"./julia/simd_erf_timing.jl", NULL };
     execvp("./julia/wrapper.sh", args);
-    fmt::println(stderr, "[ {} ]\tGenerating Plots failed with error: {}", ERROR_FMT("ERROR"), strerror(errno));
+    fmt::print(stderr, "[ {} ]\tGenerating Plots failed with error: {}\n", ERROR_FMT("ERROR"), strerror(errno));
     exit(EXIT_SUCCESS);
 }

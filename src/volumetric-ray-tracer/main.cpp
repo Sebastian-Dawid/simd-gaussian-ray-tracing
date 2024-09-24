@@ -50,7 +50,7 @@
         "\t\t5 - sequential execution with tiling\n"\
         "\t\t6 - parallel transmittance calculation with tiling\n"\
         "\t\t7 - parallel radiance calculation with tiling\n"\
-        "\t\t8 - parallel pixel calculation with tiling"
+        "\t\t8 - parallel pixel calculation with tiling\n"
 
 struct cmd_args_t
 {
@@ -142,7 +142,7 @@ struct cmd_args_t
                     this->camera_offset = strtof(optarg, NULL);
                     break;
                 case 0xff:
-                    fmt::println(HELP_MSG);
+                    fmt::print(HELP_MSG);
                     exit(EXIT_SUCCESS);
                     break;
                 case 0xfe:
@@ -308,12 +308,12 @@ i32 main(i32 argc, char **argv)
         }
         if (cmd.quiet)
         {
-            if (cmd.nr_frames == 1) fmt::println("TIME: {} ms", draw_time + tiling_time);
+            if (cmd.nr_frames == 1) fmt::print("TIME: {} ms\n", draw_time + tiling_time);
             total_time += draw_time + tiling_time;
             if (cmd.nr_frames == frames)
             {
                 if (cmd.nr_frames > 1)
-                    fmt::println("AVG. TIME: {} ms ({} frames)", total_time/cmd.nr_frames, cmd.nr_frames);
+                    fmt::print("AVG. TIME: {} ms ({} frames)\n", total_time/cmd.nr_frames, cmd.nr_frames);
                 break;
             }
         }
