@@ -50,7 +50,7 @@ else
 endif
 
 run: build ## Build then run
-	@build/bin/$(CONFIG)/volumetric-ray-tracer $(ARGS)
+	@build/bin/volumetric-ray-tracer
 
 hpc-run: ## Run for both clang and gcc through hpctoolkit
 ifdef HPC_AVAILABLE

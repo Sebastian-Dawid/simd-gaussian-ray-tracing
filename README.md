@@ -18,8 +18,10 @@ The external dependencies needed for compilation are:
 * GLFW (`vk-renderer`, `libglfw3-dev` on Debian)
 * FMT (all, `libfmt-dev` on Debian)
 * GLM (`vrt`, `vk-renderer`, `libglm-dev` on Debian)
-* Vulkan (`vk-renderer`, `libvulkan-dev`, `vulkan-validationlayers-dev` and `spirv-tools` on Debian)
+* Vulkan (`vk-renderer`, `libvulkan-dev`, `vulkan-validationlayers` and `spirv-tools` on Debian)
 * SVML (`vrt`, optional, distributed through Intel's compiler)
+
+On Debian compilation might fail using `gcc`, therefore using `clang` is recommended.
 
 [Premake](https://premake.github.io/) can be used for compilation, but there is a fallback Makefile in case premake is not available.
 A list of all targets available in the Makefile can be accessed using `make help` or just `make`.
