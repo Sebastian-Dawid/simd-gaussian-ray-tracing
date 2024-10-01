@@ -6,11 +6,18 @@ SHELL := sh
 BUILD_DIR = build
 
 PV_AVAILABLE := $(shell command -v pv 2> /dev/null)
-PREMAKE_AVAILABLE := $(shell command -v premake5 2> /dev/null)
+
+USE_CMAKE ?= false
+USE_MAKEFILE ?= false
+PREMAKE_AVAILABLE := $(shell $(USE_CMAKE) || $(USE_MAKEFILE) || command -v premake5 2> /dev/null)
+CMAKE_AVAILABLE := $(shell $(USE_MAKEFILE) || command -v cmake 2> /dev/null)
+
 HPC_AVAILABLE := $(shell command -v hpcrun 2> /dev/null)
 
+MAKEFILE_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
 THESIS_FILES := ./thesis/main.tex ./thesis/main.bib ./thesis/glossary.tex ./thesis/Makefile ./thesis/latexmkrc ./thesis/images ./thesis/plots ./thesis/smart-thesis ./thesis/README.md
-SOURCE_FILES := src test-objects Makefile fallback.mak premake5.lua julia README.md
+SOURCE_FILES := src test-objects Makefile fallback.mak premake5.lua julia README.md CMakeLists.txt
 
 ifndef CONFIG
 CONFIG=release
@@ -26,7 +33,7 @@ ifdef PREMAKE_AVAILABLE
 	$(MAKE) config=$(CONFIG);	\
 	popd > /dev/null
 else
-	$(MAKE) -f fallback.mak
+	$(MAKE) build
 endif
 
 libs: ## Compile libraries
@@ -36,7 +43,15 @@ ifdef PREMAKE_AVAILABLE
 	$(MAKE) config=$(CONFIG) imgui vrt vk-renderer;	\
 	popd > /dev/null
 else
+ifdef CMAKE_AVAILABLE
+	@mkdir -p $(BUILD_DIR); \
+	pushd $(BUILD_DIR) > /dev/null; \
+	cmake --fresh $(MAKEFILE_PATH); \
+	$(MAKE) imgui vrt vk-renderer; \
+	popd > /dev/null
+else
 	$(MAKE) -f fallback.mak imgui vrt vk-renderer
+endif
 endif
 
 build: libs	## Compile and link example application
@@ -46,7 +61,15 @@ ifdef PREMAKE_AVAILABLE
 	$(MAKE) config=$(CONFIG) volumetric-ray-tracer;	\
 	popd > /dev/null
 else
+ifdef CMAKE_AVAILABLE
+	@mkdir -p $(BUILD_DIR); \
+	pushd $(BUILD_DIR) > /dev/null; \
+	cmake --fresh $(MAKEFILE_PATH); \
+	$(MAKE) volumetric-ray-tracer; \
+	popd > /dev/null
+else
 	$(MAKE) -f fallback.mak volumetric-ray-tracer
+endif
 endif
 
 run: build ## Build then run

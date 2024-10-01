@@ -23,17 +23,32 @@ The external dependencies needed for compilation are:
 
 On Debian compilation might fail using `gcc`, therefore using `clang` is recommended.
 
-[Premake](https://premake.github.io/) can be used for compilation, but there is a fallback Makefile in case premake is not available.
-A list of all targets available in the Makefile can be accessed using `make help` or just `make`.
+[Premake](https://premake.github.io/) can be used for compilation, but there is a fallback Makefile and CMake Project in
+case premake is not available. A list of all targets available in the Makefile can be accessed using `make help` or just `make`.
 
-```sh
-make <target>  # ARGS=[additional args]
-               #   --use-gcc    use gcc instead of clang
-               #   --with-svml  use SVML routines as defaults
-               #   --save-temps save temporary files (e.g. generated assembly)
+The Makefile variables `USE_CMAKE` and `USE_MAKEFILE` can be used to override premake usage in case it is available on the
+system but CMake or the Makefile are preferred.
+
+Note that the compiler has to be set using the `CXX` environment variable if CMake or the fallback Makefile are used. For premake `clang` is the default.
+
+## Usage
+```
+$ ./build/bin/volumetric-ray-tracer --help     # List all options
+$ ./build/bin/volumetric-ray-tracer -w <width> # Sets the width of the image in pixels to <width> (Default is 256)
+$ ./build/bin/volumetric-ray-tracer -f <path>  # Load and interpret the file at <path> as a set of Gaussians
+$ ./build/bin/volumetric-ray-tracer -g <dim=4> # Render a <dim>x<dim> grid of Gaussians. (Default if no file is specified)
+$ ./build/bin/volumetric-ray-tracer -q         # Render without displaying image
+$ ./build/bin/volumetric-ray-tracer -o <path>  # Write rendered image to <path>
+$ ./build/bin/volumetric-ray-tracer -t <no>    # Set the number of threads to use to <no>
+$ ./build/bin/volumetric-ray-tracer -m <mode>  # Set the initial rendering mode to <mode>
 ```
 
-Note that the compiler has to be set using the `CXX` environment variable if the fallback Makefile is used. For premake `clang` is the default.
+Starting the example program without the `-q` flag will display the rendered image along with two floating widows that
+enable modifying the scene and changing the rendering mode in use.
+Note that the checkboxes regarding the mode of SIMD parallelization override each other from top to bottom. Meaning that
+if the bottom most checkbox is enabled the ones above it have no effect until it is unchecked.
+
+This repository contains five example objects located in the `test-objects` directory.
 
 # Used Libraries
 * [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)
