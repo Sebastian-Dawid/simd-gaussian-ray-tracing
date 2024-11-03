@@ -1,5 +1,5 @@
 #include "../../../src/include/definitions.h"
-#include "../../../src/include/tsimd_sh.H"
+#include "../../../src/include/tsimd.H"
 #include <cstdlib>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -50,7 +50,7 @@ struct circ_buf_t
 
 f64 dependant_sum(circ_buf_t<f64> &buf)
 {
-    simd::Vec<simd::Double> sum = simd::set1(0.);
+    simd::Vec<simd::Double> sum = simd::set1<simd::Double>(0.);
     for (size_t i = 0; i < buf.len; i += SIMD_FLOATS/2)
     {
         sum += simd::load(buf.ptr + i);
@@ -60,7 +60,7 @@ f64 dependant_sum(circ_buf_t<f64> &buf)
 
 f64 sum(circ_buf_t<f64> &buf)
 {
-    simd::Vec<simd::Double> sum_a = simd::set1(0.0), sum_b = simd::set1(0.0), sum_c = simd::set1(0.0), sum_d = simd::set1(0.0);
+    simd::Vec<simd::Double> sum_a = simd::set1<simd::Double>(0.0), sum_b = simd::set1<simd::Double>(0.0), sum_c = simd::set1<simd::Double>(0.0), sum_d = simd::set1<simd::Double>(0.0);
     for (size_t i = 0; i < buf.len; i += 4 * SIMD_FLOATS/2)
     {
         sum_a += simd::load(buf.ptr + i);

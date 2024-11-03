@@ -28,10 +28,10 @@ using namespace approx;
 FILE *dev_null = std::fopen("/dev/null", "wd");
 
 template<u64 Iter, u64 Step, u64 Size, void (*Fn)(f32*, f32*)>
-inline u64 benchmark(struct rdpmc_ctx* ctx, std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in)
+inline u64 benchmark(struct rdpmc_ctx* ctx, std::vector<f32, simd::aligned_allocator<f32, SIMD_BYTES>> in)
 {
     u64 start = 0, end = 0, acc = 0;
-    std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> out(Step);
+    std::vector<f32, simd::aligned_allocator<f32, SIMD_BYTES>> out(Step);
     for (u64 i = 0; i < Iter; ++i)
     {
         for (u64 j = 0; j < in.size(); j += Step)
@@ -68,7 +68,7 @@ i32 main()
 
     if (rdpmc_open(PERF_COUNT_HW_CPU_CYCLES, &ctx) < 0) exit(EXIT_FAILURE);
     {
-        std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
+        std::vector<f32, simd::aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
         for (u64 j = 0; j < SIMD_FLOATS * COUNT; ++j)
             in[j] = -6.f + 12.f * drand48();
 
@@ -91,7 +91,7 @@ i32 main()
     CSV = std::fopen("csv/simd_exp.csv", "wd");
     fmt::print(CSV, "count,t_simd,t_simd_fast,t_svml,t_vcl,t_spline,t_fast,t_std\n");
     {
-        std::vector<f32, simd_aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
+        std::vector<f32, simd::aligned_allocator<f32, SIMD_BYTES>> in(SIMD_FLOATS * COUNT);
         for (u64 j = 0; j < SIMD_FLOATS * COUNT; ++j)
             in[j] = -10.f + 10.f * drand48();
 

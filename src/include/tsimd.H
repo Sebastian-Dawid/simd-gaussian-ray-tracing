@@ -1,7 +1,9 @@
 // ===========================================================================
 //
-// tsimd_sh.H --
 // Single header version of the T-SIMD library.
+// Version: v31.1.0
+// GitHub repository: https://github.com/ti-uni-bielefeld/T-SIMD
+// Documentation: https://ti-uni-bielefeld.github.io/T-SIMD/
 //
 // This file is part of the following software:
 //
@@ -9,11 +11,11 @@
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -24,11 +26,12 @@
 // ===========================================================================
 
 // ===========================================================================
-// LICENSE
+// LICENSE.md
 // ===========================================================================
 /*
+# License
+
 License agreement (version 2)
-=================
 
 between the licensor
 
@@ -42,38 +45,38 @@ and the licensee (the user of the software and the databases)
 
 regarding the use of the following software
 
-   - the low-level C++ template SIMD library
-   - the SIMD implementation of the MinWarping and the 2D-Warping methods 
-     for local visual homing
+- the low-level C++ template SIMD library
+- the SIMD implementation of the MinWarping and the 2D-Warping methods
+  for local visual homing
 
-in the following referred to as "the software", 
+in the following referred to as "the software",
 
 and on the use of the
 
-   - panoramic image databases
+- panoramic image databases
 
 in the following referred to as "the databases".
 
-(1) The licensor grants the licensee the non-exclusive,
+1.  The licensor grants the licensee the non-exclusive,
     non-transferable, non-licensable right to use and modify the
     software and the databases. The software and the databases are
     licensed free of charge.
 
-(2) The licensee agrees not to transfer or to disclose the software
+2.  The licensee agrees not to transfer or to disclose the software
     and the databases in original or modified form to other
     individuals or to other institutions.
 
-(3) The software and the databases will only be used for the
+3.  The software and the databases will only be used for the
     licensee's own scientific study, scientific research, or academic
     teaching. Use for commercial or business purposes is not
     permitted. Use for any purposes with military background is not
     permitted.
 
-(4) The licensee agrees not to use the software and the databases in
+4.  The licensee agrees not to use the software and the databases in
     applications where the life and health of humans and the property
     of humans or institutions is potentially endangered.
 
-(5) The software is provided entirely in the form of source code. It
+5.  The software is provided entirely in the form of source code. It
     is the sole responsibility of the licensee to check the
     correctness of all parts of the software that are used by the
     licensee. The licensee has to be able to understand the
@@ -82,7 +85,7 @@ in the following referred to as "the databases".
     depth and agrees to perform in-depth tests and to correct errors
     for all parts that are used by the licensee.
 
-(6) The software contains code fragments taken from other software
+6.  The software contains code fragments taken from other software
     which is licensed by "The MIT license"
     (https://opensource.org/licenses/MIT) and code fragments from
     software help sites on the internet (e.g. stackoverflow.com). The
@@ -92,7 +95,7 @@ in the following referred to as "the databases".
     that he sees no violation of his copyright by the software in its
     present form.
 
-(7) Because the software and the databases are provided free of
+7.  Because the software and the databases are provided free of
     charge, there is no warranty for the software and the databases
     (to the extent permitted by applicable law). The software
     including the databases is provided "as is" without warranty of
@@ -100,41 +103,40 @@ in the following referred to as "the databases".
     fitness for a particular purpose. The entire risk of using the
     software and the databases lies with the licensee.
 
-(8) In no event (unless required by applicable law) will the licensor
+8.  In no event (unless required by applicable law) will the licensor
     or any contributor be liable for any claim, any sort of damage or
     any other liability arising from the use of the software and the
     databases or arising from the inability to use the software and
     the databases.
 
-(9) The licensor is not obligated to provide any support for the
+9.  The licensor is not obligated to provide any support for the
     licensee regarding the use of the software and the databases.
 
-(10) This license agreement comes into force without signatures as
-     soon as the licensee obtains the software and/or the
-     databases. If the licensee disagrees with any of the clauses of
-     this license, the licensee is not permitted to obtain or keep the
-     software and the image databases.
+10. This license agreement comes into force without signatures as
+    soon as the licensee obtains the software and/or the
+    databases. If the licensee disagrees with any of the clauses of
+    this license, the licensee is not permitted to obtain or keep the
+    software and the image databases.
 
-(11) Should any provision of this license agreement be or become
-     invalid, this shall not affect the validity of the remaining
-     provisions. Any invalid provision shall be replaced by a valid
-     provision which corresponds to the meaning and purpose of the
-     invalid provision.
+11. Should any provision of this license agreement be or become
+    invalid, this shall not affect the validity of the remaining
+    provisions. Any invalid provision shall be replaced by a valid
+    provision which corresponds to the meaning and purpose of the
+    invalid provision.
 
-(12) This license agreement (files LICENSE, LICENSE.md and LICENSE.doc) has to
-     accompany the files of the software and the files of the
-     databases. The header text of the source files referring to the
-     license agreement has to remain unchanged.
+12. This license agreement (file LICENSE.md) has to accompany the
+    files of the software and the files of the databases. The header
+    text of the source files referring to the license agreement has
+    to remain unchanged.
 
-(13) German law applies and the place of jurisdiction is Bielefeld.
+13. German law applies and the place of jurisdiction is Bielefeld.
 */
 // ===========================================================================
-// end of LICENSE
+// end of LICENSE.md
 // ===========================================================================
 
 // ===========================================================================
 //
-// tsimd.H --
 // Main include file for using the T-SIMD library.
 //
 // This source code file is part of the following software:
@@ -143,11 +145,11 @@ in the following referred to as "the databases".
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -169,7 +171,6 @@ in the following referred to as "the databases".
 // base-level templates/functions
 // ===========================================================================
 //
-// SIMDVecBase.H --
 // base-level classes and functions
 //
 // This source code file is part of the following software:
@@ -178,11 +179,11 @@ in the following referred to as "the databases".
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Jonas Keller, Ralf Möller
 //     Computer Engineering
@@ -202,7 +203,6 @@ in the following referred to as "the databases".
 
 // ===========================================================================
 //
-// SIMDDefs.H --
 // encapsulates compiler- and architecture-specific definitions and constructs
 //
 // This source code file is part of the following software:
@@ -211,11 +211,11 @@ in the following referred to as "the databases".
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -428,7 +428,226 @@ SIMD_INLINE Tout bit_cast(Tin in)
 
 // ===========================================================================
 //
-// SIMDTypes.H --
+// encapsulation for SSE Intel vector extensions
+// inspired by Agner Fog's C++ Vector Class Library
+// http://www.agner.org/optimize/#vectorclass
+// (VCL License: GNU General Public License Version 3,
+//  http://www.gnu.org/licenses/gpl-3.0.en.html)
+//
+// This source code file is part of the following software:
+//
+//    - the low-level C++ template SIMD library
+//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
+//      for local visual homing.
+//
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
+//
+// (C) Ralf Möller
+//     Computer Engineering
+//     Faculty of Technology
+//     Bielefeld University
+//     www.ti.uni-bielefeld.de
+//
+// ===========================================================================
+
+// 22. Jan 23 (Jonas Keller): moved internal implementations into internal
+// namespace
+// 13. May 23 (Jonas Keller): added Double support
+
+#ifndef SIMD_VEC_BASE_IMPL_INTEL_16_H_
+#define SIMD_VEC_BASE_IMPL_INTEL_16_H_
+
+// ===========================================================================
+//
+// allocation code
+//
+// This source code file is part of the following software:
+//
+//    - the low-level C++ template SIMD library
+//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
+//      for local visual homing.
+//
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
+//
+// (C) Ralf Möller
+//     Computer Engineering
+//     Faculty of Technology
+//     Bielefeld University
+//     www.ti.uni-bielefeld.de
+//
+// ===========================================================================
+
+// 30. Aug 22 (Jonas Keller): added simd_aligned_malloc and simd_aligned_free
+
+// 02. Mar 23 (Jonas Keller): added doxygen documentation
+
+#ifndef SIMDALLOC_H_
+#define SIMDALLOC_H_
+
+#include <cstddef>
+#include <utility>
+
+#ifdef _WIN32
+#include <malloc.h>
+#else
+#include <cstdlib>
+#endif
+
+namespace simd {
+
+/**
+ * @ingroup group_aligned_alloc
+ * @brief Aligned memory allocation.
+ *
+ * This function allocates a block of memory of size bytes, aligned to the
+ * specified alignment.
+ *
+ * The allocated memory must be freed with aligned_free().
+ *
+ * @param alignment alignment of the memory block in bytes
+ * @param size size of the memory block in bytes
+ * @return pointer to the allocated memory block
+ *
+ * @sa aligned_malloc(size_t)
+ */
+inline void *aligned_malloc(size_t alignment, size_t size)
+{
+#ifdef _WIN32
+  return _aligned_malloc(size, alignment);
+#else
+  void *ptr = nullptr;
+  if (posix_memalign(&ptr, alignment, size) != 0) { return nullptr; }
+  return ptr;
+#endif
+}
+
+#if defined(NATIVE_SIMD_WIDTH) || defined(DOXYGEN)
+/**
+ * @ingroup group_aligned_alloc
+ * @brief Aligned memory allocation aligned to `NATIVE_SIMD_WIDTH`.
+ *
+ * This function allocates a block of memory of size bytes, aligned to
+ * `NATIVE_SIMD_WIDTH`.
+ *
+ * The allocated memory must be freed with aligned_free().
+ *
+ * @param size size of the memory block in bytes
+ * @return pointer to the allocated memory block
+ *
+ * @sa aligned_malloc(size_t, size_t)
+ */
+inline void *aligned_malloc(size_t size)
+{
+  return aligned_malloc(NATIVE_SIMD_WIDTH, size);
+}
+#endif
+
+/**
+ * @ingroup group_aligned_alloc
+ * @brief Aligned memory deallocation.
+ *
+ * This function frees a block of memory that was allocated with
+ * aligned_malloc().
+ *
+ * @param ptr pointer to the memory block to be freed
+ */
+inline void aligned_free(void *ptr)
+{
+#ifdef _WIN32
+  _aligned_free(ptr);
+#else
+  free(ptr);
+#endif
+}
+
+// 05. Sep 23 (Jonas Keller): added simd_aligned_allocator
+
+/**
+ * @ingroup group_aligned_alloc
+ * @brief Aligned allocator.
+ *
+ * This class is an allocator that allocates aligned memory blocks.
+ *
+ * This class is meant to be used with std::vector for types that require
+ * aligned memory blocks.
+ *
+ * @tparam T type of the elements in the memory block
+ * @tparam ALIGN alignment of the memory block in bytes, default is
+ * `NATIVE_SIMD_WIDTH`
+ */
+#ifdef NATIVE_SIMD_WIDTH
+template <typename T, size_t ALIGN = NATIVE_SIMD_WIDTH>
+#else
+template <typename T, size_t ALIGN>
+#endif
+class aligned_allocator
+{
+  // exclude from doxygen (until endcond)
+  /// @cond
+public:
+  using value_type      = T;
+  using pointer         = T *;
+  using const_pointer   = const T *;
+  using reference       = T &;
+  using const_reference = const T &;
+  using size_type       = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+  template <typename U>
+  struct rebind
+  {
+    using other = aligned_allocator<U, ALIGN>;
+  };
+
+  aligned_allocator() noexcept {}
+  aligned_allocator(const aligned_allocator &) noexcept {}
+  template <typename U>
+  aligned_allocator(const aligned_allocator<U, ALIGN> &) noexcept
+  {}
+  ~aligned_allocator() noexcept {}
+
+  pointer address(reference x) const noexcept { return std::addressof(x); }
+  const_pointer address(const_reference x) const noexcept
+  {
+    return std::addressof(x);
+  }
+
+  pointer allocate(size_type n, const void * = 0)
+  {
+    return static_cast<pointer>(aligned_malloc(ALIGN, n * sizeof(T)));
+  }
+  void deallocate(pointer p, size_type) { aligned_free(p); }
+
+  size_type max_size() const noexcept
+  {
+    return (size_type(-1) - size_type(ALIGN)) / sizeof(T);
+  }
+  template <typename U, typename... Args>
+  void construct(U *p, Args &&...args)
+  {
+    ::new (static_cast<void *>(p)) U(std::forward<Args>(args)...);
+  }
+  void destroy(pointer p) { p->~T(); }
+
+  bool operator==(const aligned_allocator &) const { return true; }
+  bool operator!=(const aligned_allocator &) const { return false; }
+  /// @endcond
+};
+
+} // namespace simd
+
+#endif // SIMDALLOC_H_
+
+// ===========================================================================
+//
 // some basic types used for SIMD programming
 //
 // This source code file is part of the following software:
@@ -437,11 +656,11 @@ SIMD_INLINE Tout bit_cast(Tin in)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -898,7 +1117,6 @@ struct OutputType
 
 // ===========================================================================
 //
-// SIMDVec.H --
 // generic template for Vec
 //
 // This source code file is part of the following software:
@@ -907,11 +1125,11 @@ struct OutputType
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -995,7 +1213,7 @@ public:
    * std::vector<Vec<T, SIMD_WIDTH>, typename Vec<T, SIMD_WIDTH>::allocator> v;
    * @endcode
    */
-  using allocator = simd_aligned_allocator<Vec<T, SIMD_WIDTH>, SIMD_WIDTH>;
+  using allocator = aligned_allocator<Vec<T, SIMD_WIDTH>, SIMD_WIDTH>;
 }
 #endif
 ;
@@ -1176,12 +1394,7 @@ using BigEnoughFloat =
 
 // ===========================================================================
 //
-// SIMDVecBaseImplIntel16.H --
-// encapsulation for SSE Intel vector extensions
-// inspired by Agner Fog's C++ Vector Class Library
-// http://www.agner.org/optimize/#vectorclass
-// (VCL License: GNU General Public License Version 3,
-//  http://www.gnu.org/licenses/gpl-3.0.en.html)
+// compatibility code for CPUs without SSE3 or SSSE3
 //
 // This source code file is part of the following software:
 //
@@ -1189,11 +1402,11 @@ using BigEnoughFloat =
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -1203,182 +1416,11 @@ using BigEnoughFloat =
 //
 // ===========================================================================
 
-// 22. Jan 23 (Jonas Keller): moved internal implementations into internal
-// namespace
-// 13. May 23 (Jonas Keller): added Double support
-
-#ifndef SIMD_VEC_BASE_IMPL_INTEL_16_H_
-#define SIMD_VEC_BASE_IMPL_INTEL_16_H_
+#ifndef SSSE3_COMPAT_H_
+#define SSSE3_COMPAT_H_
 
 // ===========================================================================
 //
-// SIMDAlloc.H --
-// allocation code
-//
-// This source code file is part of the following software:
-//
-//    - the low-level C++ template SIMD library
-//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
-//      for local visual homing.
-//
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
-//
-// (C) Ralf Möller
-//     Computer Engineering
-//     Faculty of Technology
-//     Bielefeld University
-//     www.ti.uni-bielefeld.de
-//
-// ===========================================================================
-
-// 30. Aug 22 (Jonas Keller): added simd_aligned_malloc and simd_aligned_free
-
-// 02. Mar 23 (Jonas Keller): added doxygen documentation
-
-/**
- * @file SIMDAlloc.H
- * @brief Aligned memory allocation and deallocation.
- *
- * This file contains functions for aligned memory allocation and deallocation.
- *
- * This file is standalone, i.e. it can also be used independently of T-SIMD.
- *
- * @author Ralf Möller
- * @author Jonas Keller
- */
-
-#ifndef SIMDALLOC_H_
-#define SIMDALLOC_H_
-
-#include <cstddef>
-#include <utility>
-
-#ifdef _WIN32
-#include <malloc.h>
-#else
-#include <cstdlib>
-#endif
-
-/**
- * @ingroup group_aligned_alloc
- * @brief Aligned memory allocation.
- *
- * This function allocates a block of memory of size bytes, aligned to the
- * specified alignment.
- *
- * The allocated memory must be freed with simd_aligned_free().
- *
- * @param alignment alignment of the memory block in bytes
- * @param size size of the memory block in bytes
- * @return pointer to the allocated memory block
- */
-inline void *simd_aligned_malloc(size_t alignment, size_t size)
-{
-#ifdef _WIN32
-  return _aligned_malloc(size, alignment);
-#else
-  void *ptr = nullptr;
-  if (posix_memalign(&ptr, alignment, size) != 0) { return nullptr; }
-  return ptr;
-#endif
-}
-
-/**
- * @ingroup group_aligned_alloc
- * @brief Aligned memory deallocation.
- *
- * This function frees a block of memory that was allocated with
- * simd_aligned_malloc().
- *
- * @param ptr pointer to the memory block to be freed
- */
-inline void simd_aligned_free(void *ptr)
-{
-#ifdef _WIN32
-  _aligned_free(ptr);
-#else
-  free(ptr);
-#endif
-}
-
-// 05. Sep 23 (Jonas Keller): added simd_aligned_allocator
-
-/**
- * @ingroup group_aligned_alloc
- * @brief Aligned allocator.
- *
- * This class is an allocator that allocates aligned memory blocks.
- *
- * This class is meant to be used with std::vector for types that require
- * aligned memory blocks.
- *
- * @tparam T type of the elements in the memory block
- * @tparam ALIGN alignment of the memory block in bytes
- */
-template <typename T, size_t ALIGN>
-class simd_aligned_allocator
-{
-  // exclude from doxygen (until endcond)
-  /// @cond
-public:
-  using value_type      = T;
-  using pointer         = T *;
-  using const_pointer   = const T *;
-  using reference       = T &;
-  using const_reference = const T &;
-  using size_type       = std::size_t;
-  using difference_type = std::ptrdiff_t;
-
-  template <typename U>
-  struct rebind
-  {
-    using other = simd_aligned_allocator<U, ALIGN>;
-  };
-
-  simd_aligned_allocator() noexcept {}
-  simd_aligned_allocator(const simd_aligned_allocator &) noexcept {}
-  template <typename U>
-  simd_aligned_allocator(const simd_aligned_allocator<U, ALIGN> &) noexcept
-  {}
-  ~simd_aligned_allocator() noexcept {}
-
-  pointer address(reference x) const noexcept { return std::addressof(x); }
-  const_pointer address(const_reference x) const noexcept
-  {
-    return std::addressof(x);
-  }
-
-  pointer allocate(size_type n, const void * = 0)
-  {
-    return static_cast<pointer>(simd_aligned_malloc(ALIGN, n * sizeof(T)));
-  }
-  void deallocate(pointer p, size_type) { simd_aligned_free(p); }
-
-  size_type max_size() const noexcept
-  {
-    return (size_type(-1) - size_type(ALIGN)) / sizeof(T);
-  }
-  template <typename U, typename... Args>
-  void construct(U *p, Args &&...args)
-  {
-    ::new (static_cast<void *>(p)) U(std::forward<Args>(args)...);
-  }
-  void destroy(pointer p) { p->~T(); }
-
-  bool operator==(const simd_aligned_allocator &) const { return true; }
-  bool operator!=(const simd_aligned_allocator &) const { return false; }
-  /// @endcond
-};
-
-#endif // SIMDALLOC_H_
-
-// ===========================================================================
-//
-// SIMDIntrinsIntel.H --
 // includes include files for vector intrinsics on Intel CPUs
 //
 // This source code file is part of the following software:
@@ -1387,11 +1429,11 @@ public:
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -1624,34 +1666,6 @@ extern __inline __m512i
 #endif // SIMDVEC_INTEL_ENABLE
 
 #endif // SIMD_INTRINS_INTEL_H_
-
-// ===========================================================================
-//
-// SIMDSSSE3Compat.H --
-// compatibility code for CPUs without SSE3 or SSSE3
-//
-// This source code file is part of the following software:
-//
-//    - the low-level C++ template SIMD library
-//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
-//      for local visual homing.
-//
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
-//
-// (C) Ralf Möller
-//     Computer Engineering
-//     Faculty of Technology
-//     Bielefeld University
-//     www.ti.uni-bielefeld.de
-//
-// ===========================================================================
-
-#ifndef SSSE3_COMPAT_H_
-#define SSSE3_COMPAT_H_
 
 #include <cmath>
 #include <cstddef>
@@ -1980,12 +1994,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<T, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<T, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -2014,12 +2028,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<Float, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<Float, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -2044,11 +2058,11 @@ public:
     return *this;
   }
   operator __m128d() const { return xmm; }
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
-  using allocator = simd_aligned_allocator<Vec<Double, bytes>, bytes>;
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
+  using allocator = aligned_allocator<Vec<Double, bytes>, bytes>;
 };
 
 namespace internal {
@@ -2986,7 +3000,7 @@ static SIMD_INLINE Vec<Long, 16> min(const Vec<Long, 16> &a,
   // from Hacker's Delight, 2-12 Comparison Predicates: (swapped lt)
   const __m128i diff = _mm_sub_epi64(b, a);
 #if 1 // TODO: check which is faster
-  const __m128i res  = _mm_xor_si128(
+  const __m128i res = _mm_xor_si128(
     diff, _mm_and_si128(_mm_xor_si128(b, a), _mm_xor_si128(diff, b)));
 #else
   const __m128i res = _mm_or_si128(_mm_andnot_si128(a, b),
@@ -3091,7 +3105,7 @@ static SIMD_INLINE Vec<Long, 16> max(const Vec<Long, 16> &a,
   // from Hacker's Delight, 2-12 Comparison Predicates: (swapped lt)
   const __m128i diff = _mm_sub_epi64(b, a);
 #if 1 // TODO: check which is faster
-  const __m128i res  = _mm_xor_si128(
+  const __m128i res = _mm_xor_si128(
     diff, _mm_and_si128(_mm_xor_si128(b, a), _mm_xor_si128(diff, b)));
 #else
   const __m128i res = _mm_or_si128(_mm_andnot_si128(a, b),
@@ -4070,10 +4084,10 @@ static SIMD_INLINE void extend(const Vec<SignedByte, 16> &vIn,
   const __m128i vInPos = _mm_max_epi8(vIn, _mm_setzero_si128());
 #else
   // from Agner Fog's VCL vectori128.h
-  const __m128i signbit  = _mm_set1_epi32(0x80808080);
-  const __m128i a1       = _mm_xor_si128(vIn, signbit); // add 0x80
-  const __m128i m1       = _mm_max_epu8(a1, signbit);   // unsigned max
-  const __m128i vInPos   = _mm_xor_si128(m1, signbit);  // sub 0x80
+  const __m128i signbit = _mm_set1_epi32(0x80808080);
+  const __m128i a1      = _mm_xor_si128(vIn, signbit); // add 0x80
+  const __m128i m1      = _mm_max_epu8(a1, signbit);   // unsigned max
+  const __m128i vInPos  = _mm_xor_si128(m1, signbit);  // sub 0x80
 #endif
   vOut[0] = _mm_unpacklo_epi8(vInPos, _mm_setzero_si128());
   vOut[1] = _mm_unpackhi_epi8(vInPos, _mm_setzero_si128());
@@ -4094,16 +4108,16 @@ static SIMD_INLINE void extend(const Vec<SignedByte, 16> &vIn,
   vOut[2] = _mm_cvtepi8_epi32(_mm_srli_si128(vIn, 8));
   vOut[3] = _mm_cvtepi8_epi32(_mm_srli_si128(vIn, 12));
 #else
-  const __m128i lo8      = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
-  const __m128i hi8      = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
-  const __m128i lolo16   = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
-  const __m128i lohi16   = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
-  const __m128i hilo16   = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
-  const __m128i hihi16   = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
-  vOut[0]                = _mm_srai_epi32(lolo16, 24);
-  vOut[1]                = _mm_srai_epi32(lohi16, 24);
-  vOut[2]                = _mm_srai_epi32(hilo16, 24);
-  vOut[3]                = _mm_srai_epi32(hihi16, 24);
+  const __m128i lo8    = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
+  const __m128i hi8    = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
+  const __m128i lolo16 = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
+  const __m128i lohi16 = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
+  const __m128i hilo16 = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
+  const __m128i hihi16 = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
+  vOut[0]              = _mm_srai_epi32(lolo16, 24);
+  vOut[1]              = _mm_srai_epi32(lohi16, 24);
+  vOut[2]              = _mm_srai_epi32(hilo16, 24);
+  vOut[3]              = _mm_srai_epi32(hihi16, 24);
 #endif
 }
 
@@ -4116,16 +4130,16 @@ static SIMD_INLINE void extend(const Vec<SignedByte, 16> &vIn,
   vOut[2] = _mm_cvtepi32_ps(_mm_cvtepi8_epi32(_mm_srli_si128(vIn, 8)));
   vOut[3] = _mm_cvtepi32_ps(_mm_cvtepi8_epi32(_mm_srli_si128(vIn, 12)));
 #else
-  const __m128i lo8      = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
-  const __m128i hi8      = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
-  const __m128i lolo16   = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
-  const __m128i lohi16   = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
-  const __m128i hilo16   = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
-  const __m128i hihi16   = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
-  vOut[0]                = _mm_cvtepi32_ps(_mm_srai_epi32(lolo16, 24));
-  vOut[1]                = _mm_cvtepi32_ps(_mm_srai_epi32(lohi16, 24));
-  vOut[2]                = _mm_cvtepi32_ps(_mm_srai_epi32(hilo16, 24));
-  vOut[3]                = _mm_cvtepi32_ps(_mm_srai_epi32(hihi16, 24));
+  const __m128i lo8    = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
+  const __m128i hi8    = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
+  const __m128i lolo16 = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
+  const __m128i lohi16 = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
+  const __m128i hilo16 = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
+  const __m128i hihi16 = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
+  vOut[0]              = _mm_cvtepi32_ps(_mm_srai_epi32(lolo16, 24));
+  vOut[1]              = _mm_cvtepi32_ps(_mm_srai_epi32(lohi16, 24));
+  vOut[2]              = _mm_cvtepi32_ps(_mm_srai_epi32(hilo16, 24));
+  vOut[3]              = _mm_cvtepi32_ps(_mm_srai_epi32(hihi16, 24));
 #endif
 }
 
@@ -4163,10 +4177,10 @@ static SIMD_INLINE void extend(const Vec<Short, 16> &vIn,
     _mm_srai_epi32(_mm_unpacklo_epi16(_mm_undefined_si128(), vIn), 16);
   const __m128i hi16 =
     _mm_srai_epi32(_mm_unpackhi_epi16(_mm_undefined_si128(), vIn), 16);
-  vOut[0]           = _mm_cvtepi32_pd(lo16);
-  vOut[1]           = _mm_cvtepi32_pd(_mm_srli_si128(lo16, 8));
-  vOut[2]           = _mm_cvtepi32_pd(hi16);
-  vOut[3]           = _mm_cvtepi32_pd(_mm_srli_si128(hi16, 8));
+  vOut[0] = _mm_cvtepi32_pd(lo16);
+  vOut[1] = _mm_cvtepi32_pd(_mm_srli_si128(lo16, 8));
+  vOut[2] = _mm_cvtepi32_pd(hi16);
+  vOut[3] = _mm_cvtepi32_pd(_mm_srli_si128(hi16, 8));
 #endif
 }
 
@@ -4214,12 +4228,12 @@ static SIMD_INLINE void extend(const Vec<Word, 16> &vIn, Vec<Long, 16> vOut[4])
   vOut[2] = _mm_cvtepu16_epi64(_mm_srli_si128(vIn, 8));
   vOut[3] = _mm_cvtepu16_epi64(_mm_srli_si128(vIn, 12));
 #else
-  const __m128i lo16       = _mm_unpacklo_epi16(vIn, _mm_setzero_si128());
-  const __m128i hi16       = _mm_unpackhi_epi16(vIn, _mm_setzero_si128());
-  vOut[0]                  = _mm_unpacklo_epi32(lo16, _mm_setzero_si128());
-  vOut[1]                  = _mm_unpackhi_epi32(lo16, _mm_setzero_si128());
-  vOut[2]                  = _mm_unpacklo_epi32(hi16, _mm_setzero_si128());
-  vOut[3]                  = _mm_unpackhi_epi32(hi16, _mm_setzero_si128());
+  const __m128i lo16 = _mm_unpacklo_epi16(vIn, _mm_setzero_si128());
+  const __m128i hi16 = _mm_unpackhi_epi16(vIn, _mm_setzero_si128());
+  vOut[0]            = _mm_unpacklo_epi32(lo16, _mm_setzero_si128());
+  vOut[1]            = _mm_unpackhi_epi32(lo16, _mm_setzero_si128());
+  vOut[2]            = _mm_unpacklo_epi32(hi16, _mm_setzero_si128());
+  vOut[3]            = _mm_unpackhi_epi32(hi16, _mm_setzero_si128());
 #endif
 }
 
@@ -4232,12 +4246,12 @@ static SIMD_INLINE void extend(const Vec<Word, 16> &vIn,
   vOut[2] = _mm_cvtepi32_pd(_mm_cvtepu16_epi32(_mm_srli_si128(vIn, 8)));
   vOut[3] = _mm_cvtepi32_pd(_mm_cvtepu16_epi32(_mm_srli_si128(vIn, 12)));
 #else
-  const __m128i lo16       = _mm_unpacklo_epi16(vIn, _mm_setzero_si128());
-  const __m128i hi16       = _mm_unpackhi_epi16(vIn, _mm_setzero_si128());
-  vOut[0]                  = _mm_cvtepi32_pd(lo16);
-  vOut[1]                  = _mm_cvtepi32_pd(_mm_srli_si128(lo16, 8));
-  vOut[2]                  = _mm_cvtepi32_pd(hi16);
-  vOut[3]                  = _mm_cvtepi32_pd(_mm_srli_si128(hi16, 8));
+  const __m128i lo16 = _mm_unpacklo_epi16(vIn, _mm_setzero_si128());
+  const __m128i hi16 = _mm_unpackhi_epi16(vIn, _mm_setzero_si128());
+  vOut[0]            = _mm_cvtepi32_pd(lo16);
+  vOut[1]            = _mm_cvtepi32_pd(_mm_srli_si128(lo16, 8));
+  vOut[2]            = _mm_cvtepi32_pd(hi16);
+  vOut[3]            = _mm_cvtepi32_pd(_mm_srli_si128(hi16, 8));
 #endif
 }
 
@@ -4298,24 +4312,24 @@ static SIMD_INLINE void extend(const Vec<SignedByte, 16> &vIn,
   vOut[6] = _mm_cvtepi32_pd(_mm_cvtepi8_epi32(_mm_srli_si128(vIn, 12)));
   vOut[7] = _mm_cvtepi32_pd(_mm_cvtepi8_epi32(_mm_srli_si128(vIn, 14)));
 #else
-  const __m128i lo8        = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
-  const __m128i hi8        = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
-  const __m128i lolo16     = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
-  const __m128i lohi16     = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
-  const __m128i hilo16     = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
-  const __m128i hihi16     = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
-  const __m128i lolo16ext  = _mm_srai_epi32(lolo16, 24);
-  const __m128i lohi16ext  = _mm_srai_epi32(lohi16, 24);
-  const __m128i hilo16ext  = _mm_srai_epi32(hilo16, 24);
-  const __m128i hihi16ext  = _mm_srai_epi32(hihi16, 24);
-  vOut[0]                  = _mm_cvtepi32_pd(lolo16ext);
-  vOut[1]                  = _mm_cvtepi32_pd(_mm_srli_si128(lolo16ext, 8));
-  vOut[2]                  = _mm_cvtepi32_pd(lohi16ext);
-  vOut[3]                  = _mm_cvtepi32_pd(_mm_srli_si128(lohi16ext, 8));
-  vOut[4]                  = _mm_cvtepi32_pd(hilo16ext);
-  vOut[5]                  = _mm_cvtepi32_pd(_mm_srli_si128(hilo16ext, 8));
-  vOut[6]                  = _mm_cvtepi32_pd(hihi16ext);
-  vOut[7]                  = _mm_cvtepi32_pd(_mm_srli_si128(hihi16ext, 8));
+  const __m128i lo8       = _mm_unpacklo_epi8(_mm_undefined_si128(), vIn);
+  const __m128i hi8       = _mm_unpackhi_epi8(_mm_undefined_si128(), vIn);
+  const __m128i lolo16    = _mm_unpacklo_epi16(_mm_undefined_si128(), lo8);
+  const __m128i lohi16    = _mm_unpackhi_epi16(_mm_undefined_si128(), lo8);
+  const __m128i hilo16    = _mm_unpacklo_epi16(_mm_undefined_si128(), hi8);
+  const __m128i hihi16    = _mm_unpackhi_epi16(_mm_undefined_si128(), hi8);
+  const __m128i lolo16ext = _mm_srai_epi32(lolo16, 24);
+  const __m128i lohi16ext = _mm_srai_epi32(lohi16, 24);
+  const __m128i hilo16ext = _mm_srai_epi32(hilo16, 24);
+  const __m128i hihi16ext = _mm_srai_epi32(hihi16, 24);
+  vOut[0]                 = _mm_cvtepi32_pd(lolo16ext);
+  vOut[1]                 = _mm_cvtepi32_pd(_mm_srli_si128(lolo16ext, 8));
+  vOut[2]                 = _mm_cvtepi32_pd(lohi16ext);
+  vOut[3]                 = _mm_cvtepi32_pd(_mm_srli_si128(lohi16ext, 8));
+  vOut[4]                 = _mm_cvtepi32_pd(hilo16ext);
+  vOut[5]                 = _mm_cvtepi32_pd(_mm_srli_si128(hilo16ext, 8));
+  vOut[6]                 = _mm_cvtepi32_pd(hihi16ext);
+  vOut[7]                 = _mm_cvtepi32_pd(_mm_srli_si128(hihi16ext, 8));
 #endif
 }
 
@@ -4333,20 +4347,20 @@ static SIMD_INLINE void extend(const Vec<Byte, 16> &vIn, Vec<Long, 16> vOut[8])
   vOut[6] = _mm_cvtepu8_epi64(_mm_srli_si128(vIn, 12));
   vOut[7] = _mm_cvtepu8_epi64(_mm_srli_si128(vIn, 14));
 #else
-  const __m128i lo8        = _mm_unpacklo_epi8(vIn, _mm_setzero_si128());
-  const __m128i hi8        = _mm_unpackhi_epi8(vIn, _mm_setzero_si128());
-  const __m128i lolo16     = _mm_unpacklo_epi16(lo8, _mm_setzero_si128());
-  const __m128i lohi16     = _mm_unpackhi_epi16(lo8, _mm_setzero_si128());
-  const __m128i hilo16     = _mm_unpacklo_epi16(hi8, _mm_setzero_si128());
-  const __m128i hihi16     = _mm_unpackhi_epi16(hi8, _mm_setzero_si128());
-  vOut[0]                  = _mm_unpacklo_epi32(lolo16, _mm_setzero_si128());
-  vOut[1]                  = _mm_unpackhi_epi32(lolo16, _mm_setzero_si128());
-  vOut[2]                  = _mm_unpacklo_epi32(lohi16, _mm_setzero_si128());
-  vOut[3]                  = _mm_unpackhi_epi32(lohi16, _mm_setzero_si128());
-  vOut[4]                  = _mm_unpacklo_epi32(hilo16, _mm_setzero_si128());
-  vOut[5]                  = _mm_unpackhi_epi32(hilo16, _mm_setzero_si128());
-  vOut[6]                  = _mm_unpacklo_epi32(hihi16, _mm_setzero_si128());
-  vOut[7]                  = _mm_unpackhi_epi32(hihi16, _mm_setzero_si128());
+  const __m128i lo8    = _mm_unpacklo_epi8(vIn, _mm_setzero_si128());
+  const __m128i hi8    = _mm_unpackhi_epi8(vIn, _mm_setzero_si128());
+  const __m128i lolo16 = _mm_unpacklo_epi16(lo8, _mm_setzero_si128());
+  const __m128i lohi16 = _mm_unpackhi_epi16(lo8, _mm_setzero_si128());
+  const __m128i hilo16 = _mm_unpacklo_epi16(hi8, _mm_setzero_si128());
+  const __m128i hihi16 = _mm_unpackhi_epi16(hi8, _mm_setzero_si128());
+  vOut[0]              = _mm_unpacklo_epi32(lolo16, _mm_setzero_si128());
+  vOut[1]              = _mm_unpackhi_epi32(lolo16, _mm_setzero_si128());
+  vOut[2]              = _mm_unpacklo_epi32(lohi16, _mm_setzero_si128());
+  vOut[3]              = _mm_unpackhi_epi32(lohi16, _mm_setzero_si128());
+  vOut[4]              = _mm_unpacklo_epi32(hilo16, _mm_setzero_si128());
+  vOut[5]              = _mm_unpackhi_epi32(hilo16, _mm_setzero_si128());
+  vOut[6]              = _mm_unpacklo_epi32(hihi16, _mm_setzero_si128());
+  vOut[7]              = _mm_unpackhi_epi32(hihi16, _mm_setzero_si128());
 #endif
 }
 
@@ -4363,20 +4377,20 @@ static SIMD_INLINE void extend(const Vec<Byte, 16> &vIn,
   vOut[6] = _mm_cvtepi32_pd(_mm_cvtepu8_epi32(_mm_srli_si128(vIn, 12)));
   vOut[7] = _mm_cvtepi32_pd(_mm_cvtepu8_epi32(_mm_srli_si128(vIn, 14)));
 #else
-  const __m128i lo8        = _mm_unpacklo_epi8(vIn, _mm_setzero_si128());
-  const __m128i hi8        = _mm_unpackhi_epi8(vIn, _mm_setzero_si128());
-  const __m128i lolo16     = _mm_unpacklo_epi16(lo8, _mm_setzero_si128());
-  const __m128i lohi16     = _mm_unpackhi_epi16(lo8, _mm_setzero_si128());
-  const __m128i hilo16     = _mm_unpacklo_epi16(hi8, _mm_setzero_si128());
-  const __m128i hihi16     = _mm_unpackhi_epi16(hi8, _mm_setzero_si128());
-  vOut[0]                  = _mm_cvtepi32_pd(lolo16);
-  vOut[1]                  = _mm_cvtepi32_pd(_mm_srli_si128(lolo16, 8));
-  vOut[2]                  = _mm_cvtepi32_pd(lohi16);
-  vOut[3]                  = _mm_cvtepi32_pd(_mm_srli_si128(lohi16, 8));
-  vOut[4]                  = _mm_cvtepi32_pd(hilo16);
-  vOut[5]                  = _mm_cvtepi32_pd(_mm_srli_si128(hilo16, 8));
-  vOut[6]                  = _mm_cvtepi32_pd(hihi16);
-  vOut[7]                  = _mm_cvtepi32_pd(_mm_srli_si128(hihi16, 8));
+  const __m128i lo8    = _mm_unpacklo_epi8(vIn, _mm_setzero_si128());
+  const __m128i hi8    = _mm_unpackhi_epi8(vIn, _mm_setzero_si128());
+  const __m128i lolo16 = _mm_unpacklo_epi16(lo8, _mm_setzero_si128());
+  const __m128i lohi16 = _mm_unpackhi_epi16(lo8, _mm_setzero_si128());
+  const __m128i hilo16 = _mm_unpacklo_epi16(hi8, _mm_setzero_si128());
+  const __m128i hihi16 = _mm_unpackhi_epi16(hi8, _mm_setzero_si128());
+  vOut[0]              = _mm_cvtepi32_pd(lolo16);
+  vOut[1]              = _mm_cvtepi32_pd(_mm_srli_si128(lolo16, 8));
+  vOut[2]              = _mm_cvtepi32_pd(lohi16);
+  vOut[3]              = _mm_cvtepi32_pd(_mm_srli_si128(lohi16, 8));
+  vOut[4]              = _mm_cvtepi32_pd(hilo16);
+  vOut[5]              = _mm_cvtepi32_pd(_mm_srli_si128(hilo16, 8));
+  vOut[6]              = _mm_cvtepi32_pd(hihi16);
+  vOut[7]              = _mm_cvtepi32_pd(_mm_srli_si128(hihi16, 8));
 #endif
 }
 
@@ -5454,7 +5468,7 @@ static SIMD_INLINE Vec<Long, 16> cmplt(const Vec<Long, 16> &a,
   // from Hacker's Delight, 2-12 Comparison Predicates:
   const __m128i diff = _mm_sub_epi64(a, b);
 #if 1 // TODO: check which is faster
-  const __m128i res  = _mm_xor_si128(
+  const __m128i res = _mm_xor_si128(
     diff, _mm_and_si128(_mm_xor_si128(a, b), _mm_xor_si128(diff, a)));
 #else
   const __m128i res = _mm_or_si128(_mm_andnot_si128(b, a),
@@ -5659,7 +5673,7 @@ static SIMD_INLINE Vec<Long, 16> cmpgt(const Vec<Long, 16> &a,
   // from Hacker's Delight, 2-12 Comparison Predicates: (swapped lt)
   const __m128i diff = _mm_sub_epi64(b, a);
 #if 1 // TODO: check which is faster
-  const __m128i res  = _mm_xor_si128(
+  const __m128i res = _mm_xor_si128(
     diff, _mm_and_si128(_mm_xor_si128(b, a), _mm_xor_si128(diff, b)));
 #else
   const __m128i res = _mm_or_si128(_mm_andnot_si128(a, b),
@@ -6391,7 +6405,6 @@ static SIMD_INLINE Vec<Double, 16> iota(OutputType<Double>, Integer<16>)
 
 // ===========================================================================
 //
-// SIMDVecBaseImplIntel32.H --
 // encapsulation for AVX/AVX2 Intel vector extensions
 // inspired by Agner Fog's C++ Vector Class Library
 // http://www.agner.org/optimize/#vectorclass
@@ -6404,11 +6417,11 @@ static SIMD_INLINE Vec<Double, 16> iota(OutputType<Double>, Integer<16>)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -6493,12 +6506,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<T, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<T, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -6537,12 +6550,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<Float, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<Float, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -6578,11 +6591,11 @@ public:
   {
     return _mm256_extractf128_pd(ymm, 1);
   }
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
-  using allocator = simd_aligned_allocator<Vec<Double, bytes>, bytes>;
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
+  using allocator = aligned_allocator<Vec<Double, bytes>, bytes>;
 };
 
 namespace internal {
@@ -11844,7 +11857,6 @@ static SIMD_INLINE Vec<Double, 32> iota(OutputType<Double>, Integer<32>)
 
 // ===========================================================================
 //
-// SIMDVecBaseImplIntel64.H --
 // encapsulation for AVX512 Intel vector extensions
 // inspired by Agner Fog's C++ Vector Class Library
 // http://www.agner.org/optimize/#vectorclass
@@ -11860,11 +11872,11 @@ static SIMD_INLINE Vec<Double, 32> iota(OutputType<Double>, Integer<32>)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -11940,12 +11952,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<T, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<T, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -11986,12 +11998,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<Float, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<Float, bytes>, bytes>;
 };
 
 // ===========================================================================
@@ -12027,11 +12039,11 @@ public:
   {
     return _mm512_extractf64x4_pd(zmm, 1);
   }
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
-  using allocator = simd_aligned_allocator<Vec<Double, bytes>, bytes>;
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
+  using allocator = aligned_allocator<Vec<Double, bytes>, bytes>;
 };
 
 namespace internal {
@@ -16818,7 +16830,6 @@ static SIMD_INLINE Vec<Double, 64> iota(OutputType<Double>, Integer<64>)
 
 // ===========================================================================
 //
-// SIMDVecBaseImplNEON16.H --
 // encapsulation for ARM NEON vector extension
 // inspired by Agner Fog's C++ Vector Class Library
 // http://www.agner.org/optimize/#vectorclass
@@ -16831,11 +16842,11 @@ static SIMD_INLINE Vec<Double, 64> iota(OutputType<Double>, Integer<64>)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -16873,7 +16884,6 @@ static SIMD_INLINE Vec<Double, 64> iota(OutputType<Double>, Integer<64>)
 
 // ===========================================================================
 //
-// SIMDIntrinsNEON.H --
 // includes include files for vector intrinsics on ARM CPUs
 //
 // This source code file is part of the following software:
@@ -16882,11 +16892,11 @@ static SIMD_INLINE Vec<Double, 64> iota(OutputType<Double>, Integer<64>)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -17065,12 +17075,12 @@ public:
   // 29. Nov 22 (Jonas Keller):
   // defined operators new and delete to ensure proper alignment, since
   // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size) { return simd_aligned_malloc(bytes, size); }
-  void operator delete[](void *p) { simd_aligned_free(p); }
+  void *operator new(size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(bytes, size); }
+  void operator delete[](void *p) { aligned_free(p); }
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<T, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<T, bytes>, bytes>;
 };
 
 namespace internal {
@@ -19981,7 +19991,6 @@ static SIMD_INLINE Vec<Double, 16> iota(OutputType<Double>, Integer<16>)
 
 // ===========================================================================
 //
-// SIMDVecBaseImplSandbox.H --
 // test template functions for Vec and base level ("level-0") function
 // templates these functions just print out template parameters and some
 // arguments
@@ -19992,11 +20001,11 @@ static SIMD_INLINE Vec<Double, 16> iota(OutputType<Double>, Integer<16>)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -20035,7 +20044,7 @@ public:
   static constexpr size_t bytes    = SIMD_WIDTH;
   Vec() {}
   // 05. Sep 23 (Jonas Keller): added allocator
-  using allocator = simd_aligned_allocator<Vec<T, bytes>, bytes>;
+  using allocator = aligned_allocator<Vec<T, bytes>, bytes>;
 };
 
 namespace internal {
@@ -20708,11 +20717,16 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> setzero()
 /**
  * @ingroup group_init
  * @brief Returns a Vec with all elements set to the same value.
+ *
+ * @note The template parameter @p T has to be explicitly specified and is *not*
+ * deduced from the argument in order to avoid confusion with creating a Vec
+ * with an unintended type from an immediate value.
+ *
  * @param a value to set all elements to
  * @return Vec with all elements set to the same value
  */
 template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> set1(T a)
+static SIMD_INLINE Vec<T, SIMD_WIDTH> set1(const dont_deduce<T> a)
 {
   return internal::base::set1(a, internal::Integer<SIMD_WIDTH>());
 }
@@ -20729,7 +20743,7 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> set1(T a)
  *
  * @return Vec containing sequentially increasing numbers
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> iota()
 {
   return internal::base::iota(internal::OutputType<T>(),
@@ -22087,7 +22101,6 @@ static SIMD_INLINE Vec<Tout, SIMD_WIDTH> cvts(const Vec<Tin, SIMD_WIDTH> &a)
 // generic templates for extension commands
 // ===========================================================================
 //
-// SIMDVecExt.H --
 // extension commands combining multiple 1st-level vector template functions
 //
 // This source code file is part of the following software:
@@ -22096,11 +22109,11 @@ static SIMD_INLINE Vec<Tout, SIMD_WIDTH> cvts(const Vec<Tin, SIMD_WIDTH> &a)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -22130,7 +22143,6 @@ static SIMD_INLINE Vec<Tout, SIMD_WIDTH> cvts(const Vec<Tin, SIMD_WIDTH> &a)
 
 // ===========================================================================
 //
-// transpose_inplace_autogen.H --
 // auto-generated transpose functions with in-place processing
 // DO NOT EDIT!!!
 //
@@ -22140,11 +22152,11 @@ static SIMD_INLINE Vec<Tout, SIMD_WIDTH> cvts(const Vec<Tin, SIMD_WIDTH> &a)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -24544,6 +24556,2339 @@ static SIMD_INLINE void transpose2inplcLane(
   Vec<T, SIMD_WIDTH> outRows[Vec<T, SIMD_WIDTH>::elems])
 {
   transpose2inplcLane(inRows, outRows, Elements<Vec<T, SIMD_WIDTH>::elements>(),
+                      Bytes<SIMD_WIDTH>());
+}
+
+// ==========================================================
+// transpose1inplc (1-argument version)
+// ==========================================================
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<2>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  std::swap(rows[1], rows[2]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  std::swap(rows[1], rows[4]);
+  std::swap(rows[3], rows[6]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+  std::swap(rows[1], rows[8]);
+  std::swap(rows[2], rows[4]);
+  std::swap(rows[3], rows[12]);
+  std::swap(rows[5], rows[10]);
+  std::swap(rows[7], rows[14]);
+  std::swap(rows[11], rows[13]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip<4>(rows[16], rows[20], rows[16], rows[20]);
+  zip<4>(rows[18], rows[22], rows[18], rows[22]);
+  zip<4>(rows[17], rows[21], rows[17], rows[21]);
+  zip<4>(rows[19], rows[23], rows[19], rows[23]);
+  zip<4>(rows[24], rows[28], rows[24], rows[28]);
+  zip<4>(rows[26], rows[30], rows[26], rows[30]);
+  zip<4>(rows[25], rows[29], rows[25], rows[29]);
+  zip<4>(rows[27], rows[31], rows[27], rows[31]);
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+  zip<8>(rows[16], rows[24], rows[16], rows[24]);
+  zip<8>(rows[20], rows[28], rows[20], rows[28]);
+  zip<8>(rows[18], rows[26], rows[18], rows[26]);
+  zip<8>(rows[22], rows[30], rows[22], rows[30]);
+  zip<8>(rows[17], rows[25], rows[17], rows[25]);
+  zip<8>(rows[21], rows[29], rows[21], rows[29]);
+  zip<8>(rows[19], rows[27], rows[19], rows[27]);
+  zip<8>(rows[23], rows[31], rows[23], rows[31]);
+  zip<16>(rows[0], rows[16], rows[0], rows[16]);
+  zip<16>(rows[8], rows[24], rows[8], rows[24]);
+  zip<16>(rows[4], rows[20], rows[4], rows[20]);
+  zip<16>(rows[12], rows[28], rows[12], rows[28]);
+  zip<16>(rows[2], rows[18], rows[2], rows[18]);
+  zip<16>(rows[10], rows[26], rows[10], rows[26]);
+  zip<16>(rows[6], rows[22], rows[6], rows[22]);
+  zip<16>(rows[14], rows[30], rows[14], rows[30]);
+  zip<16>(rows[1], rows[17], rows[1], rows[17]);
+  zip<16>(rows[9], rows[25], rows[9], rows[25]);
+  zip<16>(rows[5], rows[21], rows[5], rows[21]);
+  zip<16>(rows[13], rows[29], rows[13], rows[29]);
+  zip<16>(rows[3], rows[19], rows[3], rows[19]);
+  zip<16>(rows[11], rows[27], rows[11], rows[27]);
+  zip<16>(rows[7], rows[23], rows[7], rows[23]);
+  zip<16>(rows[15], rows[31], rows[15], rows[31]);
+  std::swap(rows[1], rows[16]);
+  std::swap(rows[2], rows[8]);
+  std::swap(rows[3], rows[24]);
+  std::swap(rows[5], rows[20]);
+  std::swap(rows[6], rows[12]);
+  std::swap(rows[7], rows[28]);
+  std::swap(rows[9], rows[18]);
+  std::swap(rows[11], rows[26]);
+  std::swap(rows[13], rows[22]);
+  std::swap(rows[15], rows[30]);
+  std::swap(rows[19], rows[25]);
+  std::swap(rows[23], rows[29]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<64>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip<1>(rows[32], rows[33], rows[32], rows[33]);
+  zip<1>(rows[34], rows[35], rows[34], rows[35]);
+  zip<1>(rows[36], rows[37], rows[36], rows[37]);
+  zip<1>(rows[38], rows[39], rows[38], rows[39]);
+  zip<1>(rows[40], rows[41], rows[40], rows[41]);
+  zip<1>(rows[42], rows[43], rows[42], rows[43]);
+  zip<1>(rows[44], rows[45], rows[44], rows[45]);
+  zip<1>(rows[46], rows[47], rows[46], rows[47]);
+  zip<1>(rows[48], rows[49], rows[48], rows[49]);
+  zip<1>(rows[50], rows[51], rows[50], rows[51]);
+  zip<1>(rows[52], rows[53], rows[52], rows[53]);
+  zip<1>(rows[54], rows[55], rows[54], rows[55]);
+  zip<1>(rows[56], rows[57], rows[56], rows[57]);
+  zip<1>(rows[58], rows[59], rows[58], rows[59]);
+  zip<1>(rows[60], rows[61], rows[60], rows[61]);
+  zip<1>(rows[62], rows[63], rows[62], rows[63]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip<2>(rows[32], rows[34], rows[32], rows[34]);
+  zip<2>(rows[33], rows[35], rows[33], rows[35]);
+  zip<2>(rows[36], rows[38], rows[36], rows[38]);
+  zip<2>(rows[37], rows[39], rows[37], rows[39]);
+  zip<2>(rows[40], rows[42], rows[40], rows[42]);
+  zip<2>(rows[41], rows[43], rows[41], rows[43]);
+  zip<2>(rows[44], rows[46], rows[44], rows[46]);
+  zip<2>(rows[45], rows[47], rows[45], rows[47]);
+  zip<2>(rows[48], rows[50], rows[48], rows[50]);
+  zip<2>(rows[49], rows[51], rows[49], rows[51]);
+  zip<2>(rows[52], rows[54], rows[52], rows[54]);
+  zip<2>(rows[53], rows[55], rows[53], rows[55]);
+  zip<2>(rows[56], rows[58], rows[56], rows[58]);
+  zip<2>(rows[57], rows[59], rows[57], rows[59]);
+  zip<2>(rows[60], rows[62], rows[60], rows[62]);
+  zip<2>(rows[61], rows[63], rows[61], rows[63]);
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip<4>(rows[16], rows[20], rows[16], rows[20]);
+  zip<4>(rows[18], rows[22], rows[18], rows[22]);
+  zip<4>(rows[17], rows[21], rows[17], rows[21]);
+  zip<4>(rows[19], rows[23], rows[19], rows[23]);
+  zip<4>(rows[24], rows[28], rows[24], rows[28]);
+  zip<4>(rows[26], rows[30], rows[26], rows[30]);
+  zip<4>(rows[25], rows[29], rows[25], rows[29]);
+  zip<4>(rows[27], rows[31], rows[27], rows[31]);
+  zip<4>(rows[32], rows[36], rows[32], rows[36]);
+  zip<4>(rows[34], rows[38], rows[34], rows[38]);
+  zip<4>(rows[33], rows[37], rows[33], rows[37]);
+  zip<4>(rows[35], rows[39], rows[35], rows[39]);
+  zip<4>(rows[40], rows[44], rows[40], rows[44]);
+  zip<4>(rows[42], rows[46], rows[42], rows[46]);
+  zip<4>(rows[41], rows[45], rows[41], rows[45]);
+  zip<4>(rows[43], rows[47], rows[43], rows[47]);
+  zip<4>(rows[48], rows[52], rows[48], rows[52]);
+  zip<4>(rows[50], rows[54], rows[50], rows[54]);
+  zip<4>(rows[49], rows[53], rows[49], rows[53]);
+  zip<4>(rows[51], rows[55], rows[51], rows[55]);
+  zip<4>(rows[56], rows[60], rows[56], rows[60]);
+  zip<4>(rows[58], rows[62], rows[58], rows[62]);
+  zip<4>(rows[57], rows[61], rows[57], rows[61]);
+  zip<4>(rows[59], rows[63], rows[59], rows[63]);
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+  zip<8>(rows[16], rows[24], rows[16], rows[24]);
+  zip<8>(rows[20], rows[28], rows[20], rows[28]);
+  zip<8>(rows[18], rows[26], rows[18], rows[26]);
+  zip<8>(rows[22], rows[30], rows[22], rows[30]);
+  zip<8>(rows[17], rows[25], rows[17], rows[25]);
+  zip<8>(rows[21], rows[29], rows[21], rows[29]);
+  zip<8>(rows[19], rows[27], rows[19], rows[27]);
+  zip<8>(rows[23], rows[31], rows[23], rows[31]);
+  zip<8>(rows[32], rows[40], rows[32], rows[40]);
+  zip<8>(rows[36], rows[44], rows[36], rows[44]);
+  zip<8>(rows[34], rows[42], rows[34], rows[42]);
+  zip<8>(rows[38], rows[46], rows[38], rows[46]);
+  zip<8>(rows[33], rows[41], rows[33], rows[41]);
+  zip<8>(rows[37], rows[45], rows[37], rows[45]);
+  zip<8>(rows[35], rows[43], rows[35], rows[43]);
+  zip<8>(rows[39], rows[47], rows[39], rows[47]);
+  zip<8>(rows[48], rows[56], rows[48], rows[56]);
+  zip<8>(rows[52], rows[60], rows[52], rows[60]);
+  zip<8>(rows[50], rows[58], rows[50], rows[58]);
+  zip<8>(rows[54], rows[62], rows[54], rows[62]);
+  zip<8>(rows[49], rows[57], rows[49], rows[57]);
+  zip<8>(rows[53], rows[61], rows[53], rows[61]);
+  zip<8>(rows[51], rows[59], rows[51], rows[59]);
+  zip<8>(rows[55], rows[63], rows[55], rows[63]);
+  zip<16>(rows[0], rows[16], rows[0], rows[16]);
+  zip<16>(rows[8], rows[24], rows[8], rows[24]);
+  zip<16>(rows[4], rows[20], rows[4], rows[20]);
+  zip<16>(rows[12], rows[28], rows[12], rows[28]);
+  zip<16>(rows[2], rows[18], rows[2], rows[18]);
+  zip<16>(rows[10], rows[26], rows[10], rows[26]);
+  zip<16>(rows[6], rows[22], rows[6], rows[22]);
+  zip<16>(rows[14], rows[30], rows[14], rows[30]);
+  zip<16>(rows[1], rows[17], rows[1], rows[17]);
+  zip<16>(rows[9], rows[25], rows[9], rows[25]);
+  zip<16>(rows[5], rows[21], rows[5], rows[21]);
+  zip<16>(rows[13], rows[29], rows[13], rows[29]);
+  zip<16>(rows[3], rows[19], rows[3], rows[19]);
+  zip<16>(rows[11], rows[27], rows[11], rows[27]);
+  zip<16>(rows[7], rows[23], rows[7], rows[23]);
+  zip<16>(rows[15], rows[31], rows[15], rows[31]);
+  zip<16>(rows[32], rows[48], rows[32], rows[48]);
+  zip<16>(rows[40], rows[56], rows[40], rows[56]);
+  zip<16>(rows[36], rows[52], rows[36], rows[52]);
+  zip<16>(rows[44], rows[60], rows[44], rows[60]);
+  zip<16>(rows[34], rows[50], rows[34], rows[50]);
+  zip<16>(rows[42], rows[58], rows[42], rows[58]);
+  zip<16>(rows[38], rows[54], rows[38], rows[54]);
+  zip<16>(rows[46], rows[62], rows[46], rows[62]);
+  zip<16>(rows[33], rows[49], rows[33], rows[49]);
+  zip<16>(rows[41], rows[57], rows[41], rows[57]);
+  zip<16>(rows[37], rows[53], rows[37], rows[53]);
+  zip<16>(rows[45], rows[61], rows[45], rows[61]);
+  zip<16>(rows[35], rows[51], rows[35], rows[51]);
+  zip<16>(rows[43], rows[59], rows[43], rows[59]);
+  zip<16>(rows[39], rows[55], rows[39], rows[55]);
+  zip<16>(rows[47], rows[63], rows[47], rows[63]);
+  zip<32>(rows[0], rows[32], rows[0], rows[32]);
+  zip<32>(rows[16], rows[48], rows[16], rows[48]);
+  zip<32>(rows[8], rows[40], rows[8], rows[40]);
+  zip<32>(rows[24], rows[56], rows[24], rows[56]);
+  zip<32>(rows[4], rows[36], rows[4], rows[36]);
+  zip<32>(rows[20], rows[52], rows[20], rows[52]);
+  zip<32>(rows[12], rows[44], rows[12], rows[44]);
+  zip<32>(rows[28], rows[60], rows[28], rows[60]);
+  zip<32>(rows[2], rows[34], rows[2], rows[34]);
+  zip<32>(rows[18], rows[50], rows[18], rows[50]);
+  zip<32>(rows[10], rows[42], rows[10], rows[42]);
+  zip<32>(rows[26], rows[58], rows[26], rows[58]);
+  zip<32>(rows[6], rows[38], rows[6], rows[38]);
+  zip<32>(rows[22], rows[54], rows[22], rows[54]);
+  zip<32>(rows[14], rows[46], rows[14], rows[46]);
+  zip<32>(rows[30], rows[62], rows[30], rows[62]);
+  zip<32>(rows[1], rows[33], rows[1], rows[33]);
+  zip<32>(rows[17], rows[49], rows[17], rows[49]);
+  zip<32>(rows[9], rows[41], rows[9], rows[41]);
+  zip<32>(rows[25], rows[57], rows[25], rows[57]);
+  zip<32>(rows[5], rows[37], rows[5], rows[37]);
+  zip<32>(rows[21], rows[53], rows[21], rows[53]);
+  zip<32>(rows[13], rows[45], rows[13], rows[45]);
+  zip<32>(rows[29], rows[61], rows[29], rows[61]);
+  zip<32>(rows[3], rows[35], rows[3], rows[35]);
+  zip<32>(rows[19], rows[51], rows[19], rows[51]);
+  zip<32>(rows[11], rows[43], rows[11], rows[43]);
+  zip<32>(rows[27], rows[59], rows[27], rows[59]);
+  zip<32>(rows[7], rows[39], rows[7], rows[39]);
+  zip<32>(rows[23], rows[55], rows[23], rows[55]);
+  zip<32>(rows[15], rows[47], rows[15], rows[47]);
+  zip<32>(rows[31], rows[63], rows[31], rows[63]);
+  std::swap(rows[1], rows[32]);
+  std::swap(rows[2], rows[16]);
+  std::swap(rows[3], rows[48]);
+  std::swap(rows[4], rows[8]);
+  std::swap(rows[5], rows[40]);
+  std::swap(rows[6], rows[24]);
+  std::swap(rows[7], rows[56]);
+  std::swap(rows[9], rows[36]);
+  std::swap(rows[10], rows[20]);
+  std::swap(rows[11], rows[52]);
+  std::swap(rows[13], rows[44]);
+  std::swap(rows[14], rows[28]);
+  std::swap(rows[15], rows[60]);
+  std::swap(rows[17], rows[34]);
+  std::swap(rows[19], rows[50]);
+  std::swap(rows[21], rows[42]);
+  std::swap(rows[22], rows[26]);
+  std::swap(rows[23], rows[58]);
+  std::swap(rows[25], rows[38]);
+  std::swap(rows[27], rows[54]);
+  std::swap(rows[29], rows[46]);
+  std::swap(rows[31], rows[62]);
+  std::swap(rows[35], rows[49]);
+  std::swap(rows[37], rows[41]);
+  std::swap(rows[39], rows[57]);
+  std::swap(rows[43], rows[53]);
+  std::swap(rows[47], rows[61]);
+  std::swap(rows[55], rows[59]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems])
+{
+  transpose1inplc(rows, Elements<Vec<T, SIMD_WIDTH>::elements>());
+}
+
+// ==========================================================
+// transpose1inplcLane (1-argument version)
+// ==========================================================
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<8>(rows[7], rows[15], rows[7], rows[15]);
+  std::swap(rows[1], rows[8]);
+  std::swap(rows[2], rows[4]);
+  std::swap(rows[3], rows[12]);
+  std::swap(rows[5], rows[10]);
+  std::swap(rows[7], rows[14]);
+  std::swap(rows[11], rows[13]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  std::swap(rows[1], rows[4]);
+  std::swap(rows[3], rows[6]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  std::swap(rows[1], rows[2]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<2>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip16<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip16<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip16<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip16<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip16<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip16<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip16<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip16<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip16<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip16<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip16<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip16<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip16<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip16<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<4>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<4>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<4>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<4>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<4>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<4>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<4>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<4>(rows[27], rows[31], rows[27], rows[31]);
+  zip16<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<8>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<8>(rows[16], rows[24], rows[16], rows[24]);
+  zip16<8>(rows[20], rows[28], rows[20], rows[28]);
+  zip16<8>(rows[18], rows[26], rows[18], rows[26]);
+  zip16<8>(rows[22], rows[30], rows[22], rows[30]);
+  zip16<8>(rows[17], rows[25], rows[17], rows[25]);
+  zip16<8>(rows[21], rows[29], rows[21], rows[29]);
+  zip16<8>(rows[19], rows[27], rows[19], rows[27]);
+  zip16<8>(rows[23], rows[31], rows[23], rows[31]);
+  std::swap(rows[1], rows[8]);
+  std::swap(rows[2], rows[4]);
+  std::swap(rows[3], rows[12]);
+  std::swap(rows[5], rows[10]);
+  std::swap(rows[7], rows[14]);
+  std::swap(rows[11], rows[13]);
+  std::swap(rows[17], rows[24]);
+  std::swap(rows[18], rows[20]);
+  std::swap(rows[19], rows[28]);
+  std::swap(rows[21], rows[26]);
+  std::swap(rows[23], rows[30]);
+  std::swap(rows[27], rows[29]);
+  // correction steps follow below (if required)
+  zip<16>(rows[0], rows[16], rows[0], rows[16]);
+  zip<16>(rows[1], rows[17], rows[1], rows[17]);
+  zip<16>(rows[2], rows[18], rows[2], rows[18]);
+  zip<16>(rows[3], rows[19], rows[3], rows[19]);
+  zip<16>(rows[4], rows[20], rows[4], rows[20]);
+  zip<16>(rows[5], rows[21], rows[5], rows[21]);
+  zip<16>(rows[6], rows[22], rows[6], rows[22]);
+  zip<16>(rows[7], rows[23], rows[7], rows[23]);
+  zip<16>(rows[8], rows[24], rows[8], rows[24]);
+  zip<16>(rows[9], rows[25], rows[9], rows[25]);
+  zip<16>(rows[10], rows[26], rows[10], rows[26]);
+  zip<16>(rows[11], rows[27], rows[11], rows[27]);
+  zip<16>(rows[12], rows[28], rows[12], rows[28]);
+  zip<16>(rows[13], rows[29], rows[13], rows[29]);
+  zip<16>(rows[14], rows[30], rows[14], rows[30]);
+  zip<16>(rows[15], rows[31], rows[15], rows[31]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<4>(rows[11], rows[15], rows[11], rows[15]);
+  std::swap(rows[1], rows[4]);
+  std::swap(rows[3], rows[6]);
+  std::swap(rows[9], rows[12]);
+  std::swap(rows[11], rows[14]);
+  // correction steps follow below (if required)
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  std::swap(rows[1], rows[2]);
+  std::swap(rows[5], rows[6]);
+  // correction steps follow below (if required)
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  // correction steps follow below (if required)
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<64>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip16<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip16<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip16<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip16<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip16<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip16<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip16<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip16<1>(rows[32], rows[33], rows[32], rows[33]);
+  zip16<1>(rows[34], rows[35], rows[34], rows[35]);
+  zip16<1>(rows[36], rows[37], rows[36], rows[37]);
+  zip16<1>(rows[38], rows[39], rows[38], rows[39]);
+  zip16<1>(rows[40], rows[41], rows[40], rows[41]);
+  zip16<1>(rows[42], rows[43], rows[42], rows[43]);
+  zip16<1>(rows[44], rows[45], rows[44], rows[45]);
+  zip16<1>(rows[46], rows[47], rows[46], rows[47]);
+  zip16<1>(rows[48], rows[49], rows[48], rows[49]);
+  zip16<1>(rows[50], rows[51], rows[50], rows[51]);
+  zip16<1>(rows[52], rows[53], rows[52], rows[53]);
+  zip16<1>(rows[54], rows[55], rows[54], rows[55]);
+  zip16<1>(rows[56], rows[57], rows[56], rows[57]);
+  zip16<1>(rows[58], rows[59], rows[58], rows[59]);
+  zip16<1>(rows[60], rows[61], rows[60], rows[61]);
+  zip16<1>(rows[62], rows[63], rows[62], rows[63]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip16<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip16<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip16<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip16<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip16<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip16<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip16<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip16<2>(rows[32], rows[34], rows[32], rows[34]);
+  zip16<2>(rows[33], rows[35], rows[33], rows[35]);
+  zip16<2>(rows[36], rows[38], rows[36], rows[38]);
+  zip16<2>(rows[37], rows[39], rows[37], rows[39]);
+  zip16<2>(rows[40], rows[42], rows[40], rows[42]);
+  zip16<2>(rows[41], rows[43], rows[41], rows[43]);
+  zip16<2>(rows[44], rows[46], rows[44], rows[46]);
+  zip16<2>(rows[45], rows[47], rows[45], rows[47]);
+  zip16<2>(rows[48], rows[50], rows[48], rows[50]);
+  zip16<2>(rows[49], rows[51], rows[49], rows[51]);
+  zip16<2>(rows[52], rows[54], rows[52], rows[54]);
+  zip16<2>(rows[53], rows[55], rows[53], rows[55]);
+  zip16<2>(rows[56], rows[58], rows[56], rows[58]);
+  zip16<2>(rows[57], rows[59], rows[57], rows[59]);
+  zip16<2>(rows[60], rows[62], rows[60], rows[62]);
+  zip16<2>(rows[61], rows[63], rows[61], rows[63]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<4>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<4>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<4>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<4>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<4>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<4>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<4>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<4>(rows[27], rows[31], rows[27], rows[31]);
+  zip16<4>(rows[32], rows[36], rows[32], rows[36]);
+  zip16<4>(rows[34], rows[38], rows[34], rows[38]);
+  zip16<4>(rows[33], rows[37], rows[33], rows[37]);
+  zip16<4>(rows[35], rows[39], rows[35], rows[39]);
+  zip16<4>(rows[40], rows[44], rows[40], rows[44]);
+  zip16<4>(rows[42], rows[46], rows[42], rows[46]);
+  zip16<4>(rows[41], rows[45], rows[41], rows[45]);
+  zip16<4>(rows[43], rows[47], rows[43], rows[47]);
+  zip16<4>(rows[48], rows[52], rows[48], rows[52]);
+  zip16<4>(rows[50], rows[54], rows[50], rows[54]);
+  zip16<4>(rows[49], rows[53], rows[49], rows[53]);
+  zip16<4>(rows[51], rows[55], rows[51], rows[55]);
+  zip16<4>(rows[56], rows[60], rows[56], rows[60]);
+  zip16<4>(rows[58], rows[62], rows[58], rows[62]);
+  zip16<4>(rows[57], rows[61], rows[57], rows[61]);
+  zip16<4>(rows[59], rows[63], rows[59], rows[63]);
+  zip16<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<8>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<8>(rows[16], rows[24], rows[16], rows[24]);
+  zip16<8>(rows[20], rows[28], rows[20], rows[28]);
+  zip16<8>(rows[18], rows[26], rows[18], rows[26]);
+  zip16<8>(rows[22], rows[30], rows[22], rows[30]);
+  zip16<8>(rows[17], rows[25], rows[17], rows[25]);
+  zip16<8>(rows[21], rows[29], rows[21], rows[29]);
+  zip16<8>(rows[19], rows[27], rows[19], rows[27]);
+  zip16<8>(rows[23], rows[31], rows[23], rows[31]);
+  zip16<8>(rows[32], rows[40], rows[32], rows[40]);
+  zip16<8>(rows[36], rows[44], rows[36], rows[44]);
+  zip16<8>(rows[34], rows[42], rows[34], rows[42]);
+  zip16<8>(rows[38], rows[46], rows[38], rows[46]);
+  zip16<8>(rows[33], rows[41], rows[33], rows[41]);
+  zip16<8>(rows[37], rows[45], rows[37], rows[45]);
+  zip16<8>(rows[35], rows[43], rows[35], rows[43]);
+  zip16<8>(rows[39], rows[47], rows[39], rows[47]);
+  zip16<8>(rows[48], rows[56], rows[48], rows[56]);
+  zip16<8>(rows[52], rows[60], rows[52], rows[60]);
+  zip16<8>(rows[50], rows[58], rows[50], rows[58]);
+  zip16<8>(rows[54], rows[62], rows[54], rows[62]);
+  zip16<8>(rows[49], rows[57], rows[49], rows[57]);
+  zip16<8>(rows[53], rows[61], rows[53], rows[61]);
+  zip16<8>(rows[51], rows[59], rows[51], rows[59]);
+  zip16<8>(rows[55], rows[63], rows[55], rows[63]);
+  std::swap(rows[1], rows[8]);
+  std::swap(rows[2], rows[4]);
+  std::swap(rows[3], rows[12]);
+  std::swap(rows[5], rows[10]);
+  std::swap(rows[7], rows[14]);
+  std::swap(rows[11], rows[13]);
+  std::swap(rows[17], rows[24]);
+  std::swap(rows[18], rows[20]);
+  std::swap(rows[19], rows[28]);
+  std::swap(rows[21], rows[26]);
+  std::swap(rows[23], rows[30]);
+  std::swap(rows[27], rows[29]);
+  std::swap(rows[33], rows[40]);
+  std::swap(rows[34], rows[36]);
+  std::swap(rows[35], rows[44]);
+  std::swap(rows[37], rows[42]);
+  std::swap(rows[39], rows[46]);
+  std::swap(rows[43], rows[45]);
+  std::swap(rows[49], rows[56]);
+  std::swap(rows[50], rows[52]);
+  std::swap(rows[51], rows[60]);
+  std::swap(rows[53], rows[58]);
+  std::swap(rows[55], rows[62]);
+  std::swap(rows[59], rows[61]);
+  // correction steps follow below (if required)
+  zip<16>(rows[0], rows[16], rows[0], rows[16]);
+  zip<16>(rows[1], rows[17], rows[1], rows[17]);
+  zip<16>(rows[2], rows[18], rows[2], rows[18]);
+  zip<16>(rows[3], rows[19], rows[3], rows[19]);
+  zip<16>(rows[4], rows[20], rows[4], rows[20]);
+  zip<16>(rows[5], rows[21], rows[5], rows[21]);
+  zip<16>(rows[6], rows[22], rows[6], rows[22]);
+  zip<16>(rows[7], rows[23], rows[7], rows[23]);
+  zip<16>(rows[8], rows[24], rows[8], rows[24]);
+  zip<16>(rows[9], rows[25], rows[9], rows[25]);
+  zip<16>(rows[10], rows[26], rows[10], rows[26]);
+  zip<16>(rows[11], rows[27], rows[11], rows[27]);
+  zip<16>(rows[12], rows[28], rows[12], rows[28]);
+  zip<16>(rows[13], rows[29], rows[13], rows[29]);
+  zip<16>(rows[14], rows[30], rows[14], rows[30]);
+  zip<16>(rows[15], rows[31], rows[15], rows[31]);
+  zip<16>(rows[32], rows[48], rows[32], rows[48]);
+  zip<16>(rows[33], rows[49], rows[33], rows[49]);
+  zip<16>(rows[34], rows[50], rows[34], rows[50]);
+  zip<16>(rows[35], rows[51], rows[35], rows[51]);
+  zip<16>(rows[36], rows[52], rows[36], rows[52]);
+  zip<16>(rows[37], rows[53], rows[37], rows[53]);
+  zip<16>(rows[38], rows[54], rows[38], rows[54]);
+  zip<16>(rows[39], rows[55], rows[39], rows[55]);
+  zip<16>(rows[40], rows[56], rows[40], rows[56]);
+  zip<16>(rows[41], rows[57], rows[41], rows[57]);
+  zip<16>(rows[42], rows[58], rows[42], rows[58]);
+  zip<16>(rows[43], rows[59], rows[43], rows[59]);
+  zip<16>(rows[44], rows[60], rows[44], rows[60]);
+  zip<16>(rows[45], rows[61], rows[45], rows[61]);
+  zip<16>(rows[46], rows[62], rows[46], rows[62]);
+  zip<16>(rows[47], rows[63], rows[47], rows[63]);
+  zip<32>(rows[0], rows[32], rows[0], rows[32]);
+  zip<32>(rows[1], rows[33], rows[1], rows[33]);
+  zip<32>(rows[2], rows[34], rows[2], rows[34]);
+  zip<32>(rows[3], rows[35], rows[3], rows[35]);
+  zip<32>(rows[4], rows[36], rows[4], rows[36]);
+  zip<32>(rows[5], rows[37], rows[5], rows[37]);
+  zip<32>(rows[6], rows[38], rows[6], rows[38]);
+  zip<32>(rows[7], rows[39], rows[7], rows[39]);
+  zip<32>(rows[8], rows[40], rows[8], rows[40]);
+  zip<32>(rows[9], rows[41], rows[9], rows[41]);
+  zip<32>(rows[10], rows[42], rows[10], rows[42]);
+  zip<32>(rows[11], rows[43], rows[11], rows[43]);
+  zip<32>(rows[12], rows[44], rows[12], rows[44]);
+  zip<32>(rows[13], rows[45], rows[13], rows[45]);
+  zip<32>(rows[14], rows[46], rows[14], rows[46]);
+  zip<32>(rows[15], rows[47], rows[15], rows[47]);
+  zip<32>(rows[16], rows[48], rows[16], rows[48]);
+  zip<32>(rows[17], rows[49], rows[17], rows[49]);
+  zip<32>(rows[18], rows[50], rows[18], rows[50]);
+  zip<32>(rows[19], rows[51], rows[19], rows[51]);
+  zip<32>(rows[20], rows[52], rows[20], rows[52]);
+  zip<32>(rows[21], rows[53], rows[21], rows[53]);
+  zip<32>(rows[22], rows[54], rows[22], rows[54]);
+  zip<32>(rows[23], rows[55], rows[23], rows[55]);
+  zip<32>(rows[24], rows[56], rows[24], rows[56]);
+  zip<32>(rows[25], rows[57], rows[25], rows[57]);
+  zip<32>(rows[26], rows[58], rows[26], rows[58]);
+  zip<32>(rows[27], rows[59], rows[27], rows[59]);
+  zip<32>(rows[28], rows[60], rows[28], rows[60]);
+  zip<32>(rows[29], rows[61], rows[29], rows[61]);
+  zip<32>(rows[30], rows[62], rows[30], rows[62]);
+  zip<32>(rows[31], rows[63], rows[31], rows[63]);
+  std::swap(rows[16], rows[32]);
+  std::swap(rows[17], rows[33]);
+  std::swap(rows[18], rows[34]);
+  std::swap(rows[19], rows[35]);
+  std::swap(rows[20], rows[36]);
+  std::swap(rows[21], rows[37]);
+  std::swap(rows[22], rows[38]);
+  std::swap(rows[23], rows[39]);
+  std::swap(rows[24], rows[40]);
+  std::swap(rows[25], rows[41]);
+  std::swap(rows[26], rows[42]);
+  std::swap(rows[27], rows[43]);
+  std::swap(rows[28], rows[44]);
+  std::swap(rows[29], rows[45]);
+  std::swap(rows[30], rows[46]);
+  std::swap(rows[31], rows[47]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip16<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip16<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip16<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip16<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip16<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip16<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip16<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip16<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip16<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip16<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip16<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip16<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip16<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip16<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip16<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<4>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<4>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<4>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<4>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<4>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<4>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<4>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<4>(rows[27], rows[31], rows[27], rows[31]);
+  std::swap(rows[1], rows[4]);
+  std::swap(rows[3], rows[6]);
+  std::swap(rows[9], rows[12]);
+  std::swap(rows[11], rows[14]);
+  std::swap(rows[17], rows[20]);
+  std::swap(rows[19], rows[22]);
+  std::swap(rows[25], rows[28]);
+  std::swap(rows[27], rows[30]);
+  // correction steps follow below (if required)
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+  zip<8>(rows[16], rows[24], rows[16], rows[24]);
+  zip<8>(rows[17], rows[25], rows[17], rows[25]);
+  zip<8>(rows[18], rows[26], rows[18], rows[26]);
+  zip<8>(rows[19], rows[27], rows[19], rows[27]);
+  zip<8>(rows[20], rows[28], rows[20], rows[28]);
+  zip<8>(rows[21], rows[29], rows[21], rows[29]);
+  zip<8>(rows[22], rows[30], rows[22], rows[30]);
+  zip<8>(rows[23], rows[31], rows[23], rows[31]);
+  zip<16>(rows[0], rows[16], rows[0], rows[16]);
+  zip<16>(rows[1], rows[17], rows[1], rows[17]);
+  zip<16>(rows[2], rows[18], rows[2], rows[18]);
+  zip<16>(rows[3], rows[19], rows[3], rows[19]);
+  zip<16>(rows[4], rows[20], rows[4], rows[20]);
+  zip<16>(rows[5], rows[21], rows[5], rows[21]);
+  zip<16>(rows[6], rows[22], rows[6], rows[22]);
+  zip<16>(rows[7], rows[23], rows[7], rows[23]);
+  zip<16>(rows[8], rows[24], rows[8], rows[24]);
+  zip<16>(rows[9], rows[25], rows[9], rows[25]);
+  zip<16>(rows[10], rows[26], rows[10], rows[26]);
+  zip<16>(rows[11], rows[27], rows[11], rows[27]);
+  zip<16>(rows[12], rows[28], rows[12], rows[28]);
+  zip<16>(rows[13], rows[29], rows[13], rows[29]);
+  zip<16>(rows[14], rows[30], rows[14], rows[30]);
+  zip<16>(rows[15], rows[31], rows[15], rows[31]);
+  std::swap(rows[8], rows[16]);
+  std::swap(rows[9], rows[17]);
+  std::swap(rows[10], rows[18]);
+  std::swap(rows[11], rows[19]);
+  std::swap(rows[12], rows[20]);
+  std::swap(rows[13], rows[21]);
+  std::swap(rows[14], rows[22]);
+  std::swap(rows[15], rows[23]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip16<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<2>(rows[13], rows[15], rows[13], rows[15]);
+  std::swap(rows[1], rows[2]);
+  std::swap(rows[5], rows[6]);
+  std::swap(rows[9], rows[10]);
+  std::swap(rows[13], rows[14]);
+  // correction steps follow below (if required)
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  zip<4>(rows[8], rows[12], rows[8], rows[12]);
+  zip<4>(rows[9], rows[13], rows[9], rows[13]);
+  zip<4>(rows[10], rows[14], rows[10], rows[14]);
+  zip<4>(rows[11], rows[15], rows[11], rows[15]);
+  zip<8>(rows[0], rows[8], rows[0], rows[8]);
+  zip<8>(rows[1], rows[9], rows[1], rows[9]);
+  zip<8>(rows[2], rows[10], rows[2], rows[10]);
+  zip<8>(rows[3], rows[11], rows[3], rows[11]);
+  zip<8>(rows[4], rows[12], rows[4], rows[12]);
+  zip<8>(rows[5], rows[13], rows[5], rows[13]);
+  zip<8>(rows[6], rows[14], rows[6], rows[14]);
+  zip<8>(rows[7], rows[15], rows[7], rows[15]);
+  std::swap(rows[4], rows[8]);
+  std::swap(rows[5], rows[9]);
+  std::swap(rows[6], rows[10]);
+  std::swap(rows[7], rows[11]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  // correction steps follow below (if required)
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<4>(rows[0], rows[4], rows[0], rows[4]);
+  zip<4>(rows[1], rows[5], rows[1], rows[5]);
+  zip<4>(rows[2], rows[6], rows[2], rows[6]);
+  zip<4>(rows[3], rows[7], rows[3], rows[7]);
+  std::swap(rows[2], rows[4]);
+  std::swap(rows[3], rows[5]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose1inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems])
+{
+  transpose1inplcLane(rows, Elements<Vec<T, SIMD_WIDTH>::elements>(),
+                      Bytes<SIMD_WIDTH>());
+}
+
+// ==========================================================
+// transpose2inplc (1-argument version)
+// ==========================================================
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<2>)
+{
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>)
+{
+  zip<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>)
+{
+  zip<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>)
+{
+  zip<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip<1>(rows[13], rows[15], rows[13], rows[15]);
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>)
+{
+  zip<1>(rows[0], rows[16], rows[0], rows[16]);
+  zip<1>(rows[1], rows[17], rows[1], rows[17]);
+  zip<1>(rows[2], rows[18], rows[2], rows[18]);
+  zip<1>(rows[3], rows[19], rows[3], rows[19]);
+  zip<1>(rows[4], rows[20], rows[4], rows[20]);
+  zip<1>(rows[5], rows[21], rows[5], rows[21]);
+  zip<1>(rows[6], rows[22], rows[6], rows[22]);
+  zip<1>(rows[7], rows[23], rows[7], rows[23]);
+  zip<1>(rows[8], rows[24], rows[8], rows[24]);
+  zip<1>(rows[9], rows[25], rows[9], rows[25]);
+  zip<1>(rows[10], rows[26], rows[10], rows[26]);
+  zip<1>(rows[11], rows[27], rows[11], rows[27]);
+  zip<1>(rows[12], rows[28], rows[12], rows[28]);
+  zip<1>(rows[13], rows[29], rows[13], rows[29]);
+  zip<1>(rows[14], rows[30], rows[14], rows[30]);
+  zip<1>(rows[15], rows[31], rows[15], rows[31]);
+  zip<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip<1>(rows[16], rows[24], rows[16], rows[24]);
+  zip<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip<1>(rows[17], rows[25], rows[17], rows[25]);
+  zip<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip<1>(rows[18], rows[26], rows[18], rows[26]);
+  zip<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip<1>(rows[19], rows[27], rows[19], rows[27]);
+  zip<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip<1>(rows[20], rows[28], rows[20], rows[28]);
+  zip<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip<1>(rows[21], rows[29], rows[21], rows[29]);
+  zip<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip<1>(rows[22], rows[30], rows[22], rows[30]);
+  zip<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip<1>(rows[23], rows[31], rows[23], rows[31]);
+  zip<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip<1>(rows[16], rows[20], rows[16], rows[20]);
+  zip<1>(rows[24], rows[28], rows[24], rows[28]);
+  zip<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip<1>(rows[17], rows[21], rows[17], rows[21]);
+  zip<1>(rows[25], rows[29], rows[25], rows[29]);
+  zip<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip<1>(rows[18], rows[22], rows[18], rows[22]);
+  zip<1>(rows[26], rows[30], rows[26], rows[30]);
+  zip<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip<1>(rows[19], rows[23], rows[19], rows[23]);
+  zip<1>(rows[27], rows[31], rows[27], rows[31]);
+  zip<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip<1>(rows[16], rows[18], rows[16], rows[18]);
+  zip<1>(rows[20], rows[22], rows[20], rows[22]);
+  zip<1>(rows[24], rows[26], rows[24], rows[26]);
+  zip<1>(rows[28], rows[30], rows[28], rows[30]);
+  zip<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip<1>(rows[13], rows[15], rows[13], rows[15]);
+  zip<1>(rows[17], rows[19], rows[17], rows[19]);
+  zip<1>(rows[21], rows[23], rows[21], rows[23]);
+  zip<1>(rows[25], rows[27], rows[25], rows[27]);
+  zip<1>(rows[29], rows[31], rows[29], rows[31]);
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<64>)
+{
+  zip<1>(rows[0], rows[32], rows[0], rows[32]);
+  zip<1>(rows[1], rows[33], rows[1], rows[33]);
+  zip<1>(rows[2], rows[34], rows[2], rows[34]);
+  zip<1>(rows[3], rows[35], rows[3], rows[35]);
+  zip<1>(rows[4], rows[36], rows[4], rows[36]);
+  zip<1>(rows[5], rows[37], rows[5], rows[37]);
+  zip<1>(rows[6], rows[38], rows[6], rows[38]);
+  zip<1>(rows[7], rows[39], rows[7], rows[39]);
+  zip<1>(rows[8], rows[40], rows[8], rows[40]);
+  zip<1>(rows[9], rows[41], rows[9], rows[41]);
+  zip<1>(rows[10], rows[42], rows[10], rows[42]);
+  zip<1>(rows[11], rows[43], rows[11], rows[43]);
+  zip<1>(rows[12], rows[44], rows[12], rows[44]);
+  zip<1>(rows[13], rows[45], rows[13], rows[45]);
+  zip<1>(rows[14], rows[46], rows[14], rows[46]);
+  zip<1>(rows[15], rows[47], rows[15], rows[47]);
+  zip<1>(rows[16], rows[48], rows[16], rows[48]);
+  zip<1>(rows[17], rows[49], rows[17], rows[49]);
+  zip<1>(rows[18], rows[50], rows[18], rows[50]);
+  zip<1>(rows[19], rows[51], rows[19], rows[51]);
+  zip<1>(rows[20], rows[52], rows[20], rows[52]);
+  zip<1>(rows[21], rows[53], rows[21], rows[53]);
+  zip<1>(rows[22], rows[54], rows[22], rows[54]);
+  zip<1>(rows[23], rows[55], rows[23], rows[55]);
+  zip<1>(rows[24], rows[56], rows[24], rows[56]);
+  zip<1>(rows[25], rows[57], rows[25], rows[57]);
+  zip<1>(rows[26], rows[58], rows[26], rows[58]);
+  zip<1>(rows[27], rows[59], rows[27], rows[59]);
+  zip<1>(rows[28], rows[60], rows[28], rows[60]);
+  zip<1>(rows[29], rows[61], rows[29], rows[61]);
+  zip<1>(rows[30], rows[62], rows[30], rows[62]);
+  zip<1>(rows[31], rows[63], rows[31], rows[63]);
+  zip<1>(rows[0], rows[16], rows[0], rows[16]);
+  zip<1>(rows[32], rows[48], rows[32], rows[48]);
+  zip<1>(rows[1], rows[17], rows[1], rows[17]);
+  zip<1>(rows[33], rows[49], rows[33], rows[49]);
+  zip<1>(rows[2], rows[18], rows[2], rows[18]);
+  zip<1>(rows[34], rows[50], rows[34], rows[50]);
+  zip<1>(rows[3], rows[19], rows[3], rows[19]);
+  zip<1>(rows[35], rows[51], rows[35], rows[51]);
+  zip<1>(rows[4], rows[20], rows[4], rows[20]);
+  zip<1>(rows[36], rows[52], rows[36], rows[52]);
+  zip<1>(rows[5], rows[21], rows[5], rows[21]);
+  zip<1>(rows[37], rows[53], rows[37], rows[53]);
+  zip<1>(rows[6], rows[22], rows[6], rows[22]);
+  zip<1>(rows[38], rows[54], rows[38], rows[54]);
+  zip<1>(rows[7], rows[23], rows[7], rows[23]);
+  zip<1>(rows[39], rows[55], rows[39], rows[55]);
+  zip<1>(rows[8], rows[24], rows[8], rows[24]);
+  zip<1>(rows[40], rows[56], rows[40], rows[56]);
+  zip<1>(rows[9], rows[25], rows[9], rows[25]);
+  zip<1>(rows[41], rows[57], rows[41], rows[57]);
+  zip<1>(rows[10], rows[26], rows[10], rows[26]);
+  zip<1>(rows[42], rows[58], rows[42], rows[58]);
+  zip<1>(rows[11], rows[27], rows[11], rows[27]);
+  zip<1>(rows[43], rows[59], rows[43], rows[59]);
+  zip<1>(rows[12], rows[28], rows[12], rows[28]);
+  zip<1>(rows[44], rows[60], rows[44], rows[60]);
+  zip<1>(rows[13], rows[29], rows[13], rows[29]);
+  zip<1>(rows[45], rows[61], rows[45], rows[61]);
+  zip<1>(rows[14], rows[30], rows[14], rows[30]);
+  zip<1>(rows[46], rows[62], rows[46], rows[62]);
+  zip<1>(rows[15], rows[31], rows[15], rows[31]);
+  zip<1>(rows[47], rows[63], rows[47], rows[63]);
+  zip<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip<1>(rows[16], rows[24], rows[16], rows[24]);
+  zip<1>(rows[32], rows[40], rows[32], rows[40]);
+  zip<1>(rows[48], rows[56], rows[48], rows[56]);
+  zip<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip<1>(rows[17], rows[25], rows[17], rows[25]);
+  zip<1>(rows[33], rows[41], rows[33], rows[41]);
+  zip<1>(rows[49], rows[57], rows[49], rows[57]);
+  zip<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip<1>(rows[18], rows[26], rows[18], rows[26]);
+  zip<1>(rows[34], rows[42], rows[34], rows[42]);
+  zip<1>(rows[50], rows[58], rows[50], rows[58]);
+  zip<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip<1>(rows[19], rows[27], rows[19], rows[27]);
+  zip<1>(rows[35], rows[43], rows[35], rows[43]);
+  zip<1>(rows[51], rows[59], rows[51], rows[59]);
+  zip<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip<1>(rows[20], rows[28], rows[20], rows[28]);
+  zip<1>(rows[36], rows[44], rows[36], rows[44]);
+  zip<1>(rows[52], rows[60], rows[52], rows[60]);
+  zip<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip<1>(rows[21], rows[29], rows[21], rows[29]);
+  zip<1>(rows[37], rows[45], rows[37], rows[45]);
+  zip<1>(rows[53], rows[61], rows[53], rows[61]);
+  zip<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip<1>(rows[22], rows[30], rows[22], rows[30]);
+  zip<1>(rows[38], rows[46], rows[38], rows[46]);
+  zip<1>(rows[54], rows[62], rows[54], rows[62]);
+  zip<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip<1>(rows[23], rows[31], rows[23], rows[31]);
+  zip<1>(rows[39], rows[47], rows[39], rows[47]);
+  zip<1>(rows[55], rows[63], rows[55], rows[63]);
+  zip<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip<1>(rows[16], rows[20], rows[16], rows[20]);
+  zip<1>(rows[24], rows[28], rows[24], rows[28]);
+  zip<1>(rows[32], rows[36], rows[32], rows[36]);
+  zip<1>(rows[40], rows[44], rows[40], rows[44]);
+  zip<1>(rows[48], rows[52], rows[48], rows[52]);
+  zip<1>(rows[56], rows[60], rows[56], rows[60]);
+  zip<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip<1>(rows[17], rows[21], rows[17], rows[21]);
+  zip<1>(rows[25], rows[29], rows[25], rows[29]);
+  zip<1>(rows[33], rows[37], rows[33], rows[37]);
+  zip<1>(rows[41], rows[45], rows[41], rows[45]);
+  zip<1>(rows[49], rows[53], rows[49], rows[53]);
+  zip<1>(rows[57], rows[61], rows[57], rows[61]);
+  zip<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip<1>(rows[18], rows[22], rows[18], rows[22]);
+  zip<1>(rows[26], rows[30], rows[26], rows[30]);
+  zip<1>(rows[34], rows[38], rows[34], rows[38]);
+  zip<1>(rows[42], rows[46], rows[42], rows[46]);
+  zip<1>(rows[50], rows[54], rows[50], rows[54]);
+  zip<1>(rows[58], rows[62], rows[58], rows[62]);
+  zip<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip<1>(rows[19], rows[23], rows[19], rows[23]);
+  zip<1>(rows[27], rows[31], rows[27], rows[31]);
+  zip<1>(rows[35], rows[39], rows[35], rows[39]);
+  zip<1>(rows[43], rows[47], rows[43], rows[47]);
+  zip<1>(rows[51], rows[55], rows[51], rows[55]);
+  zip<1>(rows[59], rows[63], rows[59], rows[63]);
+  zip<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip<1>(rows[16], rows[18], rows[16], rows[18]);
+  zip<1>(rows[20], rows[22], rows[20], rows[22]);
+  zip<1>(rows[24], rows[26], rows[24], rows[26]);
+  zip<1>(rows[28], rows[30], rows[28], rows[30]);
+  zip<1>(rows[32], rows[34], rows[32], rows[34]);
+  zip<1>(rows[36], rows[38], rows[36], rows[38]);
+  zip<1>(rows[40], rows[42], rows[40], rows[42]);
+  zip<1>(rows[44], rows[46], rows[44], rows[46]);
+  zip<1>(rows[48], rows[50], rows[48], rows[50]);
+  zip<1>(rows[52], rows[54], rows[52], rows[54]);
+  zip<1>(rows[56], rows[58], rows[56], rows[58]);
+  zip<1>(rows[60], rows[62], rows[60], rows[62]);
+  zip<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip<1>(rows[13], rows[15], rows[13], rows[15]);
+  zip<1>(rows[17], rows[19], rows[17], rows[19]);
+  zip<1>(rows[21], rows[23], rows[21], rows[23]);
+  zip<1>(rows[25], rows[27], rows[25], rows[27]);
+  zip<1>(rows[29], rows[31], rows[29], rows[31]);
+  zip<1>(rows[33], rows[35], rows[33], rows[35]);
+  zip<1>(rows[37], rows[39], rows[37], rows[39]);
+  zip<1>(rows[41], rows[43], rows[41], rows[43]);
+  zip<1>(rows[45], rows[47], rows[45], rows[47]);
+  zip<1>(rows[49], rows[51], rows[49], rows[51]);
+  zip<1>(rows[53], rows[55], rows[53], rows[55]);
+  zip<1>(rows[57], rows[59], rows[57], rows[59]);
+  zip<1>(rows[61], rows[63], rows[61], rows[63]);
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip<1>(rows[32], rows[33], rows[32], rows[33]);
+  zip<1>(rows[34], rows[35], rows[34], rows[35]);
+  zip<1>(rows[36], rows[37], rows[36], rows[37]);
+  zip<1>(rows[38], rows[39], rows[38], rows[39]);
+  zip<1>(rows[40], rows[41], rows[40], rows[41]);
+  zip<1>(rows[42], rows[43], rows[42], rows[43]);
+  zip<1>(rows[44], rows[45], rows[44], rows[45]);
+  zip<1>(rows[46], rows[47], rows[46], rows[47]);
+  zip<1>(rows[48], rows[49], rows[48], rows[49]);
+  zip<1>(rows[50], rows[51], rows[50], rows[51]);
+  zip<1>(rows[52], rows[53], rows[52], rows[53]);
+  zip<1>(rows[54], rows[55], rows[54], rows[55]);
+  zip<1>(rows[56], rows[57], rows[56], rows[57]);
+  zip<1>(rows[58], rows[59], rows[58], rows[59]);
+  zip<1>(rows[60], rows[61], rows[60], rows[61]);
+  zip<1>(rows[62], rows[63], rows[62], rows[63]);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplc(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems])
+{
+  transpose2inplc(rows, Elements<Vec<T, SIMD_WIDTH>::elements>());
+}
+
+// ==========================================================
+// transpose2inplcLane (1-argument version)
+// ==========================================================
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<1>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip16<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip16<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip16<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip16<1>(rows[14], rows[15], rows[14], rows[15]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip16<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip16<1>(rows[6], rows[7], rows[6], rows[7]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip16<1>(rows[2], rows[3], rows[2], rows[3]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<2>, Bytes<16>)
+{
+  zip16<1>(rows[0], rows[1], rows[0], rows[1]);
+  // correction steps follow below (if required)
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[16], rows[0], rows[16]);
+  zip16<1>(rows[1], rows[17], rows[1], rows[17]);
+  zip16<1>(rows[2], rows[18], rows[2], rows[18]);
+  zip16<1>(rows[3], rows[19], rows[3], rows[19]);
+  zip16<1>(rows[4], rows[20], rows[4], rows[20]);
+  zip16<1>(rows[5], rows[21], rows[5], rows[21]);
+  zip16<1>(rows[6], rows[22], rows[6], rows[22]);
+  zip16<1>(rows[7], rows[23], rows[7], rows[23]);
+  zip16<1>(rows[8], rows[24], rows[8], rows[24]);
+  zip16<1>(rows[9], rows[25], rows[9], rows[25]);
+  zip16<1>(rows[10], rows[26], rows[10], rows[26]);
+  zip16<1>(rows[11], rows[27], rows[11], rows[27]);
+  zip16<1>(rows[12], rows[28], rows[12], rows[28]);
+  zip16<1>(rows[13], rows[29], rows[13], rows[29]);
+  zip16<1>(rows[14], rows[30], rows[14], rows[30]);
+  zip16<1>(rows[15], rows[31], rows[15], rows[31]);
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[16], rows[24], rows[16], rows[24]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[17], rows[25], rows[17], rows[25]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[18], rows[26], rows[18], rows[26]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[19], rows[27], rows[19], rows[27]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[20], rows[28], rows[20], rows[28]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[21], rows[29], rows[21], rows[29]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[22], rows[30], rows[22], rows[30]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[23], rows[31], rows[23], rows[31]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<1>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<1>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<1>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<1>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<1>(rows[27], rows[31], rows[27], rows[31]);
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<1>(rows[16], rows[18], rows[16], rows[18]);
+  zip16<1>(rows[20], rows[22], rows[20], rows[22]);
+  zip16<1>(rows[24], rows[26], rows[24], rows[26]);
+  zip16<1>(rows[28], rows[30], rows[28], rows[30]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<1>(rows[13], rows[15], rows[13], rows[15]);
+  zip16<1>(rows[17], rows[19], rows[17], rows[19]);
+  zip16<1>(rows[21], rows[23], rows[21], rows[23]);
+  zip16<1>(rows[25], rows[27], rows[25], rows[27]);
+  zip16<1>(rows[29], rows[31], rows[29], rows[31]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[2];
+    rows[2]                  = rows[4];
+    rows[4]                  = rows[8];
+    rows[8]                  = rows[16];
+    rows[16]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[6];
+    rows[6]                  = rows[12];
+    rows[12]                 = rows[24];
+    rows[24]                 = rows[17];
+    rows[17]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[5];
+    rows[5]                  = rows[10];
+    rows[10]                 = rows[20];
+    rows[20]                 = rows[9];
+    rows[9]                  = rows[18];
+    rows[18]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[7];
+    rows[7]                  = rows[14];
+    rows[14]                 = rows[28];
+    rows[28]                 = rows[25];
+    rows[25]                 = rows[19];
+    rows[19]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[11];
+    rows[11]                 = rows[22];
+    rows[22]                 = rows[13];
+    rows[13]                 = rows[26];
+    rows[26]                 = rows[21];
+    rows[21]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[15];
+    rows[15]                 = rows[30];
+    rows[30]                 = rows[29];
+    rows[29]                 = rows[27];
+    rows[27]                 = rows[23];
+    rows[23]                 = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<1>(rows[8], rows[10], rows[8], rows[10]);
+  zip16<1>(rows[12], rows[14], rows[12], rows[14]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[5], rows[7], rows[5], rows[7]);
+  zip16<1>(rows[9], rows[11], rows[9], rows[11]);
+  zip16<1>(rows[13], rows[15], rows[13], rows[15]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[2];
+    rows[2]                  = rows[4];
+    rows[4]                  = rows[8];
+    rows[8]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[6];
+    rows[6]                  = rows[12];
+    rows[12]                 = rows[9];
+    rows[9]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[5];
+    rows[5]                  = rows[10];
+    rows[10]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[7];
+    rows[7]                  = rows[14];
+    rows[14]                 = rows[13];
+    rows[13]                 = rows[11];
+    rows[11]                 = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[4], rows[6], rows[4], rows[6]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  zip16<1>(rows[5], rows[7], rows[5], rows[7]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[2];
+    rows[2]                  = rows[4];
+    rows[4]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[6];
+    rows[6]                  = rows[5];
+    rows[5]                  = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<4>, Bytes<32>)
+{
+  zip16<1>(rows[0], rows[2], rows[0], rows[2]);
+  zip16<1>(rows[1], rows[3], rows[1], rows[3]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[2];
+    rows[2]                  = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<64>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[32], rows[0], rows[32]);
+  zip16<1>(rows[1], rows[33], rows[1], rows[33]);
+  zip16<1>(rows[2], rows[34], rows[2], rows[34]);
+  zip16<1>(rows[3], rows[35], rows[3], rows[35]);
+  zip16<1>(rows[4], rows[36], rows[4], rows[36]);
+  zip16<1>(rows[5], rows[37], rows[5], rows[37]);
+  zip16<1>(rows[6], rows[38], rows[6], rows[38]);
+  zip16<1>(rows[7], rows[39], rows[7], rows[39]);
+  zip16<1>(rows[8], rows[40], rows[8], rows[40]);
+  zip16<1>(rows[9], rows[41], rows[9], rows[41]);
+  zip16<1>(rows[10], rows[42], rows[10], rows[42]);
+  zip16<1>(rows[11], rows[43], rows[11], rows[43]);
+  zip16<1>(rows[12], rows[44], rows[12], rows[44]);
+  zip16<1>(rows[13], rows[45], rows[13], rows[45]);
+  zip16<1>(rows[14], rows[46], rows[14], rows[46]);
+  zip16<1>(rows[15], rows[47], rows[15], rows[47]);
+  zip16<1>(rows[16], rows[48], rows[16], rows[48]);
+  zip16<1>(rows[17], rows[49], rows[17], rows[49]);
+  zip16<1>(rows[18], rows[50], rows[18], rows[50]);
+  zip16<1>(rows[19], rows[51], rows[19], rows[51]);
+  zip16<1>(rows[20], rows[52], rows[20], rows[52]);
+  zip16<1>(rows[21], rows[53], rows[21], rows[53]);
+  zip16<1>(rows[22], rows[54], rows[22], rows[54]);
+  zip16<1>(rows[23], rows[55], rows[23], rows[55]);
+  zip16<1>(rows[24], rows[56], rows[24], rows[56]);
+  zip16<1>(rows[25], rows[57], rows[25], rows[57]);
+  zip16<1>(rows[26], rows[58], rows[26], rows[58]);
+  zip16<1>(rows[27], rows[59], rows[27], rows[59]);
+  zip16<1>(rows[28], rows[60], rows[28], rows[60]);
+  zip16<1>(rows[29], rows[61], rows[29], rows[61]);
+  zip16<1>(rows[30], rows[62], rows[30], rows[62]);
+  zip16<1>(rows[31], rows[63], rows[31], rows[63]);
+  zip16<1>(rows[0], rows[16], rows[0], rows[16]);
+  zip16<1>(rows[32], rows[48], rows[32], rows[48]);
+  zip16<1>(rows[1], rows[17], rows[1], rows[17]);
+  zip16<1>(rows[33], rows[49], rows[33], rows[49]);
+  zip16<1>(rows[2], rows[18], rows[2], rows[18]);
+  zip16<1>(rows[34], rows[50], rows[34], rows[50]);
+  zip16<1>(rows[3], rows[19], rows[3], rows[19]);
+  zip16<1>(rows[35], rows[51], rows[35], rows[51]);
+  zip16<1>(rows[4], rows[20], rows[4], rows[20]);
+  zip16<1>(rows[36], rows[52], rows[36], rows[52]);
+  zip16<1>(rows[5], rows[21], rows[5], rows[21]);
+  zip16<1>(rows[37], rows[53], rows[37], rows[53]);
+  zip16<1>(rows[6], rows[22], rows[6], rows[22]);
+  zip16<1>(rows[38], rows[54], rows[38], rows[54]);
+  zip16<1>(rows[7], rows[23], rows[7], rows[23]);
+  zip16<1>(rows[39], rows[55], rows[39], rows[55]);
+  zip16<1>(rows[8], rows[24], rows[8], rows[24]);
+  zip16<1>(rows[40], rows[56], rows[40], rows[56]);
+  zip16<1>(rows[9], rows[25], rows[9], rows[25]);
+  zip16<1>(rows[41], rows[57], rows[41], rows[57]);
+  zip16<1>(rows[10], rows[26], rows[10], rows[26]);
+  zip16<1>(rows[42], rows[58], rows[42], rows[58]);
+  zip16<1>(rows[11], rows[27], rows[11], rows[27]);
+  zip16<1>(rows[43], rows[59], rows[43], rows[59]);
+  zip16<1>(rows[12], rows[28], rows[12], rows[28]);
+  zip16<1>(rows[44], rows[60], rows[44], rows[60]);
+  zip16<1>(rows[13], rows[29], rows[13], rows[29]);
+  zip16<1>(rows[45], rows[61], rows[45], rows[61]);
+  zip16<1>(rows[14], rows[30], rows[14], rows[30]);
+  zip16<1>(rows[46], rows[62], rows[46], rows[62]);
+  zip16<1>(rows[15], rows[31], rows[15], rows[31]);
+  zip16<1>(rows[47], rows[63], rows[47], rows[63]);
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[16], rows[24], rows[16], rows[24]);
+  zip16<1>(rows[32], rows[40], rows[32], rows[40]);
+  zip16<1>(rows[48], rows[56], rows[48], rows[56]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[17], rows[25], rows[17], rows[25]);
+  zip16<1>(rows[33], rows[41], rows[33], rows[41]);
+  zip16<1>(rows[49], rows[57], rows[49], rows[57]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[18], rows[26], rows[18], rows[26]);
+  zip16<1>(rows[34], rows[42], rows[34], rows[42]);
+  zip16<1>(rows[50], rows[58], rows[50], rows[58]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[19], rows[27], rows[19], rows[27]);
+  zip16<1>(rows[35], rows[43], rows[35], rows[43]);
+  zip16<1>(rows[51], rows[59], rows[51], rows[59]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[20], rows[28], rows[20], rows[28]);
+  zip16<1>(rows[36], rows[44], rows[36], rows[44]);
+  zip16<1>(rows[52], rows[60], rows[52], rows[60]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[21], rows[29], rows[21], rows[29]);
+  zip16<1>(rows[37], rows[45], rows[37], rows[45]);
+  zip16<1>(rows[53], rows[61], rows[53], rows[61]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[22], rows[30], rows[22], rows[30]);
+  zip16<1>(rows[38], rows[46], rows[38], rows[46]);
+  zip16<1>(rows[54], rows[62], rows[54], rows[62]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[23], rows[31], rows[23], rows[31]);
+  zip16<1>(rows[39], rows[47], rows[39], rows[47]);
+  zip16<1>(rows[55], rows[63], rows[55], rows[63]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<1>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<1>(rows[32], rows[36], rows[32], rows[36]);
+  zip16<1>(rows[40], rows[44], rows[40], rows[44]);
+  zip16<1>(rows[48], rows[52], rows[48], rows[52]);
+  zip16<1>(rows[56], rows[60], rows[56], rows[60]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<1>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<1>(rows[33], rows[37], rows[33], rows[37]);
+  zip16<1>(rows[41], rows[45], rows[41], rows[45]);
+  zip16<1>(rows[49], rows[53], rows[49], rows[53]);
+  zip16<1>(rows[57], rows[61], rows[57], rows[61]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<1>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<1>(rows[34], rows[38], rows[34], rows[38]);
+  zip16<1>(rows[42], rows[46], rows[42], rows[46]);
+  zip16<1>(rows[50], rows[54], rows[50], rows[54]);
+  zip16<1>(rows[58], rows[62], rows[58], rows[62]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<1>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<1>(rows[27], rows[31], rows[27], rows[31]);
+  zip16<1>(rows[35], rows[39], rows[35], rows[39]);
+  zip16<1>(rows[43], rows[47], rows[43], rows[47]);
+  zip16<1>(rows[51], rows[55], rows[51], rows[55]);
+  zip16<1>(rows[59], rows[63], rows[59], rows[63]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip<1>(rows[32], rows[33], rows[32], rows[33]);
+  zip<1>(rows[34], rows[35], rows[34], rows[35]);
+  zip<1>(rows[36], rows[37], rows[36], rows[37]);
+  zip<1>(rows[38], rows[39], rows[38], rows[39]);
+  zip<1>(rows[40], rows[41], rows[40], rows[41]);
+  zip<1>(rows[42], rows[43], rows[42], rows[43]);
+  zip<1>(rows[44], rows[45], rows[44], rows[45]);
+  zip<1>(rows[46], rows[47], rows[46], rows[47]);
+  zip<1>(rows[48], rows[49], rows[48], rows[49]);
+  zip<1>(rows[50], rows[51], rows[50], rows[51]);
+  zip<1>(rows[52], rows[53], rows[52], rows[53]);
+  zip<1>(rows[54], rows[55], rows[54], rows[55]);
+  zip<1>(rows[56], rows[57], rows[56], rows[57]);
+  zip<1>(rows[58], rows[59], rows[58], rows[59]);
+  zip<1>(rows[60], rows[61], rows[60], rows[61]);
+  zip<1>(rows[62], rows[63], rows[62], rows[63]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip<2>(rows[32], rows[34], rows[32], rows[34]);
+  zip<2>(rows[36], rows[38], rows[36], rows[38]);
+  zip<2>(rows[40], rows[42], rows[40], rows[42]);
+  zip<2>(rows[44], rows[46], rows[44], rows[46]);
+  zip<2>(rows[48], rows[50], rows[48], rows[50]);
+  zip<2>(rows[52], rows[54], rows[52], rows[54]);
+  zip<2>(rows[56], rows[58], rows[56], rows[58]);
+  zip<2>(rows[60], rows[62], rows[60], rows[62]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip<2>(rows[29], rows[31], rows[29], rows[31]);
+  zip<2>(rows[33], rows[35], rows[33], rows[35]);
+  zip<2>(rows[37], rows[39], rows[37], rows[39]);
+  zip<2>(rows[41], rows[43], rows[41], rows[43]);
+  zip<2>(rows[45], rows[47], rows[45], rows[47]);
+  zip<2>(rows[49], rows[51], rows[49], rows[51]);
+  zip<2>(rows[53], rows[55], rows[53], rows[55]);
+  zip<2>(rows[57], rows[59], rows[57], rows[59]);
+  zip<2>(rows[61], rows[63], rows[61], rows[63]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[4];
+    rows[4]                  = rows[16];
+    rows[16]                 = rows[2];
+    rows[2]                  = rows[8];
+    rows[8]                  = rows[32];
+    rows[32]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[12];
+    rows[12]                 = rows[48];
+    rows[48]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[5];
+    rows[5]                  = rows[20];
+    rows[20]                 = rows[18];
+    rows[18]                 = rows[10];
+    rows[10]                 = rows[40];
+    rows[40]                 = rows[33];
+    rows[33]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[6];
+    rows[6]                  = rows[24];
+    rows[24]                 = rows[34];
+    rows[34]                 = rows[9];
+    rows[9]                  = rows[36];
+    rows[36]                 = rows[17];
+    rows[17]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[7];
+    rows[7]                  = rows[28];
+    rows[28]                 = rows[50];
+    rows[50]                 = rows[11];
+    rows[11]                 = rows[44];
+    rows[44]                 = rows[49];
+    rows[49]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[13];
+    rows[13]                 = rows[52];
+    rows[52]                 = rows[19];
+    rows[19]                 = rows[14];
+    rows[14]                 = rows[56];
+    rows[56]                 = rows[35];
+    rows[35]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[15];
+    rows[15]                 = rows[60];
+    rows[60]                 = rows[51];
+    rows[51]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[21];
+    rows[21]                 = rows[22];
+    rows[22]                 = rows[26];
+    rows[26]                 = rows[42];
+    rows[42]                 = rows[41];
+    rows[41]                 = rows[37];
+    rows[37]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[23];
+    rows[23]                 = rows[30];
+    rows[30]                 = rows[58];
+    rows[58]                 = rows[43];
+    rows[43]                 = rows[45];
+    rows[45]                 = rows[53];
+    rows[53]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[25];
+    rows[25]                 = rows[38];
+    rows[38]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[27];
+    rows[27]                 = rows[46];
+    rows[46]                 = rows[57];
+    rows[57]                 = rows[39];
+    rows[39]                 = rows[29];
+    rows[29]                 = rows[54];
+    rows[54]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[31];
+    rows[31]                 = rows[62];
+    rows[62]                 = rows[59];
+    rows[59]                 = rows[47];
+    rows[47]                 = rows[61];
+    rows[61]                 = rows[55];
+    rows[55]                 = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<32>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[16], rows[0], rows[16]);
+  zip16<1>(rows[1], rows[17], rows[1], rows[17]);
+  zip16<1>(rows[2], rows[18], rows[2], rows[18]);
+  zip16<1>(rows[3], rows[19], rows[3], rows[19]);
+  zip16<1>(rows[4], rows[20], rows[4], rows[20]);
+  zip16<1>(rows[5], rows[21], rows[5], rows[21]);
+  zip16<1>(rows[6], rows[22], rows[6], rows[22]);
+  zip16<1>(rows[7], rows[23], rows[7], rows[23]);
+  zip16<1>(rows[8], rows[24], rows[8], rows[24]);
+  zip16<1>(rows[9], rows[25], rows[9], rows[25]);
+  zip16<1>(rows[10], rows[26], rows[10], rows[26]);
+  zip16<1>(rows[11], rows[27], rows[11], rows[27]);
+  zip16<1>(rows[12], rows[28], rows[12], rows[28]);
+  zip16<1>(rows[13], rows[29], rows[13], rows[29]);
+  zip16<1>(rows[14], rows[30], rows[14], rows[30]);
+  zip16<1>(rows[15], rows[31], rows[15], rows[31]);
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[16], rows[24], rows[16], rows[24]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[17], rows[25], rows[17], rows[25]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[18], rows[26], rows[18], rows[26]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[19], rows[27], rows[19], rows[27]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[20], rows[28], rows[20], rows[28]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[21], rows[29], rows[21], rows[29]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[22], rows[30], rows[22], rows[30]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[23], rows[31], rows[23], rows[31]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[16], rows[20], rows[16], rows[20]);
+  zip16<1>(rows[24], rows[28], rows[24], rows[28]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[17], rows[21], rows[17], rows[21]);
+  zip16<1>(rows[25], rows[29], rows[25], rows[29]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[18], rows[22], rows[18], rows[22]);
+  zip16<1>(rows[26], rows[30], rows[26], rows[30]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  zip16<1>(rows[19], rows[23], rows[19], rows[23]);
+  zip16<1>(rows[27], rows[31], rows[27], rows[31]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<1>(rows[16], rows[17], rows[16], rows[17]);
+  zip<1>(rows[18], rows[19], rows[18], rows[19]);
+  zip<1>(rows[20], rows[21], rows[20], rows[21]);
+  zip<1>(rows[22], rows[23], rows[22], rows[23]);
+  zip<1>(rows[24], rows[25], rows[24], rows[25]);
+  zip<1>(rows[26], rows[27], rows[26], rows[27]);
+  zip<1>(rows[28], rows[29], rows[28], rows[29]);
+  zip<1>(rows[30], rows[31], rows[30], rows[31]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[16], rows[18], rows[16], rows[18]);
+  zip<2>(rows[20], rows[22], rows[20], rows[22]);
+  zip<2>(rows[24], rows[26], rows[24], rows[26]);
+  zip<2>(rows[28], rows[30], rows[28], rows[30]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  zip<2>(rows[17], rows[19], rows[17], rows[19]);
+  zip<2>(rows[21], rows[23], rows[21], rows[23]);
+  zip<2>(rows[25], rows[27], rows[25], rows[27]);
+  zip<2>(rows[29], rows[31], rows[29], rows[31]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[4];
+    rows[4]                  = rows[16];
+    rows[16]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[2];
+    rows[2]                  = rows[8];
+    rows[8]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[12];
+    rows[12]                 = rows[18];
+    rows[18]                 = rows[9];
+    rows[9]                  = rows[6];
+    rows[6]                  = rows[24];
+    rows[24]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[5];
+    rows[5]                  = rows[20];
+    rows[20]                 = rows[17];
+    rows[17]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[7];
+    rows[7]                  = rows[28];
+    rows[28]                 = rows[19];
+    rows[19]                 = rows[13];
+    rows[13]                 = rows[22];
+    rows[22]                 = rows[25];
+    rows[25]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[11];
+    rows[11]                 = rows[14];
+    rows[14]                 = rows[26];
+    rows[26]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[15];
+    rows[15]                 = rows[30];
+    rows[30]                 = rows[27];
+    rows[27]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[23];
+    rows[23]                 = rows[29];
+    rows[29]                 = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<16>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[8], rows[0], rows[8]);
+  zip16<1>(rows[1], rows[9], rows[1], rows[9]);
+  zip16<1>(rows[2], rows[10], rows[2], rows[10]);
+  zip16<1>(rows[3], rows[11], rows[3], rows[11]);
+  zip16<1>(rows[4], rows[12], rows[4], rows[12]);
+  zip16<1>(rows[5], rows[13], rows[5], rows[13]);
+  zip16<1>(rows[6], rows[14], rows[6], rows[14]);
+  zip16<1>(rows[7], rows[15], rows[7], rows[15]);
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[8], rows[12], rows[8], rows[12]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[9], rows[13], rows[9], rows[13]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[10], rows[14], rows[10], rows[14]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  zip16<1>(rows[11], rows[15], rows[11], rows[15]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<1>(rows[8], rows[9], rows[8], rows[9]);
+  zip<1>(rows[10], rows[11], rows[10], rows[11]);
+  zip<1>(rows[12], rows[13], rows[12], rows[13]);
+  zip<1>(rows[14], rows[15], rows[14], rows[15]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[8], rows[10], rows[8], rows[10]);
+  zip<2>(rows[12], rows[14], rows[12], rows[14]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  zip<2>(rows[9], rows[11], rows[9], rows[11]);
+  zip<2>(rows[13], rows[15], rows[13], rows[15]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[4];
+    rows[4]                  = rows[2];
+    rows[2]                  = rows[8];
+    rows[8]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[12];
+    rows[12]                 = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[5];
+    rows[5]                  = rows[6];
+    rows[6]                  = rows[10];
+    rows[10]                 = rows[9];
+    rows[9]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[7];
+    rows[7]                  = rows[14];
+    rows[14]                 = rows[11];
+    rows[11]                 = rows[13];
+    rows[13]                 = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems], Elements<8>, Bytes<64>)
+{
+  zip16<1>(rows[0], rows[4], rows[0], rows[4]);
+  zip16<1>(rows[1], rows[5], rows[1], rows[5]);
+  zip16<1>(rows[2], rows[6], rows[2], rows[6]);
+  zip16<1>(rows[3], rows[7], rows[3], rows[7]);
+  // correction steps follow below (if required)
+  zip<1>(rows[0], rows[1], rows[0], rows[1]);
+  zip<1>(rows[2], rows[3], rows[2], rows[3]);
+  zip<1>(rows[4], rows[5], rows[4], rows[5]);
+  zip<1>(rows[6], rows[7], rows[6], rows[7]);
+  zip<2>(rows[0], rows[2], rows[0], rows[2]);
+  zip<2>(rows[4], rows[6], rows[4], rows[6]);
+  zip<2>(rows[1], rows[3], rows[1], rows[3]);
+  zip<2>(rows[5], rows[7], rows[5], rows[7]);
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[1];
+    rows[1]                  = rows[4];
+    rows[4]                  = vec_v;
+  }
+  {
+    Vec<T, SIMD_WIDTH> vec_v = rows[3];
+    rows[3]                  = rows[6];
+    rows[6]                  = vec_v;
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose2inplcLane(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems])
+{
+  transpose2inplcLane(rows, Elements<Vec<T, SIMD_WIDTH>::elements>(),
                       Bytes<SIMD_WIDTH>());
 }
 
@@ -27720,7 +30065,7 @@ static SIMD_INLINE void unswizzle(Vec<T, SIMD_WIDTH> v[2 * N])
  * The matrix must be given as an array of Vec's which are the rows of
  * the matrix. The number of rows must be equal to the number of elements
  * in a Vec (<tt>SIMD_WIDTH/sizeof(T)</tt>), i.e. the matrix must be
- * square.
+ * square. Overlap between input and output rows is not permitted.
  *
  * @param[in] inRows array of Vec's holding the matrix to be transposed
  * @param[out] outRows array of Vec's where the transposed matrix is stored
@@ -27751,6 +30096,95 @@ static SIMD_INLINE void transpose(
   // internal::ext::transpose2inplcLane(inRows, outRows);
 }
 
+/**
+ * @ingroup group_reordering
+ * @brief Transposes a matrix held in an array of Vec's.
+ *
+ * The matrix must be given as an array of Vec's which are the rows of
+ * the matrix. The number of rows must be equal to the number of elements
+ * in a Vec (<tt>SIMD_WIDTH/sizeof(T)</tt>), i.e. the matrix must be
+ * square.
+ *
+ * @param[in,out] rows array of Vec's holding the matrix to be transposed
+ */
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose(
+  Vec<T, SIMD_WIDTH> rows[Vec<T, SIMD_WIDTH>::elems])
+{
+  // uncomment fastest version
+  // only auto-generated inplace versions are allowed here
+  // internal::ext::transpose1inplc(rows);
+  // internal::ext::transpose2inplc(rows);
+  internal::ext::transpose1inplcLane(rows);
+  // internal::ext::transpose2inplcLane(rows);
+}
+
+// ========================================================================
+// integration of values in simd::Vec
+// ========================================================================
+
+// example:
+//        0    1    2    3    4    5    6    7
+// +      -    0    1    2    3    4    5    6    slle(1)
+//      --------------------------------------
+//        0  0-1  1-2  2-3  3-4  4-5  5-6  6-7
+// +      -    -    0  0-1  1-2  2-3  3-4  4-5    slle(2)
+//      --------------------------------------
+//        0  0-1  0-2  0-3  1-4  2-5  3-6  4-7
+// +      -    -    -    -    0  0-1  0-2  0-3    slle(4)
+//      --------------------------------------
+//        0  0-1  0-2  0-3  0-4  0-5  0-6  0-7
+//
+// problem: slle has immediate argument, T-SIMD: template parameter
+
+namespace internal {
+namespace ext {
+// primary template
+template <typename T, size_t SIMD_WIDTH, int SHIFT, int END_SHIFT>
+struct HInt
+{
+public:
+  static SIMD_INLINE simd::Vec<T, SIMD_WIDTH> integrate(
+    const simd::Vec<T, SIMD_WIDTH> &v)
+  {
+    return HInt<T, SIMD_WIDTH, 2 * SHIFT, END_SHIFT>::integrate(
+      simd::add(v, simd::slle<SHIFT>(v)));
+  }
+};
+
+// termination template
+template <typename T, size_t SIMD_WIDTH, int END_SHIFT>
+struct HInt<T, SIMD_WIDTH, END_SHIFT, END_SHIFT>
+{
+public:
+  static SIMD_INLINE simd::Vec<T, SIMD_WIDTH> integrate(
+    const simd::Vec<T, SIMD_WIDTH> &v)
+  {
+    return v;
+  }
+};
+} // namespace ext
+} // namespace internal
+
+/**
+ * @ingroup group_horizontal
+ * @brief Integrates the values of a Vec.
+ *
+ * This function integrates the values of a Vec, i.e. it computes the
+ * prefix sum of the elements.
+ *
+ * @param[in] v Vec to integrate
+ *
+ * @return Vec with integrated values
+ */
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE simd::Vec<T, SIMD_WIDTH> integrate(
+  const simd::Vec<T, SIMD_WIDTH> &v)
+{
+  return internal::ext::HInt<T, SIMD_WIDTH, 1,
+                             simd::Vec<T, SIMD_WIDTH>::elems>::integrate(v);
+}
+
 // ===========================================================================
 // setones: set all bits to 1
 // ===========================================================================
@@ -27761,7 +30195,7 @@ static SIMD_INLINE void transpose(
  *
  * @return Vec with all bits set to 1
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> setones()
 {
   Vec<T, SIMD_WIDTH> zero = setzero<T, SIMD_WIDTH>();
@@ -27781,7 +30215,7 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> setones()
  *
  * @return Vec with all elements set to the minimum value of the element type
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> setmin()
 {
   return set1<T, SIMD_WIDTH>(std::numeric_limits<T>::lowest());
@@ -27794,7 +30228,7 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> setmin()
  *
  * @return Vec with all elements set to the maximum value of the element type
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> setmax()
 {
   return set1<T, SIMD_WIDTH>(std::numeric_limits<T>::max());
@@ -27806,7 +30240,7 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> setmax()
  *
  * @return Vec with all elements set to the value 1
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> setunity()
 {
   return set1<T, SIMD_WIDTH>(T(1));
@@ -27820,7 +30254,7 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> setunity()
  *
  * @return Vec with all elements set to the value -1
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> setnegunity()
 {
   static_assert(std::is_signed<T>::value || std::is_floating_point<T>::value,
@@ -27945,6 +30379,18 @@ static SIMD_INLINE void bitonicSortReducedTransposed(
     }
   }
 }
+
+// same as bitonicSortReducedTransposed, but including the transpose
+template <SortSlope SLOPE, typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
+static SIMD_INLINE void bitonicSortReduced(
+  Vec<T, SIMD_WIDTH> vecs[Vec<T, SIMD_WIDTH>::elems])
+{
+  Vec<T, SIMD_WIDTH> transVecs[Vec<T, SIMD_WIDTH>::elements];
+  transpose(vecs, transVecs);
+  internal::ext::bitonicSortReducedTransposed<SLOPE>(transVecs);
+  transpose(transVecs, vecs);
+}
+
 } // namespace ext
 } // namespace internal
 
@@ -27995,13 +30441,113 @@ template <SortSlope SLOPE, typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE void bitonicSortSortedPairs(
   Vec<T, SIMD_WIDTH> vecs[Vec<T, SIMD_WIDTH>::elems])
 {
-  Vec<T, SIMD_WIDTH> transVecs[Vec<T, SIMD_WIDTH>::elements];
+  // Vec<T, SIMD_WIDTH> transVecs[Vec<T, SIMD_WIDTH>::elements];
   // second vector of each pair is reversed and fused with first vector
   for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elements; i += 2)
     internal::ext::bitonicFusion<SLOPE>(vecs[i], vecs[i + 1]);
-  transpose(vecs, transVecs);
-  internal::ext::bitonicSortReducedTransposed<SLOPE>(transVecs);
-  transpose(transVecs, vecs);
+  // transpose(vecs, transVecs);
+  // internal::ext::bitonicSortReducedTransposed<SLOPE>(transVecs);
+  // transpose(transVecs, vecs);
+  internal::ext::bitonicSortReduced<SLOPE>(vecs);
+}
+
+/**
+ * @brief Sorts data vector using vertical version of bitonic sort.
+ * Assumes that data size is a power of 2 times the number of elements
+ * in a SIMD vector squared; if not, a static assertion is
+ * raised. Note: This function has not been subjected to auto-tests.
+ *
+ * @tparam LENGTH length of data vector
+ * @tparam SLOPE direction to sort in (SortSlope::ASCENDING or
+ * SortSlope::DESCENDING)
+ * @param data vector of data (may be unaligned)
+ */
+
+// contributed by Ebba Stina Siebold, modified
+
+template <size_t LENGTH, SortSlope SLOPE, typename T,
+          size_t SIMD_WIDTH_DEFAULT_NATIVE>
+static SIMD_INLINE void verticalBitonicSort(T data[LENGTH])
+{
+  // number of elements in SIMD vector
+  constexpr size_t SIMD_ELEMS = Vec<T, SIMD_WIDTH>::elements;
+  // number of SIMD vectors in data
+  // LENGTH is assumed to be 2^n * SIMD_ELEMS^2 (n=0,1,2...)
+  // -> NUM_VECS is 2^n * SIMD_ELEMS
+  constexpr size_t NUM_VECS = LENGTH / SIMD_ELEMS;
+  // number of vectors handled simultaneously by vertical bitonic sort
+  // -> SORTING_STAGES is 2^n
+  constexpr size_t SORTING_STAGES = NUM_VECS / SIMD_ELEMS;
+  // examples if condition is fulfilled:
+  //   LENGTH=16, SIMD_ELEMS=4, NUM_VECS=4, SORTING_STAGES=1
+  //   LENGTH=32, SIMD_ELEMS=4, NUM_VECS=8, SORTING_STAGES=2
+  //   LENGTH=64, SIMD_ELEMS=4, NUM_VECS=16, SORTING_STAGES=4
+  // example if condition on LENGTH is violated:
+  //   LENGTH=10, SIMD_ELEMS=4, NUM_VECS=2, SORTING_STAGES=0
+  //   -> SORTING_STAGES * SIMD_ELEMS * SIMD_ELEMS = 0 != 10
+  //   LENGTH=100, SIMD_ELEMS=4, NUM_VECS=25, SORTING_STAGES=5
+  //   -> SORTING_STAGES * SIMD_ELEMS * SIMD_ELEMS = 80 != 100
+  static_assert(SORTING_STAGES * SIMD_ELEMS * SIMD_ELEMS == LENGTH,
+                "LENGTH is not 2^n * SIMD_ELEMS^2");
+
+  // load data into vectors
+  // TODO: is it efficient to handle this via a large array of Vec?
+  Vec<T, SIMD_WIDTH> vecs[NUM_VECS];
+  loadu<T, SIMD_WIDTH>(data, vecs, NUM_VECS);
+  // sort all vectors individually
+  for (size_t i = 0; i < SORTING_STAGES; i++) {
+    // sort next SIMD_ELEMS vectors
+    Vec<T, SIMD_WIDTH> *current_vecs = vecs + i * SIMD_ELEMS;
+    // sort each vector in itself
+    bitonicSort<SLOPE>(current_vecs);
+  }
+  // loop structure taken from bitonicSortTransposed
+  for (size_t bulk_size = 2; bulk_size <= NUM_VECS; bulk_size *= 2) {
+    // flip each lower half of each bulk and compare and swap with
+    // the upper half
+    for (size_t bulk_start = 0; bulk_start < NUM_VECS;
+         bulk_start += bulk_size) {
+      size_t half_bulk     = bulk_size / 2;
+      size_t left_counter  = bulk_start;
+      size_t right_counter = bulk_start + (bulk_size - 1);
+      for (size_t i = 0; i < half_bulk; i++) {
+        internal::ext::bitonicFusion<SLOPE>(vecs[left_counter],
+                                            vecs[right_counter]);
+        left_counter++;
+        right_counter--;
+      }
+    }
+    // distribute elements to individual vectors
+    for (size_t bulk_start = 0; bulk_start < NUM_VECS;
+         bulk_start += bulk_size) {
+      for (size_t step = bulk_size / 4; step > 0; step /= 2) {
+        for (size_t jump = 0; jump < bulk_size; jump += step * 2) {
+          size_t left_counter  = bulk_start + jump;
+          size_t right_counter = bulk_start + jump + step;
+          for (size_t k = 0; k < step; k++) {
+            internal::ext::Cas<SLOPE, T, SIMD_WIDTH>::compareAndSwap(
+              vecs[left_counter], vecs[right_counter]);
+            left_counter++;
+            right_counter++;
+          }
+        }
+      }
+    }
+    // restore order in individual vectors
+    for (size_t i = 0; i < SORTING_STAGES; i++) {
+      // sort next SIMD_ELEMS vectors
+      Vec<T, SIMD_WIDTH> *current_vecs = vecs + i * SIMD_ELEMS;
+      // sort each vector in itself
+      // TODO: in-place version (1 arg.) of transpose slower?
+      // TODO: put this into a function bitonicSortReduced?
+      // transpose(current_vecs);
+      // internal::ext::bitonicSortReducedTransposed<SLOPE>(current_vecs);
+      // transpose(current_vecs);
+      internal::ext::bitonicSortReduced<SLOPE>(current_vecs);
+    }
+  }
+  // store vectors into original data array
+  storeu<T, SIMD_WIDTH>(data, vecs, NUM_VECS);
 }
 
 /** @} */
@@ -28101,7 +30647,6 @@ SIMDVEC_UNOP(operator~, bit_not)
 // Vecs: multiple Vec in template class
 // ===========================================================================
 //
-// Vecs.H --
 // multiple Vec in a template class plus some functions
 //
 // This source code file is part of the following software:
@@ -28110,11 +30655,11 @@ SIMDVEC_UNOP(operator~, bit_not)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -28299,6 +30844,13 @@ static SIMD_INLINE void transpose(
   transpose(inRows.vec, outRows.vec);
 }
 
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void transpose(
+  Vecs<(SIMD_WIDTH / sizeof(T)), T, SIMD_WIDTH> &rows)
+{
+  transpose(rows.vec);
+}
+
 template <size_t N, typename T, size_t SIMD_WIDTH>
 static SIMD_INLINE void swizzle2(Vecs<2 * N, T, SIMD_WIDTH> &v)
 {
@@ -28418,7 +30970,6 @@ static SIMD_INLINE void set1(Vecs<NUM, T, SIMD_WIDTH> &res, T a)
 // templates/functions for masked operations
 // ===========================================================================
 //
-// SIMDVecMask.H --
 // mask classes and masked functions
 //
 // This source code file is part of the following software:
@@ -28427,11 +30978,11 @@ static SIMD_INLINE void set1(Vecs<NUM, T, SIMD_WIDTH> &res, T a)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Jonas Keller, Ralf Möller
 //     Computer Engineering
@@ -28451,7 +31002,37 @@ static SIMD_INLINE void set1(Vecs<NUM, T, SIMD_WIDTH> &res, T a)
 
 // ===========================================================================
 //
-// SIMDVecMaskImplEmu.H --
+// Mask class definitions and architecture specific functions
+// for Intel 32 byte (256 bit)
+//
+// This source code file is part of the following software:
+//
+//    - the low-level C++ template SIMD library
+//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
+//      for local visual homing.
+//
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
+//
+// (C) Jonas Keller, Ralf Möller
+//     Computer Engineering
+//     Faculty of Technology
+//     Bielefeld University
+//     www.ti.uni-bielefeld.de
+//
+// ===========================================================================
+
+// 05. Jun 24 (Jonas Keller): added Intel32 implementations of masked load and
+// store functions for 32 bit and 64 bit data types
+
+#ifndef SIMD_VEC_MASK_IMPL_INTEL_32_H_
+#define SIMD_VEC_MASK_IMPL_INTEL_32_H_
+
+// ===========================================================================
+//
 // emulated mask functions
 // Author: Markus Vieth (Bielefeld University, mvieth@techfak.uni-bielefeld.de)
 // Year of creation: 2019
@@ -28462,11 +31043,11 @@ static SIMD_INLINE void set1(Vecs<NUM, T, SIMD_WIDTH> &res, T a)
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Markus Vieth, Ralf Möller
 //     Computer Engineering
@@ -28543,13 +31124,710 @@ mask_add(const Vec<Float, SIMD_WIDTH> &src,
 // way to use flags or exceptions, so emulating them does not make much
 // sense anyway.
 
-#include <cstddef>
 #ifndef SIMD_VEC_MASK_IMPL_EMU_H_
 #define SIMD_VEC_MASK_IMPL_EMU_H_
 
+#include <cstddef>
+#include <cstdint>
+
+#ifndef SIMDVEC_SANDBOX
+
+namespace simd {
+// 05. Feb 23 (Jonas Keller): introduced generic emulated Mask class using the
+// Vec class
+
+// exclude from doxygen (until endcond)
+/// @cond
+
+template <typename T, size_t SIMD_WIDTH>
+class Mask
+{
+  Vec<T, SIMD_WIDTH> mask;
+
+public:
+  Mask() = default;
+  explicit SIMD_INLINE Mask(const Vec<T, SIMD_WIDTH> &x) : mask(x) {}
+  SIMD_INLINE Mask(const uint64_t x) : mask(int2bits<T, SIMD_WIDTH>(x)) {}
+  explicit SIMD_INLINE operator Vec<T, SIMD_WIDTH>() const { return mask; }
+  SIMD_INLINE operator uint64_t() const { return msb2int<T, SIMD_WIDTH>(mask); }
+  SIMD_INLINE bool operator[](const size_t i) const
+  {
+    if (i >= Vec<T, SIMD_WIDTH>::elems) { return false; }
+    T mask_array[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH) = {0};
+    store(mask_array, mask);
+    return mask_array[i] != T(0);
+  }
+  SIMD_INLINE bool operator==(const Mask<T, SIMD_WIDTH> &other) const
+  {
+    return test_all_zeros(
+      bit_xor(reinterpret<Int>(mask), reinterpret<Int>(other.mask)));
+  }
+  // define operators new and delete to ensure proper alignment, since
+  // the default new and delete are not guaranteed to do so before C++17
+  void *operator new(size_t size) { return aligned_malloc(SIMD_WIDTH, size); }
+  void operator delete(void *p) { aligned_free(p); }
+  void *operator new[](size_t size) { return aligned_malloc(SIMD_WIDTH, size); }
+  void operator delete[](void *p) { aligned_free(p); }
+};
+/// @endcond
+
+namespace internal {
+namespace mask {
+#define EMULATE_SOP_NAME(OP, OP_NAME)                                          \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP_NAME(                       \
+    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a)                 \
+  {                                                                            \
+    return mask::mask_ifelsezero(k, OP(a));                                    \
+  }                                                                            \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP_NAME(                        \
+    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
+    const Vec<T, SIMD_WIDTH> &a)                                               \
+  {                                                                            \
+    return mask::mask_ifelse(k, OP(a), src);                                   \
+  }
+
+#define EMULATE_SOP(OP) EMULATE_SOP_NAME(OP, OP)
+
+#define EMULATE_DOP_NAME(OP, OP_NAME)                                          \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP_NAME(                       \
+    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a,                 \
+    const Vec<T, SIMD_WIDTH> &b)                                               \
+  {                                                                            \
+    return mask::mask_ifelsezero(k, OP(a, b));                                 \
+  }                                                                            \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP_NAME(                        \
+    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
+    const Vec<T, SIMD_WIDTH> &a, const Vec<T, SIMD_WIDTH> &b)                  \
+  {                                                                            \
+    return mask::mask_ifelse(k, OP(a, b), src);                                \
+  }
+
+#define EMULATE_DOP(OP) EMULATE_DOP_NAME(OP, OP)
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelse(
+  const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &trueVal,
+  const Vec<T, SIMD_WIDTH> &falseVal)
+{
+  return ifelse((Vec<T, SIMD_WIDTH>) k, trueVal, falseVal);
+}
+
+// 04. Aug 22 (Jonas Keller): added mask_ifelsezero
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelsezero(
+  const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &trueVal)
+{
+  return bit_and((Vec<T, SIMD_WIDTH>) k, trueVal);
+}
+
+template <typename Tout, typename Tin, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<Tout, SIMD_WIDTH> reinterpret_mask(
+  const Mask<Tin, SIMD_WIDTH> &k)
+{
+  static_assert(sizeof(Tout) == sizeof(Tin), "");
+  return Mask<Tout, SIMD_WIDTH>(reinterpret<Tout>((Vec<Tin, SIMD_WIDTH>) k));
+}
+
+// The types of the masks are kind of arbitrary
+template <size_t SIMD_WIDTH>
+SIMD_INLINE Vec<Int, SIMD_WIDTH> maskz_cvts(const Mask<Float, SIMD_WIDTH> &k,
+                                            const Vec<Float, SIMD_WIDTH> &a)
+{
+  return mask::mask_ifelsezero(mask::reinterpret_mask<Int>(k),
+                               ::simd::cvts<Int>(a));
+}
+
+template <size_t SIMD_WIDTH>
+SIMD_INLINE Vec<Int, SIMD_WIDTH> mask_cvts(const Vec<Int, SIMD_WIDTH> &src,
+                                           const Mask<Float, SIMD_WIDTH> &k,
+                                           const Vec<Float, SIMD_WIDTH> &a)
+{
+  return mask::mask_ifelse(mask::reinterpret_mask<Int>(k), ::simd::cvts<Int>(a),
+                           src);
+}
+
+template <size_t SIMD_WIDTH>
+SIMD_INLINE Vec<Float, SIMD_WIDTH> maskz_cvts(const Mask<Int, SIMD_WIDTH> &k,
+                                              const Vec<Int, SIMD_WIDTH> &a)
+{
+  return mask::mask_ifelsezero(mask::reinterpret_mask<Float>(k),
+                               ::simd::cvts<Float>(a));
+}
+
+template <size_t SIMD_WIDTH>
+SIMD_INLINE Vec<Float, SIMD_WIDTH> mask_cvts(const Vec<Float, SIMD_WIDTH> &src,
+                                             const Mask<Int, SIMD_WIDTH> &k,
+                                             const Vec<Int, SIMD_WIDTH> &a)
+{
+  return mask::mask_ifelse(mask::reinterpret_mask<Float>(k),
+                           ::simd::cvts<Float>(a), src);
+}
+
+// =======================================================================
+// emulated load/store
+// =======================================================================
+
+// 04. Feb 23 (Jonas Keller): improved implementation of masked load/store
+// functions
+
+template <size_t SIMD_WIDTH, typename T>
+static SIMD_INLINE bool is_within_same_page(const T *const p)
+{
+  const uintptr_t PAGE_SIZE = 4096; // smallest page size I found
+  const uintptr_t begin_page =
+    reinterpret_cast<uintptr_t>(p) & ~(PAGE_SIZE - 1);
+  // 29. Aug 23 (Jonas Keller): fixed wrong calculation of end_page
+  const uintptr_t end_page =
+    // reinterpret_cast<uintptr_t>(p + Vec<T, SIMD_WIDTH>::elems - 1) &
+    // ~(PAGE_SIZE - 1);
+    (reinterpret_cast<uintptr_t>(p) + SIMD_WIDTH - 1) & ~(PAGE_SIZE - 1);
+  return begin_page == end_page;
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_load(const Mask<T, SIMD_WIDTH> &k,
+                                                 const T *const p)
+{
+  // if k is all zeros nothing should be loaded
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) {
+    return setzero<T, SIMD_WIDTH>();
+  }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector and mask
+  // it. Otherwise, we load the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    return mask::mask_ifelsezero(k, load<SIMD_WIDTH>(p));
+  }
+  // if k is all ones, we can load the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) { return load<SIMD_WIDTH>(p); }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH) = {0};
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { result[i] = p[i]; }
+  }
+  return load<SIMD_WIDTH>(result);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_load(const Vec<T, SIMD_WIDTH> &src,
+                                                const Mask<T, SIMD_WIDTH> &k,
+                                                const T *const p)
+{
+  // if k is all zeros nothing should be loaded
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return src; }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector and mask
+  // it. Otherwise, we load the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    return mask::mask_ifelse(k, load<SIMD_WIDTH>(p), src);
+  }
+  // if k is all ones, we can load the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) { return load<SIMD_WIDTH>(p); }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(result, src);
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { result[i] = p[i]; }
+  }
+  return load<SIMD_WIDTH>(result);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_loadu(const Mask<T, SIMD_WIDTH> &k,
+                                                  const T *const p)
+{
+  // if k is all zeros nothing should be loaded
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) {
+    return setzero<T, SIMD_WIDTH>();
+  }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector and mask
+  // it. Otherwise, we load the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    return mask::mask_ifelsezero(k, loadu<SIMD_WIDTH>(p));
+  }
+  // if k is all ones, we can load the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) { return loadu<SIMD_WIDTH>(p); }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH) = {0};
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { result[i] = p[i]; }
+  }
+  return load<SIMD_WIDTH>(result);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_loadu(const Vec<T, SIMD_WIDTH> &src,
+                                                 const Mask<T, SIMD_WIDTH> &k,
+                                                 const T *const p)
+{
+  // if k is all zeros nothing should be loaded
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return src; }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector and mask
+  // it. Otherwise, we load the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    return mask::mask_ifelse(k, loadu<SIMD_WIDTH>(p), src);
+  }
+  // if k is all ones, we can load the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) { return loadu<SIMD_WIDTH>(p); }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(result, src);
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { result[i] = p[i]; }
+  }
+  return load<SIMD_WIDTH>(result);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void mask_store(T *const p, const Mask<T, SIMD_WIDTH> &k,
+                                   const Vec<T, SIMD_WIDTH> &a)
+{
+  // if k is all zeros nothing should be stored
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return; }
+  // if k is all ones, we can store the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
+    store(p, a);
+    return;
+  }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector, mask it
+  // and store it back. Otherwise, we store the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    store(p, mask::mask_ifelse(k, a, load<SIMD_WIDTH>(p)));
+    return;
+  }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T a_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(a_arr, a);
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { p[i] = a_arr[i]; }
+  }
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE void mask_storeu(T *const p, const Mask<T, SIMD_WIDTH> &k,
+                                    const Vec<T, SIMD_WIDTH> &a)
+{
+  // if k is all zeros nothing should be stored
+  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return; }
+  // if k is all ones, we can store the whole vector
+  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
+    storeu(p, a);
+    return;
+  }
+  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
+  // there is no risk of a page fault, so we load the whole vector, mask it
+  // and store it back. Otherwise, we store the vector element-wise.
+  if (is_within_same_page<SIMD_WIDTH>(p)) {
+    storeu(p, mask::mask_ifelse(k, a, loadu<SIMD_WIDTH>(p)));
+    return;
+  }
+  T k_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(k_arr, (Vec<T, SIMD_WIDTH>) k);
+  T a_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
+  store(a_arr, a);
+  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+    if (k_arr[i] != T(0)) { p[i] = a_arr[i]; }
+  }
+}
+
+// maskz_store(u) does not exist/does not make sense
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_set1(const Mask<T, SIMD_WIDTH> &k,
+                                                 const T a)
+{
+  return mask::mask_ifelsezero(k, ::simd::set1<T, SIMD_WIDTH>(a));
+}
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_set1(const Vec<T, SIMD_WIDTH> &src,
+                                                const Mask<T, SIMD_WIDTH> &k,
+                                                const T a)
+{
+  return mask::mask_ifelse(k, ::simd::set1<T, SIMD_WIDTH>(a), src);
+}
+
+EMULATE_DOP(add)
+EMULATE_DOP(adds)
+EMULATE_DOP(sub)
+EMULATE_DOP(subs)
+
+EMULATE_DOP(mul)
+EMULATE_DOP(div)
+
+// ---------------------------------------------------------------------------
+// masked ceil, floor, round, truncate v
+// ---------------------------------------------------------------------------
+
+EMULATE_SOP(ceil)
+EMULATE_SOP(floor)
+EMULATE_SOP(round)
+EMULATE_SOP(truncate)
+
+// ---------------------------------------------------------------------------
+// masked elementary mathematical functions v
+// ---------------------------------------------------------------------------
+
+EMULATE_SOP(rcp)
+EMULATE_SOP(rsqrt)
+EMULATE_SOP(sqrt)
+
+EMULATE_SOP(abs)
+
+EMULATE_DOP_NAME(bit_and, and)
+EMULATE_DOP_NAME(bit_or, or)
+EMULATE_DOP_NAME(bit_andnot, andnot)
+EMULATE_DOP_NAME(bit_xor, xor)
+EMULATE_SOP_NAME(bit_not, not)
+EMULATE_SOP(neg)
+EMULATE_DOP(min)
+EMULATE_DOP(max)
+EMULATE_SOP(div2r0)
+EMULATE_SOP(div2rd)
+
+#define EMULATE_SHIFT(OP)                                                      \
+  template <size_t COUNT, typename T, size_t SIMD_WIDTH>                       \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP(                            \
+    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a)                 \
+  {                                                                            \
+    return mask::mask_ifelsezero(k, OP<COUNT>(a));                             \
+  }                                                                            \
+  template <size_t COUNT, typename T, size_t SIMD_WIDTH>                       \
+  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP(                             \
+    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
+    const Vec<T, SIMD_WIDTH> &a)                                               \
+  {                                                                            \
+    return mask::mask_ifelse(k, OP<COUNT>(a), src);                            \
+  }
+EMULATE_SHIFT(srai)
+EMULATE_SHIFT(srli)
+EMULATE_SHIFT(slli)
+
+EMULATE_DOP(hadd)
+EMULATE_DOP(hadds)
+EMULATE_DOP(hsub)
+EMULATE_DOP(hsubs)
+
+// TODO mask parameters?
+
+// 16. Oct 22 (Jonas Keller): added overloaded versions of mask_cmp* functions
+// that only take two vector parameters and no mask parameter
+#define EMULATE_CMP(OP)                                                        \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_##OP(                            \
+    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a,                 \
+    const Vec<T, SIMD_WIDTH> &b)                                               \
+  {                                                                            \
+    return Mask<T, SIMD_WIDTH>(mask::mask_ifelsezero(k, OP(a, b)));            \
+  }                                                                            \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_##OP(                            \
+    const Vec<T, SIMD_WIDTH> &a, const Vec<T, SIMD_WIDTH> &b)                  \
+  {                                                                            \
+    return Mask<T, SIMD_WIDTH>(OP(a, b));                                      \
+  }
+
+EMULATE_CMP(cmplt)
+EMULATE_CMP(cmple)
+EMULATE_CMP(cmpeq)
+EMULATE_CMP(cmpgt)
+EMULATE_CMP(cmpge)
+EMULATE_CMP(cmpneq)
+
+EMULATE_DOP(avg)
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE bool mask_test_all_zeros(const Mask<T, SIMD_WIDTH> &k,
+                                            const Vec<T, SIMD_WIDTH> &a)
+{
+  return test_all_zeros(mask::mask_ifelsezero(k, a));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE bool mask_test_all_ones(const Mask<T, SIMD_WIDTH> &k,
+                                           const Vec<T, SIMD_WIDTH> &a)
+{
+  return mask::mask_test_all_zeros(
+    k, bit_not(a)); // test_all_ones(mask_ifelse<T, SIMD_WIDTH>(k, a, ()
+                    // set1<Byte, SIMD_WIDTH>(0xFF)));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_all_ones(OutputType<T>,
+                                                     Integer<SIMD_WIDTH>)
+{
+  return (Mask<T, SIMD_WIDTH>) set1<T, SIMD_WIDTH>(TypeInfo<T>::trueval());
+}
+
+#define EMULATE_DMASKOP(NAME)                                                  \
+  template <typename T, size_t SIMD_WIDTH>                                     \
+  static SIMD_INLINE Mask<T, SIMD_WIDTH> k##NAME(const Mask<T, SIMD_WIDTH> &a, \
+                                                 const Mask<T, SIMD_WIDTH> &b) \
+  {                                                                            \
+    return (Mask<T, SIMD_WIDTH>) NAME##_((Vec<T, SIMD_WIDTH>) a,               \
+                                         (Vec<T, SIMD_WIDTH>) b);              \
+  }
+
+EMULATE_DMASKOP(and)
+
+// EMULATE_DMASKOP(andn)
+//  function name should be "kandn" but the vector function is "bit_andnot"
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kandn(const Mask<T, SIMD_WIDTH> &a,
+                                             const Mask<T, SIMD_WIDTH> &b)
+{
+  return (Mask<T, SIMD_WIDTH>) bit_andnot((Vec<T, SIMD_WIDTH>) a,
+                                          (Vec<T, SIMD_WIDTH>) b);
+}
+
+EMULATE_DMASKOP(or)
+EMULATE_DMASKOP(xor)
+
+// EMULATE_DMASKOP(xnor)
+//  there is not xnor-function for vectors, so we have to do: bit_not(bit_xor(a,
+//  b))
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kxnor(const Mask<T, SIMD_WIDTH> &a,
+                                             const Mask<T, SIMD_WIDTH> &b)
+{
+  return (Mask<T, SIMD_WIDTH>) bit_not(
+    bit_xor((Vec<T, SIMD_WIDTH>) a, (Vec<T, SIMD_WIDTH>) b));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kadd(const Mask<T, SIMD_WIDTH> &a,
+                                            const Mask<T, SIMD_WIDTH> &b)
+{
+  Mask<T, SIMD_WIDTH> ret;
+  ret = (((uintmax_t) a) + ((uintmax_t) b));
+  return ret;
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> knot(const Mask<T, SIMD_WIDTH> &a)
+{
+  return (Mask<T, SIMD_WIDTH>) bit_not((Vec<T, SIMD_WIDTH>) a);
+}
+
+// shift with flexible parameter (not template), probably slower than
+// template-version
+// TODO faster implementation with switch-case possible?
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftri(const Mask<T, SIMD_WIDTH> &a,
+                                                uintmax_t count)
+{
+  // 04. Aug 22 (Jonas Keller):
+  // return zero if count is larger than sizeof(uintmax_t)*8 - 1, since then
+  // the >> operator is undefined, but kshift should return zero
+  // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=kshift
+  if (count >= sizeof(uintmax_t) * 8) { return Mask<T, SIMD_WIDTH>(0); }
+  return (Mask<T, SIMD_WIDTH>) (((uintmax_t) a) >> count);
+}
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftli(const Mask<T, SIMD_WIDTH> &a,
+                                                uintmax_t count)
+{
+  // 04. Aug 22 (Jonas Keller):
+  // return zero if count is larger than sizeof(uintmax_t)*8 - 1, since then
+  // the << operator is undefined, but kshift should return zero
+  // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=kshift
+  if (count >= sizeof(uintmax_t) * 8) { return Mask<T, SIMD_WIDTH>(0); }
+  return (Mask<T, SIMD_WIDTH>) (((uintmax_t) a) << count);
+}
+
+// shift with template parameter
+template <size_t COUNT, typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftri(const Mask<T, SIMD_WIDTH> &a)
+{
+  return (Mask<T, SIMD_WIDTH>) srle<COUNT>((Vec<T, SIMD_WIDTH>) a);
+}
+template <size_t COUNT, typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftli(const Mask<T, SIMD_WIDTH> &a)
+{
+  return (Mask<T, SIMD_WIDTH>) slle<COUNT>((Vec<T, SIMD_WIDTH>) a);
+}
+
+// 30. Jan 23 (Jonas Keller): removed setTrueLeft/Right and replaced them with
+// mask_set_true/false_low/high.
+
+template <bool UP, typename T, size_t SIMD_WIDTH>
+struct MaskSetBuffer
+{
+  T buffer[Vec<T, SIMD_WIDTH>::elems * 2];
+  MaskSetBuffer()
+  {
+    for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
+      buffer[i] = UP ? 0 : TypeInfo<T>::trueval();
+    }
+    for (size_t i = Vec<T, SIMD_WIDTH>::elems;
+         i < Vec<T, SIMD_WIDTH>::elems * 2; i++) {
+      buffer[i] = UP ? TypeInfo<T>::trueval() : 0;
+    }
+  }
+};
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_low(const size_t x,
+                                                         OutputType<T>,
+                                                         Integer<SIMD_WIDTH>)
+{
+  if (x >= Vec<T, SIMD_WIDTH>::elems) {
+    return mask_all_ones(OutputType<T>(), Integer<SIMD_WIDTH>());
+  }
+  static MaskSetBuffer<false, T, SIMD_WIDTH> buffer;
+  return Mask<T, SIMD_WIDTH>(
+    loadu<SIMD_WIDTH>(buffer.buffer + Vec<T, SIMD_WIDTH>::elems - x));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_high(const size_t x,
+                                                          OutputType<T>,
+                                                          Integer<SIMD_WIDTH>)
+{
+  if (x >= Vec<T, SIMD_WIDTH>::elems) {
+    return mask_all_ones(OutputType<T>(), Integer<SIMD_WIDTH>());
+  }
+  static MaskSetBuffer<true, T, SIMD_WIDTH> buffer;
+  return Mask<T, SIMD_WIDTH>(loadu<SIMD_WIDTH>(buffer.buffer + x));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_low(const size_t x,
+                                                          OutputType<T>,
+                                                          Integer<SIMD_WIDTH>)
+{
+  if (x >= Vec<T, SIMD_WIDTH>::elems) { return Mask<T, SIMD_WIDTH>(0); }
+  static MaskSetBuffer<true, T, SIMD_WIDTH> buffer;
+  return Mask<T, SIMD_WIDTH>(
+    loadu<SIMD_WIDTH>(buffer.buffer + Vec<T, SIMD_WIDTH>::elems - x));
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_high(const size_t x,
+                                                           OutputType<T>,
+                                                           Integer<SIMD_WIDTH>)
+{
+  if (x >= Vec<T, SIMD_WIDTH>::elems) { return Mask<T, SIMD_WIDTH>(0); }
+  static MaskSetBuffer<false, T, SIMD_WIDTH> buffer;
+  return Mask<T, SIMD_WIDTH>(loadu<SIMD_WIDTH>(buffer.buffer + x));
+}
+
+// 07. Aug 23 (Jonas Keller): added ktest_all_zeros/ones.
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE bool ktest_all_zeros(const Mask<T, SIMD_WIDTH> &a)
+{
+  return test_all_zeros((Vec<T, SIMD_WIDTH>) a);
+}
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE bool ktest_all_ones(const Mask<T, SIMD_WIDTH> &a)
+{
+  return test_all_ones((Vec<T, SIMD_WIDTH>) a);
+}
+
+// 07. Aug 23 (Jonas Keller): added kcmpeq
+
+template <typename T, size_t SIMD_WIDTH>
+static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
+                               const Mask<T, SIMD_WIDTH> &b)
+{
+  return internal::mask::ktest_all_zeros(internal::mask::kxor(a, b));
+}
+
+} // namespace mask
+} // namespace internal
+} // namespace simd
+
+#endif // SIMDVEC_SANDBOX
+
+#endif // SIMD_VEC_MASK_IMPL_EMU_H_
+
+#if defined(SIMDVEC_INTEL_ENABLE) && defined(_SIMD_VEC_32_AVAIL_) &&           \
+  !defined(SIMDVEC_SANDBOX)
+namespace simd {
+namespace internal {
+namespace mask {
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4)>
+static SIMD_INLINE Vec<T, 32> maskz_loadu(const Mask<T, 32> &k,
+                                          const T *const p)
+{
+  return reinterpret<T>(Vec<Float, 32>(_mm256_maskload_ps(
+    reinterpret_cast<const Float *>(p), reinterpret<Int>((Vec<T, 32>) k))));
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 8), typename = void>
+static SIMD_INLINE Vec<T, 32> maskz_loadu(const Mask<T, 32> &k,
+                                          const T *const p)
+{
+  return reinterpret<T>(Vec<Double, 32>(_mm256_maskload_pd(
+    reinterpret_cast<const Double *>(p), reinterpret<Long>((Vec<T, 32>) k))));
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4 || sizeof(T) == 8)>
+static SIMD_INLINE Vec<T, 32> mask_loadu(const Vec<T, 32> &src,
+                                         const Mask<T, 32> &k, const T *const p)
+{
+  return mask::mask_ifelse(k, mask::maskz_loadu(k, p), src);
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4 || sizeof(T) == 8)>
+static SIMD_INLINE Vec<T, 32> maskz_load(const Mask<T, 32> &k, const T *const p)
+{
+  return mask::maskz_loadu(k, p);
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4 || sizeof(T) == 8)>
+static SIMD_INLINE Vec<T, 32> mask_load(const Vec<T, 32> &src,
+                                        const Mask<T, 32> &k, const T *const p)
+{
+  return mask::mask_loadu(src, k, p);
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4)>
+static SIMD_INLINE void mask_storeu(T *const p, const Mask<T, 32> &k,
+                                    const Vec<T, 32> &a)
+{
+  _mm256_maskstore_ps(reinterpret_cast<Float *>(p),
+                      reinterpret<Int>((Vec<T, 32>) k), reinterpret<Float>(a));
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 8), typename = void>
+static SIMD_INLINE void mask_storeu(T *const p, const Mask<T, 32> &k,
+                                    const Vec<T, 32> &a)
+{
+  _mm256_maskstore_pd(reinterpret_cast<Double *>(p),
+                      reinterpret<Long>((Vec<T, 32>) k),
+                      reinterpret<Double>(a));
+}
+
+template <typename T, SIMD_ENABLE_IF(sizeof(T) == 4 || sizeof(T) == 8)>
+static SIMD_INLINE void mask_store(T *const p, const Mask<T, 32> &k,
+                                   const Vec<T, 32> &a)
+{
+  mask::mask_storeu(p, k, a);
+}
+
+} // namespace mask
+} // namespace internal
+} // namespace simd
+#endif
+
+#endif // SIMD_VEC_MASK_IMPL_INTEL_32_H_
+
 // ===========================================================================
 //
-// SIMDVecMaskImplIntel64.H --
 // Mask class definitions and architecture specific functions
 // for Intel 64 byte (512 bit)
 // Author: Markus Vieth (Bielefeld University, mvieth@techfak.uni-bielefeld.de)
@@ -28561,11 +31839,11 @@ mask_add(const Vec<Float, SIMD_WIDTH> &src,
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Markus Vieth, Ralf Möller
 //     Computer Engineering
@@ -29964,7 +33242,7 @@ static SIMD_INLINE Vec<T, 64> mask_hadd(const Vec<T, 64> &src,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return mask_add(src, k, x, y);
+  return internal::mask::mask_add(src, k, x, y);
 }
 
 template <typename T>
@@ -29974,7 +33252,7 @@ static SIMD_INLINE Vec<T, 64> maskz_hadd(const Mask<T, 64> &k,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return maskz_add(k, x, y);
+  return internal::mask::maskz_add(k, x, y);
 }
 
 // ---------------------------------------------------------------------------
@@ -29989,7 +33267,7 @@ static SIMD_INLINE Vec<T, 64> mask_hadds(const Vec<T, 64> &src,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return mask_adds(src, k, x, y);
+  return internal::mask::mask_adds(src, k, x, y);
 }
 
 template <typename T>
@@ -29999,7 +33277,7 @@ static SIMD_INLINE Vec<T, 64> maskz_hadds(const Mask<T, 64> &k,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return maskz_adds(k, x, y);
+  return internal::mask::maskz_adds(k, x, y);
 }
 
 // ---------------------------------------------------------------------------
@@ -30014,7 +33292,7 @@ static SIMD_INLINE Vec<T, 64> mask_hsub(const Vec<T, 64> &src,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return mask_sub(src, k, x, y);
+  return internal::mask::mask_sub(src, k, x, y);
 }
 
 template <typename T>
@@ -30024,7 +33302,7 @@ static SIMD_INLINE Vec<T, 64> maskz_hsub(const Mask<T, 64> &k,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return maskz_sub(k, x, y);
+  return internal::mask::maskz_sub(k, x, y);
 }
 
 // ---------------------------------------------------------------------------
@@ -30039,7 +33317,7 @@ static SIMD_INLINE Vec<T, 64> mask_hsubs(const Vec<T, 64> &src,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return mask_subs(src, k, x, y);
+  return internal::mask::mask_subs(src, k, x, y);
 }
 
 template <typename T>
@@ -30049,7 +33327,7 @@ static SIMD_INLINE Vec<T, 64> maskz_hsubs(const Mask<T, 64> &k,
 {
   Vec<T, 64> x, y;
   unzip<1>(a, b, x, y);
-  return maskz_subs(k, x, y);
+  return internal::mask::maskz_subs(k, x, y);
 }
 
 // 16. Oct 22 (Jonas Keller): added overloaded versions of mask_cmp* functions
@@ -30224,7 +33502,7 @@ static SIMD_INLINE Vec<T, 64> mask_avg(const Vec<T, 64> &src,
   const auto lsb = bit_and(bit_or(a, b), one);
   const auto as  = srai<1>(a);
   const auto bs  = srai<1>(b);
-  return mask_add(src, k, lsb, add(as, bs));
+  return internal::mask::mask_add(src, k, lsb, add(as, bs));
 }
 
 template <typename T,
@@ -30237,7 +33515,7 @@ static SIMD_INLINE Vec<T, 64> maskz_avg(const Mask<T, 64> &k,
   const auto lsb = bit_and(bit_or(a, b), one);
   const auto as  = srai<1>(a);
   const auto bs  = srai<1>(b);
-  return maskz_add(k, lsb, add(as, bs));
+  return internal::mask::maskz_add(k, lsb, add(as, bs));
 }
 
 // NOTE: Float version doesn't round!
@@ -30662,641 +33940,8 @@ static SIMD_INLINE Mask<T, 64> kcmpeq(const Mask<T, 64> &a,
 
 #endif // SIMD_VEC_MASK_IMPL_INTEL_64_H_
 
-#include <cstdint>
-
-#ifndef SIMDVEC_SANDBOX
-
-namespace simd {
-// 05. Feb 23 (Jonas Keller): introduced generic emulated Mask class using the
-// Vec class
-
-// exclude from doxygen (until endcond)
-/// @cond
-
-template <typename T, size_t SIMD_WIDTH>
-class Mask
-{
-  Vec<T, SIMD_WIDTH> mask;
-
-public:
-  Mask() = default;
-  explicit SIMD_INLINE Mask(const Vec<T, SIMD_WIDTH> &x) : mask(x) {}
-  SIMD_INLINE Mask(const uint64_t x) : mask(int2bits<T, SIMD_WIDTH>(x)) {}
-  explicit SIMD_INLINE operator Vec<T, SIMD_WIDTH>() const { return mask; }
-  SIMD_INLINE operator uint64_t() const { return msb2int<T, SIMD_WIDTH>(mask); }
-  SIMD_INLINE bool operator[](const size_t i) const
-  {
-    if (i >= SIMD_WIDTH) { return false; }
-    uint8_t mask_array[SIMD_WIDTH] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-    store((T *) mask_array, mask);
-    // check first byte of i-th element (the bytes of a single element should
-    // be the same)
-    return mask_array[i * sizeof(T)] != 0;
-  }
-  SIMD_INLINE bool operator==(const Mask<T, SIMD_WIDTH> &other) const
-  {
-    return test_all_zeros(
-      bit_xor(reinterpret<Int>(mask), reinterpret<Int>(other.mask)));
-  }
-  // define operators new and delete to ensure proper alignment, since
-  // the default new and delete are not guaranteed to do so before C++17
-  void *operator new(size_t size)
-  {
-    return simd_aligned_malloc(SIMD_WIDTH, size);
-  }
-  void operator delete(void *p) { simd_aligned_free(p); }
-  void *operator new[](size_t size)
-  {
-    return simd_aligned_malloc(SIMD_WIDTH, size);
-  }
-  void operator delete[](void *p) { simd_aligned_free(p); }
-};
-/// @endcond
-
-namespace internal {
-namespace mask {
-#define EMULATE_SOP_NAME(OP, OP_NAME)                                          \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP_NAME(                       \
-    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a)                 \
-  {                                                                            \
-    return mask::mask_ifelsezero(k, OP(a));                                    \
-  }                                                                            \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP_NAME(                        \
-    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
-    const Vec<T, SIMD_WIDTH> &a)                                               \
-  {                                                                            \
-    return mask::mask_ifelse(k, OP(a), src);                                   \
-  }
-
-#define EMULATE_SOP(OP) EMULATE_SOP_NAME(OP, OP)
-
-#define EMULATE_DOP_NAME(OP, OP_NAME)                                          \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP_NAME(                       \
-    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a,                 \
-    const Vec<T, SIMD_WIDTH> &b)                                               \
-  {                                                                            \
-    return mask::mask_ifelsezero(k, OP(a, b));                                 \
-  }                                                                            \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP_NAME(                        \
-    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
-    const Vec<T, SIMD_WIDTH> &a, const Vec<T, SIMD_WIDTH> &b)                  \
-  {                                                                            \
-    return mask::mask_ifelse(k, OP(a, b), src);                                \
-  }
-
-#define EMULATE_DOP(OP) EMULATE_DOP_NAME(OP, OP)
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelse(
-  const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &trueVal,
-  const Vec<T, SIMD_WIDTH> &falseVal)
-{
-  return ifelse((Vec<T, SIMD_WIDTH>) k, trueVal, falseVal);
-}
-
-// 04. Aug 22 (Jonas Keller): added mask_ifelsezero
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelsezero(
-  const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &trueVal)
-{
-  return bit_and((Vec<T, SIMD_WIDTH>) k, trueVal);
-}
-
-template <typename Tout, typename Tin, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<Tout, SIMD_WIDTH> reinterpret_mask(
-  const Mask<Tin, SIMD_WIDTH> &k)
-{
-  static_assert(sizeof(Tout) == sizeof(Tin), "");
-  return Mask<Tout, SIMD_WIDTH>(reinterpret<Tout>((Vec<Tin, SIMD_WIDTH>) k));
-}
-
-// The types of the masks are kind of arbitrary
-template <size_t SIMD_WIDTH>
-SIMD_INLINE Vec<Int, SIMD_WIDTH> maskz_cvts(const Mask<Float, SIMD_WIDTH> &k,
-                                            const Vec<Float, SIMD_WIDTH> &a)
-{
-  return mask::mask_ifelsezero(mask::reinterpret_mask<Int>(k),
-                               ::simd::cvts<Int>(a));
-}
-
-template <size_t SIMD_WIDTH>
-SIMD_INLINE Vec<Int, SIMD_WIDTH> mask_cvts(const Vec<Int, SIMD_WIDTH> &src,
-                                           const Mask<Float, SIMD_WIDTH> &k,
-                                           const Vec<Float, SIMD_WIDTH> &a)
-{
-  return mask::mask_ifelse(mask::reinterpret_mask<Int>(k), ::simd::cvts<Int>(a),
-                           src);
-}
-
-template <size_t SIMD_WIDTH>
-SIMD_INLINE Vec<Float, SIMD_WIDTH> maskz_cvts(const Mask<Int, SIMD_WIDTH> &k,
-                                              const Vec<Int, SIMD_WIDTH> &a)
-{
-  return mask::mask_ifelsezero(mask::reinterpret_mask<Float>(k),
-                               ::simd::cvts<Float>(a));
-}
-
-template <size_t SIMD_WIDTH>
-SIMD_INLINE Vec<Float, SIMD_WIDTH> mask_cvts(const Vec<Float, SIMD_WIDTH> &src,
-                                             const Mask<Int, SIMD_WIDTH> &k,
-                                             const Vec<Int, SIMD_WIDTH> &a)
-{
-  return mask::mask_ifelse(mask::reinterpret_mask<Float>(k),
-                           ::simd::cvts<Float>(a), src);
-}
-
-// =======================================================================
-// emulated load/store
-// =======================================================================
-
-// 04. Feb 23 (Jonas Keller): improved implementation of masked load/store
-// functions
-
-template <size_t SIMD_WIDTH, typename T>
-static SIMD_INLINE bool is_within_same_page(const T *const p)
-{
-  const uintptr_t PAGE_SIZE = 4096; // smallest page size I found
-  const uintptr_t begin_page =
-    reinterpret_cast<uintptr_t>(p) & ~(PAGE_SIZE - 1);
-  // 29. Aug 23 (Jonas Keller): fixed wrong calculation of end_page
-  const uintptr_t end_page =
-    // reinterpret_cast<uintptr_t>(p + Vec<T, SIMD_WIDTH>::elems - 1) &
-    // ~(PAGE_SIZE - 1);
-    (reinterpret_cast<uintptr_t>(p) + SIMD_WIDTH - 1) & ~(PAGE_SIZE - 1);
-  return begin_page == end_page;
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_load(const Mask<T, SIMD_WIDTH> &k,
-                                                 const T *const p)
-{
-  // if k is all zeros nothing should be loaded
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) {
-    return setzero<T, SIMD_WIDTH>();
-  }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector and mask
-  // it. Otherwise, we load the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    return mask::mask_ifelsezero(k, load<SIMD_WIDTH>(p));
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can load the whole vector
-    return load<SIMD_WIDTH>(p);
-  }
-  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    result[i] = k[i] ? p[i] : 0;
-  }
-  return load<SIMD_WIDTH>(result);
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_load(const Vec<T, SIMD_WIDTH> &src,
-                                                const Mask<T, SIMD_WIDTH> &k,
-                                                const T *const p)
-{
-  // if k is all zeros nothing should be loaded
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return src; }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector and mask
-  // it. Otherwise, we load the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    return mask::mask_ifelse(k, load<SIMD_WIDTH>(p), src);
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can load the whole vector
-    return load<SIMD_WIDTH>(p);
-  }
-  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  T src_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  store(src_arr, src);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    result[i] = k[i] ? p[i] : src_arr[i];
-  }
-  return load<SIMD_WIDTH>(result);
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_loadu(const Mask<T, SIMD_WIDTH> &k,
-                                                  const T *const p)
-{
-  // if k is all zeros nothing should be loaded
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) {
-    return setzero<T, SIMD_WIDTH>();
-  }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector and mask
-  // it. Otherwise, we load the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    return mask::mask_ifelsezero(k, loadu<SIMD_WIDTH>(p));
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can load the whole vector
-    return loadu<SIMD_WIDTH>(p);
-  }
-  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    result[i] = k[i] ? p[i] : 0;
-  }
-  return load<SIMD_WIDTH>(result);
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_loadu(const Vec<T, SIMD_WIDTH> &src,
-                                                 const Mask<T, SIMD_WIDTH> &k,
-                                                 const T *const p)
-{
-  // if k is all zeros nothing should be loaded
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return src; }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector and mask
-  // it. Otherwise, we load the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    return mask::mask_ifelse(k, loadu<SIMD_WIDTH>(p), src);
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can load the whole vector
-    return loadu<SIMD_WIDTH>(p);
-  }
-  T result[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  T src_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  store(src_arr, src);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    result[i] = k[i] ? p[i] : src_arr[i];
-  }
-  return load<SIMD_WIDTH>(result);
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE void mask_store(T *const p, const Mask<T, SIMD_WIDTH> &k,
-                                   const Vec<T, SIMD_WIDTH> &a)
-{
-  // if k is all zeros nothing should be stored
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return; }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector, mask it
-  // and store it back. Otherwise, we store the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    store(p, mask::mask_ifelse(k, a, load<SIMD_WIDTH>(p)));
-    return;
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can store the whole vector
-    store(p, a);
-    return;
-  }
-  T a_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  store(a_arr, a);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    if (k[i]) { p[i] = a_arr[i]; }
-  }
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE void mask_storeu(T *const p, const Mask<T, SIMD_WIDTH> &k,
-                                    const Vec<T, SIMD_WIDTH> &a)
-{
-  // if k is all zeros nothing should be stored
-  if (test_all_zeros((Vec<T, SIMD_WIDTH>) k)) { return; }
-  // If p till p+Vec<T, SIMD_WIDTH>::elems-1 is within the same page,
-  // there is no risk of a page fault, so we load the whole vector, mask it
-  // and store it back. Otherwise, we store the vector element-wise.
-  if (is_within_same_page<SIMD_WIDTH>(p)) {
-    storeu(p, mask::mask_ifelse(k, a, loadu<SIMD_WIDTH>(p)));
-    return;
-  }
-  if (test_all_ones((Vec<T, SIMD_WIDTH>) k)) {
-    // if k is all ones, we can store the whole vector
-    storeu(p, a);
-    return;
-  }
-  T a_arr[Vec<T, SIMD_WIDTH>::elems] SIMD_ATTR_ALIGNED(SIMD_WIDTH);
-  store(a_arr, a);
-  for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-    if (k[i]) { p[i] = a_arr[i]; }
-  }
-}
-
-// maskz_store(u) does not exist/does not make sense
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_set1(const Mask<T, SIMD_WIDTH> &k,
-                                                 const T a)
-{
-  return mask::mask_ifelsezero(k, ::simd::set1<T, SIMD_WIDTH>(a));
-}
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_set1(const Vec<T, SIMD_WIDTH> &src,
-                                                const Mask<T, SIMD_WIDTH> &k,
-                                                const T a)
-{
-  return mask::mask_ifelse(k, ::simd::set1<T, SIMD_WIDTH>(a), src);
-}
-
-EMULATE_DOP(add)
-EMULATE_DOP(adds)
-EMULATE_DOP(sub)
-EMULATE_DOP(subs)
-
-EMULATE_DOP(mul)
-EMULATE_DOP(div)
-
-// ---------------------------------------------------------------------------
-// masked ceil, floor, round, truncate v
-// ---------------------------------------------------------------------------
-
-EMULATE_SOP(ceil)
-EMULATE_SOP(floor)
-EMULATE_SOP(round)
-EMULATE_SOP(truncate)
-
-// ---------------------------------------------------------------------------
-// masked elementary mathematical functions v
-// ---------------------------------------------------------------------------
-
-EMULATE_SOP(rcp)
-EMULATE_SOP(rsqrt)
-EMULATE_SOP(sqrt)
-
-EMULATE_SOP(abs)
-
-EMULATE_DOP_NAME(bit_and, and)
-EMULATE_DOP_NAME(bit_or, or)
-EMULATE_DOP_NAME(bit_andnot, andnot)
-EMULATE_DOP_NAME(bit_xor, xor)
-EMULATE_SOP_NAME(bit_not, not )
-EMULATE_SOP(neg)
-EMULATE_DOP(min)
-EMULATE_DOP(max)
-EMULATE_SOP(div2r0)
-EMULATE_SOP(div2rd)
-
-#define EMULATE_SHIFT(OP)                                                      \
-  template <size_t COUNT, typename T, size_t SIMD_WIDTH>                       \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> maskz_##OP(                            \
-    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a)                 \
-  {                                                                            \
-    return mask::mask_ifelsezero(k, OP<COUNT>(a));                             \
-  }                                                                            \
-  template <size_t COUNT, typename T, size_t SIMD_WIDTH>                       \
-  static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_##OP(                             \
-    const Vec<T, SIMD_WIDTH> &src, const Mask<T, SIMD_WIDTH> &k,               \
-    const Vec<T, SIMD_WIDTH> &a)                                               \
-  {                                                                            \
-    return mask::mask_ifelse(k, OP<COUNT>(a), src);                            \
-  }
-EMULATE_SHIFT(srai)
-EMULATE_SHIFT(srli)
-EMULATE_SHIFT(slli)
-
-EMULATE_DOP(hadd)
-EMULATE_DOP(hadds)
-EMULATE_DOP(hsub)
-EMULATE_DOP(hsubs)
-
-// TODO mask parameters?
-
-// 16. Oct 22 (Jonas Keller): added overloaded versions of mask_cmp* functions
-// that only take two vector parameters and no mask parameter
-#define EMULATE_CMP(OP)                                                        \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_##OP(                            \
-    const Mask<T, SIMD_WIDTH> &k, const Vec<T, SIMD_WIDTH> &a,                 \
-    const Vec<T, SIMD_WIDTH> &b)                                               \
-  {                                                                            \
-    return Mask<T, SIMD_WIDTH>(mask::mask_ifelsezero(k, OP(a, b)));            \
-  }                                                                            \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_##OP(                            \
-    const Vec<T, SIMD_WIDTH> &a, const Vec<T, SIMD_WIDTH> &b)                  \
-  {                                                                            \
-    return Mask<T, SIMD_WIDTH>(OP(a, b));                                      \
-  }
-
-EMULATE_CMP(cmplt)
-EMULATE_CMP(cmple)
-EMULATE_CMP(cmpeq)
-EMULATE_CMP(cmpgt)
-EMULATE_CMP(cmpge)
-EMULATE_CMP(cmpneq)
-
-EMULATE_DOP(avg)
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE bool mask_test_all_zeros(const Mask<T, SIMD_WIDTH> &k,
-                                            const Vec<T, SIMD_WIDTH> &a)
-{
-  return test_all_zeros(mask::mask_ifelsezero(k, a));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE bool mask_test_all_ones(const Mask<T, SIMD_WIDTH> &k,
-                                           const Vec<T, SIMD_WIDTH> &a)
-{
-  return mask::mask_test_all_zeros(
-    k, bit_not(a)); // test_all_ones(mask_ifelse<T, SIMD_WIDTH>(k, a, ()
-                    // set1<Byte, SIMD_WIDTH>(0xFF)));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_all_ones(OutputType<T>,
-                                                     Integer<SIMD_WIDTH>)
-{
-  return (Mask<T, SIMD_WIDTH>) set1<T, SIMD_WIDTH>(TypeInfo<T>::trueval());
-}
-
-#define EMULATE_DMASKOP(NAME)                                                  \
-  template <typename T, size_t SIMD_WIDTH>                                     \
-  static SIMD_INLINE Mask<T, SIMD_WIDTH> k##NAME(const Mask<T, SIMD_WIDTH> &a, \
-                                                 const Mask<T, SIMD_WIDTH> &b) \
-  {                                                                            \
-    return (Mask<T, SIMD_WIDTH>) NAME##_((Vec<T, SIMD_WIDTH>) a,               \
-                                         (Vec<T, SIMD_WIDTH>) b);              \
-  }
-
-EMULATE_DMASKOP(and)
-
-// EMULATE_DMASKOP(andn)
-//  function name should be "kandn" but the vector function is "bit_andnot"
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kandn(const Mask<T, SIMD_WIDTH> &a,
-                                             const Mask<T, SIMD_WIDTH> &b)
-{
-  return (Mask<T, SIMD_WIDTH>) bit_andnot((Vec<T, SIMD_WIDTH>) a,
-                                          (Vec<T, SIMD_WIDTH>) b);
-}
-
-EMULATE_DMASKOP(or)
-EMULATE_DMASKOP(xor)
-
-// EMULATE_DMASKOP(xnor)
-//  there is not xnor-function for vectors, so we have to do: bit_not(bit_xor(a,
-//  b))
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kxnor(const Mask<T, SIMD_WIDTH> &a,
-                                             const Mask<T, SIMD_WIDTH> &b)
-{
-  return (Mask<T, SIMD_WIDTH>) bit_not(
-    bit_xor((Vec<T, SIMD_WIDTH>) a, (Vec<T, SIMD_WIDTH>) b));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kadd(const Mask<T, SIMD_WIDTH> &a,
-                                            const Mask<T, SIMD_WIDTH> &b)
-{
-  Mask<T, SIMD_WIDTH> ret;
-  ret = (((uintmax_t) a) + ((uintmax_t) b));
-  return ret;
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> knot(const Mask<T, SIMD_WIDTH> &a)
-{
-  return (Mask<T, SIMD_WIDTH>) bit_not((Vec<T, SIMD_WIDTH>) a);
-}
-
-// shift with flexible parameter (not template), probably slower than
-// template-version
-// TODO faster implementation with switch-case possible?
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftri(const Mask<T, SIMD_WIDTH> &a,
-                                                uintmax_t count)
-{
-  // 04. Aug 22 (Jonas Keller):
-  // return zero if count is larger than sizeof(uintmax_t)*8 - 1, since then
-  // the >> operator is undefined, but kshift should return zero
-  // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=kshift
-  if (count >= sizeof(uintmax_t) * 8) { return Mask<T, SIMD_WIDTH>(0); }
-  return (Mask<T, SIMD_WIDTH>) (((uintmax_t) a) >> count);
-}
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftli(const Mask<T, SIMD_WIDTH> &a,
-                                                uintmax_t count)
-{
-  // 04. Aug 22 (Jonas Keller):
-  // return zero if count is larger than sizeof(uintmax_t)*8 - 1, since then
-  // the << operator is undefined, but kshift should return zero
-  // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=kshift
-  if (count >= sizeof(uintmax_t) * 8) { return Mask<T, SIMD_WIDTH>(0); }
-  return (Mask<T, SIMD_WIDTH>) (((uintmax_t) a) << count);
-}
-
-// shift with template parameter
-template <size_t COUNT, typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftri(const Mask<T, SIMD_WIDTH> &a)
-{
-  return (Mask<T, SIMD_WIDTH>) srle<COUNT>((Vec<T, SIMD_WIDTH>) a);
-}
-template <size_t COUNT, typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> kshiftli(const Mask<T, SIMD_WIDTH> &a)
-{
-  return (Mask<T, SIMD_WIDTH>) slle<COUNT>((Vec<T, SIMD_WIDTH>) a);
-}
-
-// 30. Jan 23 (Jonas Keller): removed setTrueLeft/Right and replaced them with
-// mask_set_true/false_low/high.
-
-template <bool UP, typename T, size_t SIMD_WIDTH>
-struct MaskSetBuffer
-{
-  T buffer[Vec<T, SIMD_WIDTH>::elems * 2];
-  MaskSetBuffer()
-  {
-    for (size_t i = 0; i < Vec<T, SIMD_WIDTH>::elems; i++) {
-      buffer[i] = UP ? 0 : TypeInfo<T>::trueval();
-    }
-    for (size_t i = Vec<T, SIMD_WIDTH>::elems;
-         i < Vec<T, SIMD_WIDTH>::elems * 2; i++) {
-      buffer[i] = UP ? TypeInfo<T>::trueval() : 0;
-    }
-  }
-};
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_low(const size_t x,
-                                                         OutputType<T>,
-                                                         Integer<SIMD_WIDTH>)
-{
-  if (x >= Vec<T, SIMD_WIDTH>::elems) {
-    return mask_all_ones(OutputType<T>(), Integer<SIMD_WIDTH>());
-  }
-  static MaskSetBuffer<false, T, SIMD_WIDTH> buffer;
-  return Mask<T, SIMD_WIDTH>(
-    loadu<SIMD_WIDTH>(buffer.buffer + Vec<T, SIMD_WIDTH>::elems - x));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_high(const size_t x,
-                                                          OutputType<T>,
-                                                          Integer<SIMD_WIDTH>)
-{
-  if (x >= Vec<T, SIMD_WIDTH>::elems) {
-    return mask_all_ones(OutputType<T>(), Integer<SIMD_WIDTH>());
-  }
-  static MaskSetBuffer<true, T, SIMD_WIDTH> buffer;
-  return Mask<T, SIMD_WIDTH>(loadu<SIMD_WIDTH>(buffer.buffer + x));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_low(const size_t x,
-                                                          OutputType<T>,
-                                                          Integer<SIMD_WIDTH>)
-{
-  if (x >= Vec<T, SIMD_WIDTH>::elems) { return Mask<T, SIMD_WIDTH>(0); }
-  static MaskSetBuffer<true, T, SIMD_WIDTH> buffer;
-  return Mask<T, SIMD_WIDTH>(
-    loadu<SIMD_WIDTH>(buffer.buffer + Vec<T, SIMD_WIDTH>::elems - x));
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_high(const size_t x,
-                                                           OutputType<T>,
-                                                           Integer<SIMD_WIDTH>)
-{
-  if (x >= Vec<T, SIMD_WIDTH>::elems) { return Mask<T, SIMD_WIDTH>(0); }
-  static MaskSetBuffer<false, T, SIMD_WIDTH> buffer;
-  return Mask<T, SIMD_WIDTH>(loadu<SIMD_WIDTH>(buffer.buffer + x));
-}
-
-// 07. Aug 23 (Jonas Keller): added ktest_all_zeros/ones.
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE bool ktest_all_zeros(const Mask<T, SIMD_WIDTH> &a)
-{
-  return test_all_zeros((Vec<T, SIMD_WIDTH>) a);
-}
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE bool ktest_all_ones(const Mask<T, SIMD_WIDTH> &a)
-{
-  return test_all_ones((Vec<T, SIMD_WIDTH>) a);
-}
-
-// 07. Aug 23 (Jonas Keller): added kcmpeq
-
-template <typename T, size_t SIMD_WIDTH>
-static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
-                               const Mask<T, SIMD_WIDTH> &b)
-{
-  return internal::mask::ktest_all_zeros(internal::mask::kxor(a, b));
-}
-
-} // namespace mask
-} // namespace internal
-} // namespace simd
-
-#endif // SIMDVEC_SANDBOX
-
-#endif // SIMD_VEC_MASK_IMPL_EMU_H_
-
 // ===========================================================================
 //
-// SIMDVecMaskImplSandbox.H --
 // test template functions for Mask and associated function templates
 // these functions just print out template parameters and some arguments
 //
@@ -31306,11 +33951,11 @@ static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Ralf Möller
 //     Computer Engineering
@@ -32665,7 +35310,7 @@ static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_all_ones()
  * @param x number of bits to set to true
  * @return Mask with the lower @p x bits set to true
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_low(const size_t x)
 {
   return internal::mask::mask_set_true_low(x, internal::OutputType<T>(),
@@ -32680,7 +35325,7 @@ static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_low(const size_t x)
  * @param x number of bits to set to true
  * @return Mask with the upper @p x bits set to true
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_high(const size_t x)
 {
   return internal::mask::mask_set_true_high(x, internal::OutputType<T>(),
@@ -32695,7 +35340,7 @@ static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_true_high(const size_t x)
  * @param x number of bits to set to false
  * @return Mask with the lower @p x bits set to false
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_low(const size_t x)
 {
   return internal::mask::mask_set_false_low(x, internal::OutputType<T>(),
@@ -32710,7 +35355,7 @@ static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_low(const size_t x)
  * @param x number of bits to set to false
  * @return Mask with the upper @p x bits set to false
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename T, size_t SIMD_WIDTH_DEFAULT_NATIVE>
 static SIMD_INLINE Mask<T, SIMD_WIDTH> mask_set_false_high(const size_t x)
 {
   return internal::mask::mask_set_false_high(x, internal::OutputType<T>(),
@@ -33940,12 +36585,15 @@ static SIMD_INLINE bool mask_test_all_ones(const Mask<T, SIMD_WIDTH> &k,
  * @param falseVal Vec to select from if the condition is false
  * @return Vec containing the selected elements
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename Tcond, typename T, size_t SIMD_WIDTH>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelse(
-  const Mask<T, SIMD_WIDTH> &cond, const Vec<T, SIMD_WIDTH> &trueVal,
+  const Mask<Tcond, SIMD_WIDTH> &cond, const Vec<T, SIMD_WIDTH> &trueVal,
   const Vec<T, SIMD_WIDTH> &falseVal)
 {
-  return internal::mask::mask_ifelse(cond, trueVal, falseVal);
+  static_assert(sizeof(Tcond) == sizeof(T),
+                "condition and value types must have the same size");
+  return internal::mask::mask_ifelse(reinterpret_mask<T>(cond), trueVal,
+                                     falseVal);
 }
 
 /**
@@ -33956,11 +36604,13 @@ static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelse(
  * @param trueVal Vec to select from if the condition is true
  * @return Vec containing the selected elements
  */
-template <typename T, size_t SIMD_WIDTH>
+template <typename Tcond, typename T, size_t SIMD_WIDTH>
 static SIMD_INLINE Vec<T, SIMD_WIDTH> mask_ifelsezero(
-  const Mask<T, SIMD_WIDTH> &cond, const Vec<T, SIMD_WIDTH> &trueVal)
+  const Mask<Tcond, SIMD_WIDTH> &cond, const Vec<T, SIMD_WIDTH> &trueVal)
 {
-  return internal::mask::mask_ifelsezero(cond, trueVal);
+  static_assert(sizeof(Tcond) == sizeof(T),
+                "condition and value types must have the same size");
+  return internal::mask::mask_ifelsezero(reinterpret_mask<T>(cond), trueVal);
 }
 
 // 07. Aug 23 (Jonas Keller): added kcmpeq
@@ -33989,7 +36639,6 @@ static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
 // backward compatibility
 // ===========================================================================
 //
-// SIMDBackwardCompat.H --
 // aliases for backward compatibility
 //
 // This source code file is part of the following software:
@@ -33998,11 +36647,11 @@ static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
 //    - the SIMD implementation of the MinWarping and the 2D-Warping methods
 //      for local visual homing.
 //
-// The software is provided based on the accompanying license agreement
-// in the file LICENSE or LICENSE.doc. The software is provided "as is"
-// without any warranty by the licensor and without any liability of the
-// licensor, and the software may not be distributed by the licensee; see
-// the license agreement for details.
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
 //
 // (C) Jonas Keller, Ralf Möller
 //     Computer Engineering
@@ -34018,19 +36667,19 @@ static SIMD_INLINE bool kcmpeq(const Mask<T, SIMD_WIDTH> &a,
 // 09. Mar 23 (Jonas Keller): added doxygen documentation
 
 /**
- * @file SIMDBackwardCompat.H
+ * @file backward_compat.H
  * @brief Aliases for backward compatibility.
  */
 
 #ifndef SIMD_BACKWARD_COMPAT_H_
 #define SIMD_BACKWARD_COMPAT_H_
 
-namespace simd {
-
 /**
  * @addtogroup group_aliases
  * @{
  */
+
+namespace simd {
 
 using SIMDByte       = Byte;       ///< Alias for Byte.
 using SIMDSignedByte = SignedByte; ///< Alias for SignedByte.
@@ -34133,8 +36782,28 @@ static constexpr SIMD_INLINE size_t numOutputSIMDVecs()
   return numOutVecs<Tout, Tin>();
 }
 
-/** @} */
 } // namespace simd
+
+/// Alias for simd::aligned_malloc(). @deprecated Use simd::aligned_malloc()
+/// instead.
+inline void *simd_aligned_malloc(size_t alignment, size_t size)
+{
+  return simd::aligned_malloc(alignment, size);
+}
+
+/// Alias for simd::aligned_free(). @deprecated Use simd::aligned_free()
+/// instead.
+inline void simd_aligned_free(void *ptr)
+{
+  simd::aligned_free(ptr);
+}
+
+/// Alias for simd::simd_aligned_allocator. @deprecated Use
+/// simd::simd_aligned_allocator instead.
+template <typename T, size_t ALIGN>
+using simd_aligned_allocator = simd::aligned_allocator<T, ALIGN>;
+
+/** @} */
 
 // some IDEs don't see this if it comes first (compiles, but IDE has problems)
 // shifted here:
@@ -34150,6 +36819,49 @@ namespace ns_simd {}
 #else
 namespace ns_simd = simd;
 #endif
+
+#endif
+
+// experimental functions
+// ===========================================================================
+//
+// place to put experimental code
+//
+// This source code file is part of the following software:
+//
+//    - the low-level C++ template SIMD library
+//    - the SIMD implementation of the MinWarping and the 2D-Warping methods
+//      for local visual homing.
+//
+// The software is provided based on the accompanying license agreement in the
+// file LICENSE.md.
+// The software is provided "as is" without any warranty by the licensor and
+// without any liability of the licensor, and the software may not be
+// distributed by the licensee; see the license agreement for details.
+//
+// (C) Ralf Möller
+//     Computer Engineering
+//     Faculty of Technology
+//     Bielefeld University
+//     www.ti.uni-bielefeld.de
+//
+// ===========================================================================
+
+// NOTE: This file contains experimental code which hasn't been tested
+// NOTE: at all or hasn't been tested in depth.
+
+#ifndef SIMD_EXPERIMENTAL_H_
+#define SIMD_EXPERIMENTAL_H_
+
+#include <cstddef>
+
+namespace simd {
+namespace experimental {
+
+// put experimental code here
+
+} // namespace experimental
+} // namespace simd
 
 #endif
 

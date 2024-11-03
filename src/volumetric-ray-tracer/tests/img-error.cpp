@@ -26,7 +26,7 @@ i32 main()
                     });
     tiles_t tiles = tile_gaussians(1.f/8.f, 1.f/8.f, _gaussians, glm::mat4(1.f));
 
-    u32 *ref_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
+    u32 *ref_image = (u32*)simd::aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
     const camera_t cam(camera_create_info_t{});
 
     const vec4f_t origin{0.f, 0.f, 0.f};
@@ -34,9 +34,9 @@ i32 main()
     render_image<radiance<transmittance>>(256, 256, ref_image, cam, origin, tiles, true, 16);
 
     fmt::print("[ {} ]\tGenerating Test Images\n", INFO_FMT("INFO"));
-    u32 *svml_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    u32 *fog_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
-    u32 *my_image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
+    u32 *svml_image = (u32*)simd::aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
+    u32 *fog_image = (u32*)simd::aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
+    u32 *my_image = (u32*)simd::aligned_malloc(SIMD_BYTES, sizeof(u32) * 256 * 256);
 
     simd_render_image(256, 256, svml_image, cam, origin, tiles, true, 16);
     simd_render_image<approx::vcl_exp, approx::simd_abramowitz_stegun_erf>(256, 256, fog_image, cam, origin, tiles, true, 16);

@@ -7,7 +7,7 @@
 #include "thread-pool.h"
 #include "camera.h"
 #include "approx.h"
-#include <include/tsimd_sh.H>
+#include <include/tsimd.H>
 #include <glm/glm.hpp>
 #include <numbers>
 
@@ -61,7 +61,7 @@ namespace vrt
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf, f32_func_t Expf = expf>
     f32 simd_transmittance(const vec4f_t _o, const vec4f_t _n, const f32 s, const gaussians_t &gaussians)
     {
-        simd::Vec<simd::Float> T = simd::set1(0.f);
+        simd::Vec<simd::Float> T = simd::set1<simd::Float>(0.f);
         for (u64 i = 0; i < gaussians.gaussians.size(); i += SIMD_FLOATS)
         {
             simd_gaussian_t g_q{
@@ -76,20 +76,20 @@ namespace vrt
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
 
             const simd_vec4f_t origin_to_center = g_q.mu - o;
-            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * g_q.sigma * g_q.sigma);
+            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1<simd::Float>(2.f) * g_q.sigma * g_q.sigma);
             const simd::Vec<simd::Float> mu_bar = (origin_to_center).dot(n);
             const simd::Vec<simd::Float> oc_sqnorm = origin_to_center.sqnorm();
             const simd::Vec<simd::Float> mb2 = mu_bar * mu_bar;
             const simd::Vec<simd::Float> oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
             const simd::Vec<simd::Float> c_bar = g_q.magnitude * Exp(-(oc_sqnorm_diff_mb2 * inv_2_sigma2));
 
-            const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * g_q.sigma;
+            const simd::Vec<simd::Float> sqrt_2_sig = simd::set1<simd::Float>(SQRT_2) * g_q.sigma;
 
             const simd::Vec<simd::Float> mu_bar_sqrt_2_sig = mu_bar * simd::rcp(sqrt_2_sig);
-            const simd::Vec<simd::Float> s_sqrt_2_sig = simd::set1(s) * simd::rcp(sqrt_2_sig);
+            const simd::Vec<simd::Float> s_sqrt_2_sig = simd::set1<simd::Float>(s) * simd::rcp(sqrt_2_sig);
             const simd::Vec<simd::Float> erf1 = Erf(-mu_bar_sqrt_2_sig);
             const simd::Vec<simd::Float> erf2 = Erf(s_sqrt_2_sig-mu_bar_sqrt_2_sig);
-            T += g_q.sigma * c_bar * simd::set1(INV_SQRT_2_PI) * (erf1 - erf2);
+            T += g_q.sigma * c_bar * simd::set1<simd::Float>(INV_SQRT_2_PI) * (erf1 - erf2);
         }
         return Expf(simd::hadds(T));
     }
@@ -102,7 +102,7 @@ namespace vrt
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     simd::Vec<simd::Float> broadcast_transmittance(const simd_vec4f_t &o, const simd_vec4f_t &n, const simd::Vec<simd::Float> &s, const gaussians_t &gaussians)
     {
-        simd::Vec<simd::Float> T = simd::set1(0.f);
+        simd::Vec<simd::Float> T = simd::set1<simd::Float>(0.f);
         for (u64 i = 0; i < gaussians.gaussians.size(); ++i)
         {
             const simd_gaussian_t G_q = simd_gaussian_t::from_gaussian_t(gaussians.gaussians[i]);
@@ -111,17 +111,17 @@ namespace vrt
             const simd::Vec<simd::Float> mb2 = mu_bar * mu_bar;
             const simd::Vec<simd::Float> oc_sqnorm = origin_to_center.sqnorm();
             const simd::Vec<simd::Float> sigma2 = G_q.sigma * G_q.sigma;
-            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1(2.f) * sigma2);
+            const simd::Vec<simd::Float> inv_2_sigma2 = simd::rcp(simd::set1<simd::Float>(2.f) * sigma2);
             const simd::Vec<simd::Float> oc_sqnorm_diff_mb2 = oc_sqnorm - mb2;
             const simd::Vec<simd::Float> c_bar = G_q.magnitude * Exp( -(oc_sqnorm_diff_mb2 * inv_2_sigma2) );
 
-            const simd::Vec<simd::Float> sqrt_2_sig = simd::set1(SQRT_2) * G_q.sigma;
+            const simd::Vec<simd::Float> sqrt_2_sig = simd::set1<simd::Float>(SQRT_2) * G_q.sigma;
 
             const simd::Vec<simd::Float> mu_bar_sqrt_2_sig = mu_bar * simd::rcp(sqrt_2_sig);;
             const simd::Vec<simd::Float> s_sqrt_2_sig = s * simd::rcp(sqrt_2_sig);
             const simd::Vec<simd::Float> erf1 = Erf(-mu_bar_sqrt_2_sig);
             const simd::Vec<simd::Float> erf2 = Erf(s_sqrt_2_sig - mu_bar_sqrt_2_sig);
-            T += G_q.sigma * c_bar * simd::set1(INV_SQRT_2_PI) * (erf1 - erf2);
+            T += G_q.sigma * c_bar * simd::set1<simd::Float>(INV_SQRT_2_PI) * (erf1 - erf2);
         }
         return Exp(T);
     }
@@ -174,7 +174,7 @@ namespace vrt
                     .x = simd::load(gaussians.soa_gaussians->albedo.r + i),
                     .y = simd::load(gaussians.soa_gaussians->albedo.g + i),
                     .z = simd::load(gaussians.soa_gaussians->albedo.b + i),
-                    .w = simd::set1(1.f)
+                    .w = simd::set1<simd::Float>(1.f)
                 },
                 .mu{
                     .x = simd::load(gaussians.soa_gaussians->mu.x + i),
@@ -186,7 +186,7 @@ namespace vrt
             simd_vec4f_t o = simd_vec4f_t::from_vec4f_t(_o);
             simd_vec4f_t n = simd_vec4f_t::from_vec4f_t(_n);
             const simd::Vec<simd::Float> lambda = g_q.sigma;
-            simd::Vec<simd::Float> inner = simd::set1(0.f);
+            simd::Vec<simd::Float> inner = simd::set1<simd::Float>(0.f);
             for (i8 k = -4; k <= 0; ++k)
             {
                 const simd::Vec<simd::Float> s = (g_q.mu - o).dot(n) + simd::set1<simd::Float>(k) * lambda;
@@ -205,12 +205,12 @@ namespace vrt
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     simd_vec4f_t broadcast_radiance(const simd_vec4f_t o, const simd_vec4f_t n, const gaussians_t &gaussians)
     {
-        simd_vec4f_t L_hat{ .x = simd::set1(0.f), .y = simd::set1(0.f), .z = simd::set1(0.f), .w = simd::set1(0.f) };
+        simd_vec4f_t L_hat{ .x = simd::set1<simd::Float>(0.f), .y = simd::set1<simd::Float>(0.f), .z = simd::set1<simd::Float>(0.f), .w = simd::set1<simd::Float>(0.f) };
         for (const gaussian_t &_G_q : gaussians.gaussians)
         {
             const simd_gaussian_t G_q = simd_gaussian_t::from_gaussian_t(_G_q);
             const simd::Vec<simd::Float> lambda_q = G_q.sigma;
-            simd::Vec<simd::Float> inner = simd::set1(0.f);
+            simd::Vec<simd::Float> inner = simd::set1<simd::Float>(0.f);
             for (i8 k = -4; k <= 0; ++k)
             {
                 const simd::Vec<simd::Float> s = (G_q.mu - o).dot(n) + simd::set1<simd::Float>(k) * lambda_q;
@@ -259,7 +259,7 @@ namespace vrt
             std::unique_ptr<thread_pool_t> tp = (tc == 1) ? nullptr : std::make_unique<thread_pool_t>(tc);
             for (u64 tidx = 0; tidx < tiles.w * tiles.h; ++tidx)
             {
-                tile_buffers.push_back((i32*)simd_aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
+                tile_buffers.push_back((i32*)simd::aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
                 /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
                 //gaussians_t g{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*tiles.gaussians[tidx].gaussians_broadcast) };
                 std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height,
@@ -302,7 +302,7 @@ namespace vrt
                 simd::Vec<simd::Int> d = simd::load(img + _i);
                 simd::store((i32*)image + i, d);
             }
-            simd_aligned_free(img);
+            simd::aligned_free(img);
         }
         tile_buffers.clear();
         if (!running) return true;
@@ -327,9 +327,9 @@ namespace vrt
             dir.normalize();
             const simd_vec4f_t color = broadcast_radiance<Exp, Erf>(simd_origin, dir, gaussians);
             const simd::Vec<simd::Int> A = simd::set1<simd::Int>(0xFF000000);
-            const simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(color.x, simd::set1(1.f)) * simd::set1(255.f));
-            const simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(color.y, simd::set1(1.f)) * simd::set1(255.f));
-            const simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(color.z, simd::set1(1.f)) * simd::set1(255.f));
+            const simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(color.x, simd::set1<simd::Float>(1.f)) * simd::set1<simd::Float>(255.f));
+            const simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(color.y, simd::set1<simd::Float>(1.f)) * simd::set1<simd::Float>(255.f));
+            const simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(color.z, simd::set1<simd::Float>(1.f)) * simd::set1<simd::Float>(255.f));
             simd::store((i32*)image + i, (A | simd::slli<16>(R) | simd::slli<8>(G) | B));
             if (!running) return true;
         }
@@ -355,7 +355,7 @@ namespace vrt
             std::unique_ptr<thread_pool_t> tp = (tc == 1) ? nullptr : std::make_unique<thread_pool_t>(tc);
             for (u64 tidx = 0; tidx < tiles.w * tiles.h; ++tidx)
             {
-                tile_buffers.push_back((i32*)simd_aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
+                tile_buffers.push_back((i32*)simd::aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
                 /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
                 gaussians_t g{ tiles.gaussians[tidx].gaussians };
                 std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height, g, &tiles, &cam, &simd_origin] () {
@@ -370,10 +370,10 @@ namespace vrt
                         } - simd_origin;
                         dir.normalize();
                         simd_vec4f_t color = broadcast_radiance<Exp, Erf>(simd_origin, dir, g);
-                        simd::Vec<simd::Int> A = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.w) * simd::set1(255.f));
-                        simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.x) * simd::set1(255.f));
-                        simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.y) * simd::set1(255.f));
-                        simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(simd::set1(1.f), color.z) * simd::set1(255.f));
+                        simd::Vec<simd::Int> A = simd::cvts<simd::Int>(simd::min(simd::set1<simd::Float>(1.f), color.w) * simd::set1<simd::Float>(255.f));
+                        simd::Vec<simd::Int> R = simd::cvts<simd::Int>(simd::min(simd::set1<simd::Float>(1.f), color.x) * simd::set1<simd::Float>(255.f));
+                        simd::Vec<simd::Int> G = simd::cvts<simd::Int>(simd::min(simd::set1<simd::Float>(1.f), color.y) * simd::set1<simd::Float>(255.f));
+                        simd::Vec<simd::Int> B = simd::cvts<simd::Int>(simd::min(simd::set1<simd::Float>(1.f), color.z) * simd::set1<simd::Float>(255.f));
                         simd::store(img + _i, (simd::slli<24>(A) | simd::slli<16>(R) | simd::slli<8>(G) | B));
                     }
                 };
@@ -395,7 +395,7 @@ namespace vrt
                 simd::Vec<simd::Int> d = simd::load(img + _i);
                 simd::store((i32*)image + i, d);
             }
-            simd_aligned_free(img);
+            simd::aligned_free(img);
         }
         tile_buffers.clear();
 

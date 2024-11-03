@@ -1,7 +1,7 @@
 #pragma once
 
 #include "include/definitions.h"
-#include <include/tsimd_sh.H>
+#include <include/tsimd.H>
 
 #define VCL_NAMESPACE vcl
 #include <include/vectorclass/vectorclass.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <include/tsimd_sh.H>
+#include <include/tsimd.H>
 #include <include/definitions.h>
 
 #include <fmt/core.h>
@@ -114,7 +114,7 @@ namespace vrt
 
     struct simd_vec4f_t
     {
-        simd::Vec<simd::Float> x, y, z, w = simd::set1(0.f);
+        simd::Vec<simd::Float> x, y, z, w = simd::set1<simd::Float>(0.f);
         inline simd_vec4f_t operator+(const simd_vec4f_t &other) const
         {
             return simd_vec4f_t { this->x + other.x,
@@ -184,10 +184,10 @@ namespace vrt
         inline static simd_vec4f_t from_vec4f_t(const vec4f_t &other)
         {
             return simd_vec4f_t{
-                .x = simd::set1(other.x),
-                    .y = simd::set1(other.y),
-                    .z = simd::set1(other.z),
-                    .w = simd::set1(other.w)
+                .x = simd::set1<simd::Float>(other.x),
+                    .y = simd::set1<simd::Float>(other.y),
+                    .z = simd::set1<simd::Float>(other.z),
+                    .w = simd::set1<simd::Float>(other.w)
             };
         }
     };
@@ -298,7 +298,7 @@ namespace vrt
         template <simd::Vec<simd::Float> (*Exp)(simd::Vec<simd::Float>) = simd::exp>
         simd::Vec<simd::Float> pdf(const simd_vec4f_t x) const
         {
-            return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu)) * simd::rcp(simd::set1(2.f) * this->sigma * this->sigma));
+            return this->magnitude * Exp(-((x - this->mu).dot(x - this->mu)) * simd::rcp(simd::set1<simd::Float>(2.f) * this->sigma * this->sigma));
         }
 
         /// Broadcasts a single `gaussian_t` to a set of `SIMD_FLOATS` gaussians.
