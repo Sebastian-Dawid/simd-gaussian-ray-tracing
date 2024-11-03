@@ -51,7 +51,7 @@ if the bottom most checkbox is enabled the ones above it have no effect until it
 This repository contains five example objects located in the `test-objects` directory.
 
 # Used Libraries
-* [T-SIMD](http://www.ti.uni-bielefeld.de/html/people/moeller/tsimd_warpingsimd.html)
+* [T-SIMD](https://github.com/ti-uni-bielefeld/T-SIMD)
 * [GLFW](https://github.com/glfw/glfw)
 * [GLM](https://github.com/g-truc/glm)
 * [ImGui](https://github.com/ocornut/imgui)
