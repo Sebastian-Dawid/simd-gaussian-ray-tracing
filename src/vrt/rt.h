@@ -259,7 +259,7 @@ namespace vrt
             std::unique_ptr<thread_pool_t> tp = (tc == 1) ? nullptr : std::make_unique<thread_pool_t>(tc);
             for (u64 tidx = 0; tidx < tiles.w * tiles.h; ++tidx)
             {
-                tile_buffers.push_back((i32*)simd::aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
+                tile_buffers.push_back((i32*)simd::aligned_malloc(sizeof(i32) * tile_width * tile_height));
                 /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
                 //gaussians_t g{ tiles.gaussians[tidx].gaussians, new gaussian_vec_t(*tiles.gaussians[tidx].gaussians_broadcast) };
                 std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height,
@@ -311,7 +311,7 @@ namespace vrt
 
     /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     /// This function is parallelized along the image pixels.
-    /// Requires `image`, `xs` and `ys` to be aligned to `SIMD_BYTES`.
+    /// Requires `image`, `xs` and `ys` to be aligned to `NATIVE_SIMD_WIDTH`.
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
     bool simd_render_image(const u32 width, const u32 height, u32 *image, const camera_t &cam, const vec4f_t &origin, const gaussians_t &gaussians, const bool &running = true)
     {
@@ -338,7 +338,7 @@ namespace vrt
 
     /// Renders an image with dimensions `width` x `height` of the given `gaussians` into `image`.
     /// This function is parallelized along the image pixels.
-    /// Requires `image` to be aligned to `SIMD_BYTES`.
+    /// Requires `image` to be aligned to `NATIVE_SIMD_WIDTH`.
     /// This version of the function takes a tiled set of gaussians.
     /// The width of the tiles needs to be a multiple of `SIMD_FLOATS`.
     template<simd_f32_func_t Exp = simd::exp, simd_f32_func_t Erf = simd::erf>
@@ -355,7 +355,7 @@ namespace vrt
             std::unique_ptr<thread_pool_t> tp = (tc == 1) ? nullptr : std::make_unique<thread_pool_t>(tc);
             for (u64 tidx = 0; tidx < tiles.w * tiles.h; ++tidx)
             {
-                tile_buffers.push_back((i32*)simd::aligned_malloc(SIMD_BYTES, sizeof(i32) * tile_width * tile_height));
+                tile_buffers.push_back((i32*)simd::aligned_malloc(sizeof(i32) * tile_width * tile_height));
                 /// NOTE: apparently i can not share the tiles object across multiple threads to access the gaussians
                 gaussians_t g{ tiles.gaussians[tidx].gaussians };
                 std::function<void()> task = [img{tile_buffers[tidx]}, tidx, tile_width, tile_height, g, &tiles, &cam, &simd_origin] () {

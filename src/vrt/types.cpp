@@ -33,20 +33,20 @@ namespace vrt
     }
 
     /// Creates a new `gaussian_vec_t` from a given `std::vector<gaussian_t>`.
-    /// `SIMD_BYTES` aligned memory is allocated for the number of gaussians included in `gaussians`.
+    /// `NATIVE_SIMD_WIDTH` aligned memory is allocated for the number of gaussians included in `gaussians`.
     gaussian_vec_t *gaussian_vec_t::from_gaussians(const std::vector<gaussian_t> &gaussians)
     {
         gaussian_vec_t *vec = new gaussian_vec_t();
         u64 size = ((gaussians.size() / SIMD_FLOATS) + 1) * SIMD_FLOATS;
 
-        vec->mu.x = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->mu.y = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->mu.z = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->albedo.r = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->albedo.g = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->albedo.b = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->sigma = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
-        vec->magnitude = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        vec->mu.x = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->mu.y = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->mu.z = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->albedo.r = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->albedo.g = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->albedo.b = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->sigma = (f32*)simd::aligned_malloc(sizeof(f32) * size);
+        vec->magnitude = (f32*)simd::aligned_malloc(sizeof(f32) * size);
 
         for (u64 i = 0; i < size; ++i)
         {
@@ -78,21 +78,21 @@ namespace vrt
     gaussian_vec_t::gaussian_vec_t(gaussian_vec_t &other)
     {
         this->size = other.size;
-        this->mu.x = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->mu.x = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->mu.x, other.mu.x, this->size * sizeof(f32));
-        this->mu.y = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->mu.y = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->mu.y, other.mu.y, this->size * sizeof(f32));
-        this->mu.z = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->mu.z = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->mu.z, other.mu.z, this->size * sizeof(f32));
-        this->albedo.r = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->albedo.r = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->albedo.r, other.albedo.r, this->size * sizeof(f32));
-        this->albedo.g = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->albedo.g = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->albedo.g, other.albedo.g, this->size * sizeof(f32));
-        this->albedo.b = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->albedo.b = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->albedo.b, other.albedo.b, this->size * sizeof(f32));
-        this->sigma = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->sigma = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->sigma, other.sigma, this->size * sizeof(f32));
-        this->magnitude = (f32*)simd::aligned_malloc(SIMD_BYTES, sizeof(f32) * size);
+        this->magnitude = (f32*)simd::aligned_malloc(sizeof(f32) * size);
         memcpy(this->magnitude, other.magnitude, this->size * sizeof(f32));
     }
 

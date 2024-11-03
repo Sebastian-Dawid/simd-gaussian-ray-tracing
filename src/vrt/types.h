@@ -253,7 +253,7 @@ namespace vrt
         void load_gaussians(const std::vector<gaussian_t> &gaussians);
 
         /// Creates a new `gaussian_vec_t` from a given `std::vector<gaussian_t>`.
-        /// `SIMD_BYTES` aligned memory is allocated for the number of gaussians included in `gaussians`.
+        /// `NATIVE_SIMD_WIDTH` aligned memory is allocated for the number of gaussians included in `gaussians`.
         static gaussian_vec_t *from_gaussians(const std::vector<gaussian_t> &gaussians);
 
         gaussian_vec_t() {}

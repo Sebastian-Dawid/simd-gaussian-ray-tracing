@@ -242,7 +242,7 @@ i32 main(i32 argc, char **argv)
         };
     }
     std::thread render_thread([&](){ if (renderer != nullptr) renderer->run(running); });
-    u32 *image = (u32*)simd::aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+    u32 *image = (u32*)simd::aligned_malloc(sizeof(u32) * width * height);
     struct timespec start, end;
 
     vrt::vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
