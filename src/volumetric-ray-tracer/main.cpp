@@ -8,15 +8,14 @@
 #include <sched.h>
 #include <getopt.h>
 #include <malloc.h>
+#include <include/tsimd.H>
+#include <include/TimeMeasurement.H>
 
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #pragma GCC diagnostic ignored "-Wuninitialized"
-
-#include <include/tsimd_sh.H>
-#include <include/TimeMeasurement.H>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <include/stb_image_write.h>
@@ -243,7 +242,7 @@ i32 main(i32 argc, char **argv)
         };
     }
     std::thread render_thread([&](){ if (renderer != nullptr) renderer->run(running); });
-    u32 *image = (u32*)simd_aligned_malloc(SIMD_BYTES, sizeof(u32) * width * height);
+    u32 *image = (u32*)simd::aligned_malloc(sizeof(u32) * width * height);
     struct timespec start, end;
 
     vrt::vec4f_t origin{ 0.f, 0.f, cmd.camera_offset };
@@ -336,7 +335,7 @@ i32 main(i32 argc, char **argv)
     }
 
     render_thread.join();
-    simd_aligned_free(image);
+    simd::aligned_free(image);
 
     return EXIT_SUCCESS;
 }

@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <unistd.h>
 
+#include "tsimd.H"
+
 typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -16,12 +18,7 @@ typedef int64_t i64;
 typedef float f32;
 typedef double f64;
 
-#ifdef __AVX512F__
-#define SIMD_BYTES 64
-#else
-#define SIMD_BYTES 32
-#endif
-constexpr u64 SIMD_FLOATS = (SIMD_BYTES/sizeof(f32));
+constexpr u64 SIMD_FLOATS = simd::Vec<simd::Float>::elements;
 
 #define ASSERT(expr)        \
 {                           \
